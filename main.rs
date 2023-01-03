@@ -14,7 +14,5 @@ fn main() {
         board.play_black(&mut p, *point);
         println!("{:?}", &p);
     }
-
-    println!("{}", "hello".green());
 }
 

@@ -1,7 +1,8 @@
 
 use std::fmt;
 use std::ops::Index;
-use engine::Color::{Empty, Black}; //, White};
+use crate::engine::Color::{Empty, Black}; //, White};
+use colored::*;
 
 // COLOR
 
@@ -17,7 +18,10 @@ pub struct Position {
     bubbles:      Vec<Vec<usize>>,
 
     board_state: Vec<Color>,
-    chain_id_backref: Vec<usize>
+    chain_id_backref: Vec<usize>,
+
+    // dbug only
+    tui_layout: Vec<(usize, usize)>,
 }
 
 impl Position {
@@ -31,6 +35,10 @@ impl Position {
         self.black_chains.push(Vec::new());
         return self.black_chains.len()-1;
     }
+
+    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
+        self.tui_layout = tui_layout;
+    }
 }
 
 impl Index<usize> for Position {
@@ -40,16 +48,30 @@ impl Index<usize> for Position {
 
 impl fmt::Debug for Position {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for &point in self.board_state.iter() {
-            write!(f, "{}", if point == Empty {"."} 
-                            else if point == Black {"x"}
-                            else {"o"})?;
+        let colors = vec!["red", "green", "blue", "magenta", "yellow", "cyan",
+                          "bright red", "bright green", "bright blue",
+                          "bright magenta", "bright yellow", "bright cyan"];
+
+        let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
+        let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
+        let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
+
+        for (i, &point) in self.board_state.iter().enumerate() {
+            pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
+                match point {
+                    Empty => String::from("-"),
+                    Black => String::from("x"),
+                    White => String::from("o"),
+                }.color(colors[self.chain_id_backref[i]]);
         }
-        write!(f, "\n")?;
-        for id in self.chain_id_backref.iter() {
-            write!(f, "{}", id)?;
+
+        for line in pretty {
+            for item in line {
+                write!(f, "{}", item)?;
+            }
+            write!(f, "\n")?;
         }
-        write!(f, "\n")
+        Ok(())
     }
 }
 
@@ -117,7 +139,10 @@ impl Board {
                           ].concat(),
 
             board_state: vec![Empty; self.point_count],
-            chain_id_backref: vec![0; self.point_count]
+            chain_id_backref: vec![0; self.point_count],
+
+            // debug only
+            tui_layout: (0..self.point_count).map(|n| (n, 0)).collect(),
         }
     }
 
