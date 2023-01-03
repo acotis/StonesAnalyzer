@@ -22,7 +22,7 @@ pub struct Position {
 
 impl Position {
     fn fresh_black_chain_id(&mut self) -> usize {
-        for id in 1..self.black_chains.len() {
+        for id in 0..self.black_chains.len() {
             if self.black_chains[id].is_empty() {
                 return id;
             }
@@ -132,38 +132,48 @@ impl Board {
 
     pub fn play_black(&self, pos: &mut Position, play: usize) {
         assert!(pos[play] == Empty);
+        pos.board_state[play] = Black;
 
         // Create a sorted, de-dupped list of all the ID's of the black chains
         // this move was adjacent to (which there can be zero or more of).
 
-        let mut chains_to_merge: Vec<usize> =
+        let mut adjacent_chain_ids: Vec<usize> =
             self.neighbor_lists[play].iter()
                 .filter(|&&n| pos.board_state[n] == Black)
                 .map(|&n| pos.chain_id_backref[n])
                 .collect();
 
-        chains_to_merge.sort();
-        chains_to_merge.dedup();
+        adjacent_chain_ids.sort();
+        adjacent_chain_ids.dedup();
 
         // If there were no chains adjacent to this move, get a fresh chain ID
-        // and consider the move "adjacent" to the chain it refers to.
+        // and consider the move "adjacent" to that chain.
 
-        if chains_to_merge.is_empty() {
-            chains_to_merge.push(pos.fresh_black_chain_id());
+        if adjacent_chain_ids.is_empty() {
+            adjacent_chain_ids.push(pos.fresh_black_chain_id());
         }
+
+        println!("Chain ids: {:?}", adjacent_chain_ids);
 
         // Push the move into the first chain in the list.
 
-        pos.black_chains[chains_to_merge[0]].push(play);
+        pos.black_chains[adjacent_chain_ids[0]].push(play);
 
         // Drain all the other chains in the list into the first one.
 
-        //for chain_id in chains_to_merge.iter().skip(1) {
-            //let first_chain = &mut pos.black_chains[chains_to_merge[0]];
-            //let other_chain = &mut pos.black_chains[chains_to_merge[*chain_id]];
+        let mut temp = Vec::<usize>::new();
 
-            //first_chain.pos(other_chain);
-        //}
+        for chain_id in adjacent_chain_ids.iter().skip(1) {
+            temp.append(&mut pos.black_chains[adjacent_chain_ids[*chain_id]]);
+            pos.black_chains[adjacent_chain_ids[0]].append(&mut temp);
+        }
+
+        // For the chain that got drained into, iterate over all of its stones
+        // and mark the points under them as belonging to this chain.
+
+        for point in &pos.black_chains[adjacent_chain_ids[0]] {
+            pos.chain_id_backref[*point] = adjacent_chain_ids[0];
+        }
     }
 }
 
