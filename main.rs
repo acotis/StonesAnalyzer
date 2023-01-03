@@ -1,13 +1,17 @@
 
 //#![deny(warnings)]
 
-mod board;
-use board::Board;
+mod engine;
+use engine::Board;
+use engine::Position;
 
 fn main() {
-    let mut board = Board::new(10);
-    board.connect(3, 4);
-    board.connect(4, 9);
+    let board = Board::new(10, (0..9).map(|n| (n, n+1)).collect());
+    let mut p: Position = board.empty_position();
+
+    println!("{:?}", p);
+    board.play_black(&mut p, 1);
+
     println!("{:?}", board);
 }
 
