@@ -1,7 +1,7 @@
 
 use std::fmt;
 use std::ops::Index;
-use crate::engine::Color::{Empty, Black}; //, White};
+use crate::engine::Color::{Empty, Black, White};
 use colored::*;
 
 // COLOR
@@ -48,9 +48,32 @@ impl Index<usize> for Position {
 
 impl fmt::Debug for Position {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let colors = vec!["red", "green", "blue", "magenta", "yellow", "cyan",
-                          "bright red", "bright green", "bright blue",
-                          "bright magenta", "bright yellow", "bright cyan"];
+        let mut empty_colors = vec![String::from("white"); self.bubbles.len()];
+        let mut black_colors = vec![String::from("white"); self.black_chains.len()];
+        let mut white_colors = vec![String::from("white"); self.white_chains.len()];
+
+        let mut colors = vec!["red", "green", "blue", "magenta", "yellow", "cyan",
+                              "bright red", "bright green", "bright blue",
+                              "bright magenta", "bright yellow", "bright cyan"];
+
+        for id in 0..self.bubbles.len() {
+            if (!self.bubbles[id].is_empty()) && (!colors.is_empty()) {
+                empty_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
+        for id in 0..self.black_chains.len() {
+            if (!self.black_chains[id].is_empty()) && (!colors.is_empty()) {
+                black_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
+        for id in 0..self.white_chains.len() {
+            if (!self.white_chains[id].is_empty()) && (!colors.is_empty()) {
+                white_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
 
         let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
         let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
@@ -59,10 +82,10 @@ impl fmt::Debug for Position {
         for (i, &point) in self.board_state.iter().enumerate() {
             pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
                 match point {
-                    Empty => String::from("-"),
-                    Black => String::from("x"),
-                    White => String::from("o"),
-                }.color(colors[self.chain_id_backref[i]]);
+                    Empty => String::from("-").color(&*empty_colors[self.chain_id_backref[i]]),
+                    Black => String::from("x").color(&*black_colors[self.chain_id_backref[i]]),
+                    White => String::from("o").color(&*white_colors[self.chain_id_backref[i]]),
+                };
         }
 
         for line in pretty {
