@@ -11,8 +11,8 @@ fn main() {
     let mut p: Position = board.empty_position();
 
     println!("{:?}", p);
-    for point in [1, 3, 5, 7, 9, 11, 13].iter() {
-        board.play_black(&mut p, *point);
+    for &point in [1, 3, 5, 7, 9, 11, 13].iter() {
+        p.play_black(point);
         println!("{:?}", &p);
     }
 }

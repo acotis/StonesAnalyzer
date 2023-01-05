@@ -9,94 +9,6 @@ use colored::*;
 #[derive(Clone, PartialEq, Copy)]
 pub enum Color {Empty, Black, White}
 
-// POSITION
-
-#[derive(Clone)]
-pub struct Position {
-    black_chains: Vec<Vec<usize>>,
-    white_chains: Vec<Vec<usize>>,
-    bubbles:      Vec<Vec<usize>>,
-
-    board_state: Vec<Color>,
-    chain_id_backref: Vec<usize>,
-
-    // dbug only
-    tui_layout: Vec<(usize, usize)>,
-}
-
-impl Position {
-    fn fresh_chain_id(chain_list: &mut Vec<Vec<usize>>) -> usize {
-        match chain_list.iter().enumerate().filter(|&v| v.1.is_empty()).next() {
-            Some((i, _)) => i,
-            None => {
-                chain_list.push(Vec::new());
-                chain_list.len()-1
-            }
-        }
-    }
-
-    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
-        self.tui_layout = tui_layout;
-    }
-}
-
-impl Index<usize> for Position {
-    type Output = Color;
-    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
-}
-
-impl fmt::Debug for Position {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut empty_colors = vec![String::from("white"); self.bubbles.len()];
-        let mut black_colors = vec![String::from("white"); self.black_chains.len()];
-        let mut white_colors = vec![String::from("white"); self.white_chains.len()];
-
-        let mut colors = vec!["red", "green", "bright blue", "magenta", "yellow", "cyan",
-                              "bright red", "bright green", "blue",
-                              "bright magenta", "bright yellow", "bright cyan"];
-
-        for id in 0..self.bubbles.len() {
-            if (!self.bubbles[id].is_empty()) && (!colors.is_empty()) {
-                empty_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-        for id in 0..self.black_chains.len() {
-            if (!self.black_chains[id].is_empty()) && (!colors.is_empty()) {
-                black_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-        for id in 0..self.white_chains.len() {
-            if (!self.white_chains[id].is_empty()) && (!colors.is_empty()) {
-                white_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-
-        let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
-        let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
-        let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
-
-        for (i, &point) in self.board_state.iter().enumerate() {
-            pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
-                match point {
-                    Empty => String::from("-").color(&*empty_colors[self.chain_id_backref[i]]),
-                    Black => String::from("x").color(&*black_colors[self.chain_id_backref[i]]),
-                    White => String::from("o").color(&*white_colors[self.chain_id_backref[i]]),
-                };
-        }
-
-        for line in pretty {
-            for item in line {
-                write!(f, "{}", item)?;
-            }
-            write!(f, "\n")?;
-        }
-        Ok(())
-    }
-}
-
 // BOARD
 
 pub struct Board {
@@ -154,40 +66,125 @@ impl Board {
 
     pub fn empty_position(&self) -> Position {
         Position {
+            board: self,
+
+            board_state: vec![Empty; self.point_count],
+            chain_id_backref: vec![0; self.point_count],
+
             black_chains: vec![vec![]; self.point_count],
             white_chains: vec![vec![]; self.point_count],
             bubbles:      [ vec![(0..self.point_count).collect()],
                             vec![vec![]; self.point_count-1]
                           ].concat(),
 
-            board_state: vec![Empty; self.point_count],
-            chain_id_backref: vec![0; self.point_count],
-
             // debug only
             tui_layout: (0..self.point_count).map(|n| (n, 0)).collect(),
         }
     }
+}
 
-    // pub struct Position {
-    //     black_chains: Vec<Vec<usize>>,
-    //     white_chains: Vec<Vec<usize>>,
-    //     bubbles:      Vec<Vec<usize>>,
-    // 
-    //     board_state: Vec<Color>,
-    //     chain_id_backref: Vec<usize>
-    // }
+// POSITION
 
-    pub fn play_black(&self, pos: &mut Position, play: usize) {
-        assert!(pos[play] == Empty);
-        pos.board_state[play] = Black;
+#[derive(Clone)]
+pub struct Position<'a> {
+    board: &'a Board,
+
+    board_state: Vec<Color>,
+    chain_id_backref: Vec<usize>,
+
+    black_chains: Vec<Vec<usize>>,
+    white_chains: Vec<Vec<usize>>,
+    bubbles:      Vec<Vec<usize>>,
+
+    // dbug only
+    tui_layout: Vec<(usize, usize)>,
+}
+
+impl Index<usize> for Position<'_> {
+    type Output = Color;
+    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
+}
+
+impl fmt::Debug for Position<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut empty_colors = vec![String::from("white"); self.bubbles.len()];
+        let mut black_colors = vec![String::from("white"); self.black_chains.len()];
+        let mut white_colors = vec![String::from("white"); self.white_chains.len()];
+
+        let mut colors = vec!["red", "green", "bright blue", "magenta", "yellow", "cyan",
+                              "bright red", "bright green", "blue",
+                              "bright magenta", "bright yellow", "bright cyan"];
+
+        for id in 0..self.bubbles.len() {
+            if (!self.bubbles[id].is_empty()) && (!colors.is_empty()) {
+                empty_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
+        for id in 0..self.black_chains.len() {
+            if (!self.black_chains[id].is_empty()) && (!colors.is_empty()) {
+                black_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
+        for id in 0..self.white_chains.len() {
+            if (!self.white_chains[id].is_empty()) && (!colors.is_empty()) {
+                white_colors[id] = colors[0].to_string();
+                colors.remove(0);
+            }
+        }
+
+        let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
+        let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
+        let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
+
+        for (i, &point) in self.board_state.iter().enumerate() {
+            pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
+                match point {
+                    Empty => String::from("-").color(&*empty_colors[self.chain_id_backref[i]]),
+                    Black => String::from("x").color(&*black_colors[self.chain_id_backref[i]]),
+                    White => String::from("o").color(&*white_colors[self.chain_id_backref[i]]),
+                };
+        }
+
+        for line in pretty {
+            for item in line {
+                write!(f, "{}", item)?;
+            }
+            write!(f, "\n")?;
+        }
+        Ok(())
+    }
+}
+
+impl Position<'_> {
+    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
+        self.tui_layout = tui_layout;
+    }
+}
+
+impl Position<'_> {
+    fn fresh_chain_id(chain_list: &mut Vec<Vec<usize>>) -> usize {
+        match chain_list.iter().enumerate().filter(|&v| v.1.is_empty()).next() {
+            Some((i, _)) => i,
+            None => {
+                chain_list.push(Vec::new());
+                chain_list.len()-1
+            }
+        }
+    }
+
+    pub fn play_black(&mut self, play: usize) {
+        assert!(self.board_state[play] == Empty);
+        self.board_state[play] = Black;
 
         // Create a sorted, de-dupped list of all the ID's of the black chains
         // this move was adjacent to (which there can be zero or more of).
 
         let mut adjacent_chain_ids: Vec<usize> =
-            self.neighbor_lists[play].iter()
-                .filter(|&&n| pos.board_state[n] == Black)
-                .map(|&n| pos.chain_id_backref[n])
+            self.board.neighbor_lists[play].iter()
+                .filter(|&&n| self.board_state[n] == Black)
+                .map(|&n| self.chain_id_backref[n])
                 .collect();
 
         adjacent_chain_ids.sort();
@@ -197,27 +194,27 @@ impl Board {
         // and consider the move "adjacent" to that chain.
 
         if adjacent_chain_ids.is_empty() {
-            adjacent_chain_ids.push(Position::fresh_chain_id(&mut pos.black_chains));
+            adjacent_chain_ids.push(Self::fresh_chain_id(&mut self.black_chains));
         }
 
         // Push the move into the first chain in the list.
 
-        pos.black_chains[adjacent_chain_ids[0]].push(play);
+        self.black_chains[adjacent_chain_ids[0]].push(play);
 
         // Drain all the other chains in the list into the first one.
 
         let mut temp = Vec::<usize>::new();
 
         for chain_id in adjacent_chain_ids.iter().skip(1) {
-            temp.append(&mut pos.black_chains[adjacent_chain_ids[*chain_id]]);
-            pos.black_chains[adjacent_chain_ids[0]].append(&mut temp);
+            temp.append(&mut self.black_chains[adjacent_chain_ids[*chain_id]]);
+            self.black_chains[adjacent_chain_ids[0]].append(&mut temp);
         }
 
         // For the chain that got drained into, iterate over all of its stones
         // and mark the points under them as belonging to this chain.
 
-        for point in &pos.black_chains[adjacent_chain_ids[0]] {
-            pos.chain_id_backref[*point] = adjacent_chain_ids[0];
+        for point in &self.black_chains[adjacent_chain_ids[0]] {
+            self.chain_id_backref[*point] = adjacent_chain_ids[0];
         }
 
         // This move may have been adjacent to a bubble (it can't be adjacent to
@@ -225,9 +222,9 @@ impl Board {
         // if it was.
 
         let adjacent_bubble_id = 
-            self.neighbor_lists[play].iter()
-            .filter(|&&n| pos.board_state[n] == Empty)
-            .map(|&n| pos.chain_id_backref[n])
+            self.board.neighbor_lists[play].iter()
+            .filter(|&&n| self.board_state[n] == Empty)
+            .map(|&n| self.chain_id_backref[n])
             .next();
 
         let adjacent_bubble_id = match adjacent_bubble_id {
@@ -238,7 +235,7 @@ impl Board {
         // Now drain all the points from that bubble into temp so that we can
         // re-allocate them into one or more bubbles as necessary.
 
-        //temp.append(&mut pos.bubbles[adjacent_bubble_id]);
+        //temp.append(&mut self.bubbles[adjacent_bubble_id]);
 
         //while !temp.is_empty() {
             
