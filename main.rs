@@ -6,11 +6,12 @@ use engine::Board;
 use engine::Position;
 
 fn main() {
-    let board = Board::new(10, (0..9).map(|n| (n, n+1)).collect());
+    const SIZE: usize = 15;
+    let board = Board::new(SIZE, (0..SIZE-1).map(|n| (n, n+1)).collect());
     let mut p: Position = board.empty_position();
 
     println!("{:?}", p);
-    for point in [1, 3, 2, 4].iter() {
+    for point in [1, 3, 5, 7, 9, 11, 13].iter() {
         board.play_black(&mut p, *point);
         println!("{:?}", &p);
     }

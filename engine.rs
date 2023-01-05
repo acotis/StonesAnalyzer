@@ -25,15 +25,14 @@ pub struct Position {
 }
 
 impl Position {
-    fn fresh_black_chain_id(&mut self) -> usize {
-        for id in 0..self.black_chains.len() {
-            if self.black_chains[id].is_empty() {
-                return id;
+    fn fresh_chain_id(chain_list: &mut Vec<Vec<usize>>) -> usize {
+        match chain_list.iter().enumerate().filter(|&v| v.1.is_empty()).next() {
+            Some((i, _)) => i,
+            None => {
+                chain_list.push(Vec::new());
+                chain_list.len()-1
             }
         }
-
-        self.black_chains.push(Vec::new());
-        return self.black_chains.len()-1;
     }
 
     pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
@@ -52,8 +51,8 @@ impl fmt::Debug for Position {
         let mut black_colors = vec![String::from("white"); self.black_chains.len()];
         let mut white_colors = vec![String::from("white"); self.white_chains.len()];
 
-        let mut colors = vec!["red", "green", "blue", "magenta", "yellow", "cyan",
-                              "bright red", "bright green", "bright blue",
+        let mut colors = vec!["red", "green", "bright blue", "magenta", "yellow", "cyan",
+                              "bright red", "bright green", "blue",
                               "bright magenta", "bright yellow", "bright cyan"];
 
         for id in 0..self.bubbles.len() {
@@ -198,10 +197,8 @@ impl Board {
         // and consider the move "adjacent" to that chain.
 
         if adjacent_chain_ids.is_empty() {
-            adjacent_chain_ids.push(pos.fresh_black_chain_id());
+            adjacent_chain_ids.push(Position::fresh_chain_id(&mut pos.black_chains));
         }
-
-        println!("Chain ids: {:?}", adjacent_chain_ids);
 
         // Push the move into the first chain in the list.
 
@@ -222,6 +219,30 @@ impl Board {
         for point in &pos.black_chains[adjacent_chain_ids[0]] {
             pos.chain_id_backref[*point] = adjacent_chain_ids[0];
         }
+
+        // This move may have been adjacent to a bubble (it can't be adjacent to
+        // more than one). If it was, it may have split that bubble. First, check
+        // if it was.
+
+        let adjacent_bubble_id = 
+            self.neighbor_lists[play].iter()
+            .filter(|&&n| pos.board_state[n] == Empty)
+            .map(|&n| pos.chain_id_backref[n])
+            .next();
+
+        let adjacent_bubble_id = match adjacent_bubble_id {
+            Some(id) => id,
+            None => return,
+        };
+
+        // Now drain all the points from that bubble into temp so that we can
+        // re-allocate them into one or more bubbles as necessary.
+
+        //temp.append(&mut pos.bubbles[adjacent_bubble_id]);
+
+        //while !temp.is_empty() {
+            
+        //}
     }
 }
 
