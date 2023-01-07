@@ -2,6 +2,7 @@
 //#![deny(warnings)]
 
 mod engine;
+use engine::Color::*;
 use engine::Board;
 use engine::Position;
 
@@ -12,7 +13,7 @@ fn main() {
 
     println!("{:?}", p);
     for &point in [1, 3, 5, 7, 9, 11, 13].iter() {
-        p.play_black(point);
+        p.play(point, Black);
         println!("{:?}", &p);
     }
 }
