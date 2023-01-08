@@ -12,7 +12,7 @@ fn main() {
     let mut p: Position = board.empty_position();
 
     println!("{:?}", p);
-    for &point in [1, 3, 5, 7, 9, 11, 13].iter() {
+    for &point in [3, 4, 5, 7, 9, 11, 13].iter() {
         p.play(point, Black);
         println!("{:?}", &p);
     }

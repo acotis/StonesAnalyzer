@@ -162,24 +162,65 @@ impl Position<'_> {
 }
 
 impl Position<'_> {
-    fn fresh_chain_id(chain_list: &mut Vec<Vec<usize>>) -> usize {
-        match chain_list.iter().enumerate().filter(|&v| v.1.is_empty()).next() {
+    fn fresh_chain_id(&mut self, color: Color) -> usize {
+        match self.chains[color as usize].iter()
+                  .enumerate()
+                  .filter(|&v| v.1.is_empty())
+                  .next() {
             Some((i, _)) => i,
             None => {
-                chain_list.push(Vec::new());
-                chain_list.len()-1
+                self.chains[color as usize].push(Vec::new());
+                self.chains[color as usize].len()-1
             }
         }
     }
 
+    fn create_chain_bucketfill(&mut self, point: usize) -> usize {
+        let color = self.board_state[point];
+        let id = self.fresh_chain_id(color);
+        self.chains[color as usize][id].push(point);
+
+        let mut next = 0;
+
+        while next < self.chains[color as usize][id].len() {
+            let point = self.chains[color as usize][id][next];
+
+            for neighbor in self.board.neighbor_lists[point].iter() {
+                if self.board_state[*neighbor] == color {
+                    if !self.chains[color as usize][id].contains(neighbor) {
+                        self.chains[color as usize][id].push(*neighbor);
+                    }
+                }
+            }
+
+            next += 1;
+        }
+
+        id
+    }
+
+    // board_state
+    // chains
+    // chain_id_backref
+    //
+    //   1. Place stone.
+    //      - Add to board.
+    //      - Add to adjacent chain and merge chains; update backref.
+    //      - Split bubbles; update backref.
+    //   2. Capture opponent.
+    //      - Remove from board.
+    //      - Empty captured chains; update backref.
+    //      - Merge bubbles; update backref.
+    //   3. Capture self.
+    //
 
     pub fn play(&mut self, point: usize, color: Color) {
-        assert!(self.board_state[point] == Empty);
         assert!(color != Empty);
+        assert!(self.board_state[point] == Empty);
+        
+        // For later, note the ID of the bubble at this point.
 
-        // Put this stone on the board.
-
-        self.board_state[point] = color;
+        let bubble_id = self.chain_id_backref[point];
 
         // Create a sorted, de-dupped list of all the ID's of the same-colored
         // chains this move was adjacent to (there can be zero or more of these).
@@ -196,53 +237,36 @@ impl Position<'_> {
         // If there were no chains adjacent to this move, get a fresh chain ID
         // and consider the move "adjacent" to that chain.
 
-        if adjacent_chain_ids.is_empty() {
-            adjacent_chain_ids.push(Self::fresh_chain_id(&mut self.chains[color as usize]));
+        let dest_chain = match adjacent_chain_ids.len() {
+            0 => self.fresh_chain_id(color),
+            _ => adjacent_chain_ids.remove_swap(0);
         }
 
-        // Push the move into the first chain in the list.
+        // Put this stone on the board; push it onto the destination chain.
 
-        self.chains[color as usize][adjacent_chain_ids[0]].push(point);
+        self.board_state[point] = color;
+        self.chains[color as usize][dest_chain].push(point);
 
         // Drain all the other chains in the list into the first one.
 
         let mut temp = Vec::<usize>::new();
 
-        for chain_id in adjacent_chain_ids.iter().skip(1) {
-            temp.append(&mut self.chains[color as usize][adjacent_chain_ids[*chain_id]]);
-            self.chains[color as usize][adjacent_chain_ids[0]].append(&mut temp);
+        for chain_id in adjacent_chain_ids {
+            temp.append(&mut self.chains[color as usize][chain_id]);
+            self.chains[color as usize][dest_chain].append(&mut temp);
         }
 
-        // For the chain that got drained into, iterate over all of its stones
-        // and mark the points under them as belonging to this chain.
+        // ...and update the backref for all points in this chain.
 
-        for point in &self.chains[color as usize][adjacent_chain_ids[0]] { 
-            self.chain_id_backref[*point] = adjacent_chain_ids[0];
+        for point in &self.chains[color as usize][dest_chain] { 
+            self.chain_id_backref[*point] = dest_chain;
         }
 
-        // This move may have been adjacent to a bubble (it can't be adjacent to
-        // more than one). If it was, it may have split that bubble. First, check
-        // if it was.
+        // This move may be splitting the bubble it was played in into multiple
+        // parts. 
 
-        let adjacent_bubble_id = 
-            self.board.neighbor_lists[point].iter()
-            .filter(|&&n| self.board_state[n] == Empty)
-            .map(|&n| self.chain_id_backref[n])
-            .next();
+        
 
-        let adjacent_bubble_id = match adjacent_bubble_id {
-            Some(id) => id,
-            None => return,
-        };
-
-        // Now drain all the points from that bubble into temp so that we can
-        // re-allocate them into one or more bubbles as necessary.
-
-        //temp.append(&mut self.bubbles[adjacent_bubble_id]);
-
-        //while !temp.is_empty() {
-            
-        //}
     }
 }
 
