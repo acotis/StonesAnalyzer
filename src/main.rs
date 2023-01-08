@@ -2,13 +2,15 @@
 //#![deny(warnings)]
 
 mod engine;
+mod boards;
+
 use engine::Color::*;
 use engine::Board;
 use engine::Position;
+use boards::*;
 
 fn main() {
-    const SIZE: usize = 6;
-    let board = Board::new(SIZE, (0..SIZE-1).map(|n| (n, n+1)).collect());
+    let board = make_rectangular_board(6, 1);
     let mut p: Position = board.empty_position();
 
     println!("Original board state");

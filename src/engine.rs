@@ -32,7 +32,7 @@ impl fmt::Debug for Board {
 }
 
 impl Board {
-    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
+    pub fn set_tui_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
         self.tui_layout = tui_layout;
     }
 }
