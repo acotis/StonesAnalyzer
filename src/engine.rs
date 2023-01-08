@@ -71,10 +71,15 @@ impl Board {
             board_state: vec![Empty; self.point_count],
             chain_id_backref: vec![0; self.point_count],
             chains: [vec![(0..self.point_count).collect()],
-                     vec![vec![]; self.point_count-1]].concat(),
+                     vec![vec![]; self.point_count]].concat(),
             // debug only
             tui_layout: (0..self.point_count).map(|n| (n, 0)).collect(),
         }
+
+        // Note that we create one more chain ID than the number of points on the
+        // board, because at any given moment there can be up to N chains, and
+        // when we call seed_chain we need to make one more on top of the ones
+        // that already exist.
     }
 }
 
@@ -139,25 +144,14 @@ impl Position<'_> {
 
 impl Position<'_> {
 
-    // Return the ID of a currently unused chain vector of the given color. If
-    // there is no such vector, create one and return its ID.
-    //
-    // TODO: I'm pretty sure we can always expect there to be an empty chain
-    // given that we initialize with as many chains as there are points. This
-    // could fail though if any part of any method's algorithm uses temporary
-    // virtual chains.
+    // Return the ID of a currently unused chain vector.
 
     fn fresh_chain_id(&mut self) -> usize {
-        match self.chains.iter()
-                  .enumerate()
-                  .filter(|&v| v.1.is_empty())
-                  .next() {
-            Some((i, _)) => i,
-            None => {
-                self.chains.push(Vec::new());
-                self.chains.len()-1
-            }
-        }
+        self.chains.iter()
+            .enumerate()
+            .filter(|&v| v.1.is_empty())
+            .next()
+            .unwrap().0
     }
 
     // Remove a given point from a given chain. Panics if the point is not

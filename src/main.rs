@@ -14,10 +14,16 @@ fn main() {
     println!("Original board state");
     print!("{:?}", p);
 
-    for &point in [0, 1, 2, 3, 4, 5].iter() {
+    let program = [
+        (Black, 3),
+        (White, 2),
+        (White, 4),
+    ];
+
+    for (color, point) in program {
         println!("=================");
-        println!("Playing move at {}", point);
-        p.play(point, Black);
+        println!("Playing move at {} (color: {})", point, color as usize);
+        p.play(point, color);
         print!("{:?}", &p);
     }
 }
