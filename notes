@@ -1,0 +1,43 @@
+
+Old, maybe faster algorithm for updating the chains after adding a newly-placed stone to the board:
+
+        // Create a sorted, de-dupped list of all the ID's of the same-colored
+        // chains this move was adjacent to (there can be zero or more of these).
+
+        //let mut adjacent_chain_ids: Vec<usize> =
+            //self.board.neighbor_lists[point].iter()
+                //.filter(|&&n| self.board_state[n] == color)
+                //.map(|&n| self.chain_id_backref[n])
+                //.collect();
+
+        //adjacent_chain_ids.sort();
+        //adjacent_chain_ids.dedup();
+
+        // If there were no chains adjacent to this move, get a fresh chain ID
+        // and consider the move "adjacent" to that chain.
+
+        //let dest_chain = match adjacent_chain_ids.len() {
+            //0 => self.fresh_chain_id(color),
+            //_ => adjacent_chain_ids.swap_remove(0),
+        //};
+
+        // Put this stone on the board; push it onto the destination chain.
+
+        //self.board_state[point] = color;
+        //self.chains[color as usize][dest_chain].push(point);
+
+        // Drain all the other chains in the list into the first one.
+
+        //let mut temp = Vec::<usize>::new();
+
+        //for chain_id in adjacent_chain_ids {
+            //temp.append(&mut self.chains[color as usize][chain_id]);
+            //self.chains[color as usize][dest_chain].append(&mut temp);
+        //}
+
+        // ...and update the backref for all points in this chain.
+
+        //for point in &self.chains[color as usize][dest_chain] { 
+            //self.chain_id_backref[*point] = dest_chain;
+        //}
+

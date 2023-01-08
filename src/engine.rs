@@ -187,25 +187,37 @@ impl Position<'_> {
         let color = self.board_state[point];
         let id = self.fresh_chain_id(color);
         self.chains[color as usize][id].push(point);
+        self.chain_id_backref[point] = id;
+
+        println!("Seeding chain at {} (color is {}, id is {})", 
+                 point, color as usize, id);
 
         let mut next = 0;
 
         while next < self.chains[color as usize][id].len() {
             let point = self.chains[color as usize][id][next];
 
-            for neighbor in self.board.neighbor_lists[point].iter() {
-                if self.board_state[*neighbor] == color {
-                    let current_chain = self.chain_id_backref[*neighbor];
+            println!("  Visiting point {}", point);
+
+            for &neighbor in self.board.neighbor_lists[point].iter() {
+                println!("    Neighbor: {}", neighbor);
+
+                if self.board_state[neighbor] == color {
+                    println!("      Same color...");
+
+                    let current_chain = self.chain_id_backref[neighbor];
 
                     if current_chain != id {
+                        println!("      Currently in different chain: {}", current_chain);
+
                         let index =
                             self.chains[color as usize][current_chain].iter()
                             .position(|x| *x == point)
                             .expect("Stone missing from chain");
 
                         self.chains[color as usize][current_chain].swap_remove(index);
-                        self.chains[color as usize][id].push(*neighbor);
-                        self.chain_id_backref[*neighbor] = id;
+                        self.chains[color as usize][id].push(neighbor);
+                        self.chain_id_backref[neighbor] = id;
                     }
                 }
             }
@@ -239,52 +251,29 @@ impl Position<'_> {
 
         let bubble_id = self.chain_id_backref[point];
 
-        // Create a sorted, de-dupped list of all the ID's of the same-colored
-        // chains this move was adjacent to (there can be zero or more of these).
-
-        let mut adjacent_chain_ids: Vec<usize> =
-            self.board.neighbor_lists[point].iter()
-                .filter(|&&n| self.board_state[n] == color)
-                .map(|&n| self.chain_id_backref[n])
-                .collect();
-
-        adjacent_chain_ids.sort();
-        adjacent_chain_ids.dedup();
-
-        // If there were no chains adjacent to this move, get a fresh chain ID
-        // and consider the move "adjacent" to that chain.
-
-        let dest_chain = match adjacent_chain_ids.len() {
-            0 => self.fresh_chain_id(color),
-            _ => adjacent_chain_ids.swap_remove(0),
-        };
-
-        // Put this stone on the board; push it onto the destination chain.
-
+        // Place the stone and seed a new chain from it. This will merge any
+        // existing chains that are adjacent to the point it was played at.
+        
         self.board_state[point] = color;
-        self.chains[color as usize][dest_chain].push(point);
-
-        // Drain all the other chains in the list into the first one.
-
-        let mut temp = Vec::<usize>::new();
-
-        for chain_id in adjacent_chain_ids {
-            temp.append(&mut self.chains[color as usize][chain_id]);
-            self.chains[color as usize][dest_chain].append(&mut temp);
-        }
-
-        // ...and update the backref for all points in this chain.
-
-        for point in &self.chains[color as usize][dest_chain] { 
-            self.chain_id_backref[*point] = dest_chain;
-        }
+        self.seed_chain(point);
 
         // This move may be splitting the bubble it was played in into multiple
-        // parts. For each empty point adjacent to the move, we will generate a
-        // new empty chain seeded by that point. If a point gets covered
+        // parts. For each empty point adjacent to the move, we will seed a new
+        // empty chain on that point. If an adjacent point is grabbed by the
+        // seeding process initiated by a previous adjacent point, we do not
+        // need to seed a new chain there.
 
-        
-
+        for &neighbor in self.board.neighbor_lists[point].iter() {
+            if self.chain_id_backref[neighbor] == bubble_id {
+                self.seed_chain(neighbor);
+            }
+        }
     }
 }
+
+
+
+
+
+
 
