@@ -132,9 +132,9 @@ impl fmt::Debug for Position<'_> {
             write!(f, "\n")?;
         }
 
-        writeln!(f, "  empty chains: {:?}", self.chains[Empty as usize])?;
-        writeln!(f, "  black chains: {:?}", self.chains[Black as usize])?;
-        writeln!(f, "  white chains: {:?}", self.chains[White as usize])?;
+        //writeln!(f, "  empty chains: {:?}", self.chains[Empty as usize])?;
+        //writeln!(f, "  black chains: {:?}", self.chains[Black as usize])?;
+        //writeln!(f, "  white chains: {:?}", self.chains[White as usize])?;
         Ok(())
     }
 }
@@ -177,9 +177,11 @@ impl Position<'_> {
         self.chains[color as usize][id].swap_remove(index);
     }
 
-    // Create a new chain by applying the bucket-fill algorithm starting at a
-    // given point. Every time you add a point to the new chain, remove it from
-    // the chain it started in and update the backref.
+    // Create a new chain by setting a given point equal to a given color and
+    // then applying the bucket-fill algorithm starting there. Each time you
+    // add a point to the new chain, remove it from the chain it started in
+    // and update the backref. The new chain's ID is guaranteed not to be equal
+    // to any ID that was in use at the moment the method was called.
 
     fn seed_chain(&mut self, point: usize, color: Color) -> usize {
         let id = self.fresh_chain_id(color);
@@ -191,26 +193,26 @@ impl Position<'_> {
         self.chain_id_backref[point] = id;
         self.board_state[point] = color;
 
-        println!("Seeding chain at {} (color is {}, id is {})", 
-                 point, color as usize, id);
+        //println!("Seeding chain at {} (color is {}, id is {})", 
+                 //point, color as usize, id);
 
         let mut next = 0;
 
         while next < self.chains[color as usize][id].len() {
             let point = self.chains[color as usize][id][next];
 
-            println!("  Visiting point {}", point);
+            //println!("  Visiting point {}", point);
 
             for &neighbor in self.board.neighbor_lists[point].iter() {
-                println!("    Neighbor: {}", neighbor);
+                //println!("    Neighbor: {}", neighbor);
 
                 if self.board_state[neighbor] == color {
-                    println!("      Same color...");
+                    //println!("      Same color...");
 
                     let current_chain = self.chain_id_backref[neighbor];
 
                     if current_chain != id {
-                        println!("      Currently in different chain: {}", current_chain);
+                        //println!("      Currently in different chain: {}", current_chain);
 
                         self.remove_from_chain(color, current_chain, neighbor);
                         self.chains[color as usize][id].push(neighbor);
@@ -253,7 +255,7 @@ impl Position<'_> {
         
         self.seed_chain(point, color);
 
-        print!("{:?}", self);
+        //print!("{:?}", self);
 
         // This move may be splitting the bubble it was played in into multiple
         // parts. For each empty point adjacent to the move, we will seed a new
