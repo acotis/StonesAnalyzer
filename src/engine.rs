@@ -227,20 +227,26 @@ impl Position<'_> {
         id
     }
 
-    // board_state
-    // chains
-    // chain_id_backref
-    //
-    //   1. Place stone.
-    //      - Add to board.
-    //      - Add to adjacent chain and merge chains; update backref.
-    //      - Split bubbles; update backref.
-    //   2. Capture opponent.
-    //      - Remove from board.
-    //      - Empty captured chains; update backref.
-    //      - Merge bubbles; update backref.
-    //   3. Capture self.
-    //
+    pub fn capture(&mut self, color: Color) {
+        for id in 0..self.chains[color as usize].len() {
+            if !self.chains[color as usize][id].is_empty() &&
+               !self.chains[color as usize][id].iter()
+                    .any(|&n| self.board.neighbor_lists[n].iter()
+                                   .any(|&n| self.board_state[n] == Empty)) {
+
+                let temp_bubble_id = self.fresh_chain_id(Empty);
+                for &point in self.chains[color as usize][id].iter() {
+                    self.remove_from_chain(color, id, point);
+
+                    self.board_state[point] = Empty;
+                    self.chain_id_backref[point] = temp_bubble_id;
+                    self.chains[color as usize][temp_bubble_id].push(point);
+                }
+
+                self.seed_chain(self.chains[color as usize][id][0], Empty);
+            }
+        }
+    }
 
     pub fn play(&mut self, point: usize, color: Color) {
         assert!(color != Empty);
@@ -253,6 +259,7 @@ impl Position<'_> {
         // Place the stone and seed a new chain from it. This will merge any
         // existing chains that are adjacent to the point it was played at.
         
+        println!("play(): calling seed_chain({}, {})", point, color as usize);
         self.seed_chain(point, color);
 
         //print!("{:?}", self);
@@ -267,15 +274,20 @@ impl Position<'_> {
             if self.board_state[neighbor] == Empty &&
                 self.chain_id_backref[neighbor] == bubble_id {
 
+                println!("play(): calling seed_chain({}, {})", neighbor, Empty as usize);
                 self.seed_chain(neighbor, Empty);
             }
         }
+
+        // Perform captures.
+        
+        let opposite_color = match color {Black => White, White => Black, _ => panic!()};
+
+        println!("play(): calling capture({})", opposite_color as usize);
+        self.capture(opposite_color);
+
+        println!("play(): calling capture({})", color as usize);
+        self.capture(color);
     }
 }
-
-
-
-
-
-
 
