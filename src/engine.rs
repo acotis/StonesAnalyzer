@@ -183,7 +183,7 @@ impl Position<'_> {
     // given point. Every time you add a point to the new chain, remove it from
     // the chain it started in and update the backref.
 
-    fn create_chain_bucketfill(&mut self, point: usize) -> usize {
+    fn seed_chain(&mut self, point: usize) -> usize {
         let color = self.board_state[point];
         let id = self.fresh_chain_id(color);
         self.chains[color as usize][id].push(point);
