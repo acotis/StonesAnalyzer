@@ -259,9 +259,7 @@ impl Position<'_> {
 
         //println!("play(): Seeding bubbles");
         for &neighbor in self.board.neighbor_lists[point].iter() {
-            if self.board_state[neighbor] == Empty &&
-                self.chain_id_backref[neighbor] == bubble_id {
-
+            if self.chain_id_backref[neighbor] == bubble_id {
                 self.seed_chain(neighbor);
             }
         }

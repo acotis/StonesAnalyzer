@@ -10,7 +10,7 @@ use engine::Position;
 use boards::*;
 
 fn main() {
-    let board = make_rectangular_board(6, 1);
+    let board = make_rectangular_board(6, 2);
     let mut p: Position = board.empty_position();
 
     println!("Original board state");
@@ -20,6 +20,7 @@ fn main() {
         (Black, 3),
         (White, 2),
         (White, 4),
+        (White, 9),
     ];
 
     for (color, point) in program {
