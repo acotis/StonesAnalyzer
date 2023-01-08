@@ -14,7 +14,9 @@ pub enum Color {Empty = 0, Black, White}
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
-    connectivity_matrix: Vec<Vec<bool>>
+    connectivity_matrix: Vec<Vec<bool>>,
+
+    tui_layout: Vec<(usize, usize)>, // debug only
 }
 
 impl fmt::Debug for Board {
@@ -30,11 +32,20 @@ impl fmt::Debug for Board {
 }
 
 impl Board {
+    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
+        self.tui_layout = tui_layout;
+    }
+}
+
+impl Board {
     pub fn new(point_count: usize, connections: Vec<(usize, usize)>) -> Board {
         let mut board = Board {
             point_count: point_count,
             neighbor_lists: vec![vec![]; point_count],
-            connectivity_matrix: vec![vec![false; point_count]; point_count]
+            connectivity_matrix: vec![vec![false; point_count]; point_count],
+
+            // debug only
+            tui_layout: (0..point_count).map(|n| (n, 0)).collect(),
         };
 
         for connection in connections.iter() {
@@ -72,8 +83,6 @@ impl Board {
             chain_id_backref: vec![0; self.point_count],
             chains: [vec![(0..self.point_count).collect()],
                      vec![vec![]; self.point_count]].concat(),
-            // debug only
-            tui_layout: (0..self.point_count).map(|n| (n, 0)).collect(),
         }
 
         // Note that we create one more chain ID than the number of points on the
@@ -92,9 +101,6 @@ pub struct Position<'a> {
     board_state: Vec<Color>,
     chains: Vec<Vec<usize>>,
     chain_id_backref: Vec<usize>,
-
-    // dbug only
-    tui_layout: Vec<(usize, usize)>,
 }
 
 impl Index<usize> for Position<'_> {
@@ -104,8 +110,8 @@ impl Index<usize> for Position<'_> {
 
 impl fmt::Debug for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
-        let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
+        let str_width  = self.board.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
+        let str_height = self.board.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
         let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
 
         for (i, &point) in self.board_state.iter().enumerate() {
@@ -116,7 +122,7 @@ impl fmt::Debug for Position<'_> {
                     _ => '?',
                 });
 
-            pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
+            pretty[self.board.tui_layout[i].1][self.board.tui_layout[i].0] =
                 match self.board_state[i] {
                     Empty => string.truecolor(80, 30, 10).italic(),
                     Black => string.truecolor(0, 0, 0).bold(),
@@ -133,12 +139,6 @@ impl fmt::Debug for Position<'_> {
 
         writeln!(f, "chains: {:?}", self.chains)?;
         Ok(())
-    }
-}
-
-impl Position<'_> {
-    pub fn set_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
-        self.tui_layout = tui_layout;
     }
 }
 
@@ -168,7 +168,7 @@ impl Position<'_> {
         self.chains[id].swap_remove(index);
     }
 
-    // Use the bucketfill algorithm to create a chain from a given seen point.
+    // Use the bucketfill algorithm to create a chain from a given seed point.
     // Each time you add a point to the new chain, remove it from the chain it
     // started in and update the backref. The ID of the new chain is guaranteed
     // to be unequal to that of any chain that existed when the method was called.
