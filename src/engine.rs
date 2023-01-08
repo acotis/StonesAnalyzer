@@ -162,6 +162,10 @@ impl Position<'_> {
 }
 
 impl Position<'_> {
+
+    // Return the ID of a currently unused chain vector of the given color. If
+    // there is no such vector, create one and return its ID.
+
     fn fresh_chain_id(&mut self, color: Color) -> usize {
         match self.chains[color as usize].iter()
                   .enumerate()
@@ -175,6 +179,10 @@ impl Position<'_> {
         }
     }
 
+    // Create a new chain by applying the bucket-fill algorithm starting at a
+    // given point. Every time you add a point to the new chain, remove it from
+    // the chain it started in and update the backref.
+
     fn create_chain_bucketfill(&mut self, point: usize) -> usize {
         let color = self.board_state[point];
         let id = self.fresh_chain_id(color);
@@ -187,8 +195,17 @@ impl Position<'_> {
 
             for neighbor in self.board.neighbor_lists[point].iter() {
                 if self.board_state[*neighbor] == color {
-                    if !self.chains[color as usize][id].contains(neighbor) {
+                    let current_chain = self.chain_id_backref[*neighbor];
+
+                    if current_chain != id {
+                        let index =
+                            self.chains[color as usize][current_chain].iter()
+                            .position(|x| *x == point)
+                            .expect("Stone missing from chain");
+
+                        self.chains[color as usize][current_chain].swap_remove(index);
                         self.chains[color as usize][id].push(*neighbor);
+                        self.chain_id_backref[*neighbor] = id;
                     }
                 }
             }
@@ -239,8 +256,8 @@ impl Position<'_> {
 
         let dest_chain = match adjacent_chain_ids.len() {
             0 => self.fresh_chain_id(color),
-            _ => adjacent_chain_ids.remove_swap(0);
-        }
+            _ => adjacent_chain_ids.swap_remove(0),
+        };
 
         // Put this stone on the board; push it onto the destination chain.
 
@@ -263,7 +280,8 @@ impl Position<'_> {
         }
 
         // This move may be splitting the bubble it was played in into multiple
-        // parts. 
+        // parts. For each empty point adjacent to the move, we will generate a
+        // new empty chain seeded by that point. If a point gets covered
 
         
 
