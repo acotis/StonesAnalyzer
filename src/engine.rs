@@ -105,44 +105,24 @@ impl Index<usize> for Position<'_> {
 
 impl fmt::Debug for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut empty_colors = vec![String::from("white"); self.chains[Empty as usize].len()];
-        let mut black_colors = vec![String::from("white"); self.chains[Black as usize].len()];
-        let mut white_colors = vec![String::from("white"); self.chains[White as usize].len()];
-
-        let mut colors = vec!["red", "green", "bright blue", "magenta", "yellow", "cyan",
-                              "bright red", "bright green", "blue",
-                              "bright magenta", "bright yellow", "bright cyan"];
-
-        for id in 0..self.chains[Empty as usize].len() {
-            if (!self.chains[Empty as usize][id].is_empty()) && (!colors.is_empty()) {
-                empty_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-        for id in 0..self.chains[Black as usize].len() {
-            if (!self.chains[Black as usize][id].is_empty()) && (!colors.is_empty()) {
-                black_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-        for id in 0..self.chains[White as usize].len() {
-            if (!self.chains[White as usize][id].is_empty()) && (!colors.is_empty()) {
-                white_colors[id] = colors[0].to_string();
-                colors.remove(0);
-            }
-        }
-
         let str_width  = self.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
         let str_height = self.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
         let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
 
         for (i, &point) in self.board_state.iter().enumerate() {
+            let string = 
+                String::from(match self.chain_id_backref[i] {
+                    0..=9 => char::from_u32((self.chain_id_backref[i] + 48) as u32).unwrap(),
+                    10.. => char::from_u32((self.chain_id_backref[i] - 10 + 97) as u32).unwrap(),
+                    _ => '?',
+                });
+
             pretty[self.tui_layout[i].1][self.tui_layout[i].0] =
-                match point {
-                    Empty => String::from("-").color(&*empty_colors[self.chain_id_backref[i]]),
-                    Black => String::from("x").color(&*black_colors[self.chain_id_backref[i]]),
-                    White => String::from("o").color(&*white_colors[self.chain_id_backref[i]]),
-                };
+                match self.board_state[i] {
+                    Empty => string.truecolor(80, 30, 10).italic(),
+                    Black => string.truecolor(0, 0, 0).bold(),
+                    White => string.truecolor(255, 255, 255).bold(),
+                }.on_truecolor(212, 140, 30);
         }
 
         for line in pretty {
