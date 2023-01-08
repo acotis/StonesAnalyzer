@@ -131,6 +131,10 @@ impl fmt::Debug for Position<'_> {
             }
             write!(f, "\n")?;
         }
+
+        writeln!(f, "  empty chains: {:?}", self.chains[Empty as usize])?;
+        writeln!(f, "  black chains: {:?}", self.chains[Black as usize])?;
+        writeln!(f, "  white chains: {:?}", self.chains[White as usize])?;
         Ok(())
     }
 }
@@ -159,15 +163,33 @@ impl Position<'_> {
         }
     }
 
+    // Remove a given point from a given chain. Panics if the point is not
+    // in that chain.
+
+    fn remove_from_chain(&mut self, color: Color, id: usize, point: usize) {
+        //println!("remove_from_chain({}, {}, {})", color as usize, id, point);
+
+        let index =
+            self.chains[color as usize][id].iter()
+            .position(|x| *x == point)
+            .expect("Stone missing from chain");
+
+        self.chains[color as usize][id].swap_remove(index);
+    }
+
     // Create a new chain by applying the bucket-fill algorithm starting at a
     // given point. Every time you add a point to the new chain, remove it from
     // the chain it started in and update the backref.
 
-    fn seed_chain(&mut self, point: usize) -> usize {
-        let color = self.board_state[point];
+    fn seed_chain(&mut self, point: usize, color: Color) -> usize {
         let id = self.fresh_chain_id(color);
+
+        self.remove_from_chain(self.board_state[point],
+                               self.chain_id_backref[point],
+                               point);
         self.chains[color as usize][id].push(point);
         self.chain_id_backref[point] = id;
+        self.board_state[point] = color;
 
         println!("Seeding chain at {} (color is {}, id is {})", 
                  point, color as usize, id);
@@ -190,12 +212,7 @@ impl Position<'_> {
                     if current_chain != id {
                         println!("      Currently in different chain: {}", current_chain);
 
-                        let index =
-                            self.chains[color as usize][current_chain].iter()
-                            .position(|x| *x == point)
-                            .expect("Stone missing from chain");
-
-                        self.chains[color as usize][current_chain].swap_remove(index);
+                        self.remove_from_chain(color, current_chain, neighbor);
                         self.chains[color as usize][id].push(neighbor);
                         self.chain_id_backref[neighbor] = id;
                     }
@@ -234,8 +251,9 @@ impl Position<'_> {
         // Place the stone and seed a new chain from it. This will merge any
         // existing chains that are adjacent to the point it was played at.
         
-        self.board_state[point] = color;
-        self.seed_chain(point);
+        self.seed_chain(point, color);
+
+        print!("{:?}", self);
 
         // This move may be splitting the bubble it was played in into multiple
         // parts. For each empty point adjacent to the move, we will seed a new
@@ -244,8 +262,10 @@ impl Position<'_> {
         // need to seed a new chain there.
 
         for &neighbor in self.board.neighbor_lists[point].iter() {
-            if self.chain_id_backref[neighbor] == bubble_id {
-                self.seed_chain(neighbor);
+            if self.board_state[neighbor] == Empty &&
+                self.chain_id_backref[neighbor] == bubble_id {
+
+                self.seed_chain(neighbor, Empty);
             }
         }
     }

@@ -12,13 +12,13 @@ fn main() {
     let mut p: Position = board.empty_position();
 
     println!("Original board state");
-    println!("{:?}", p);
+    print!("{:?}", p);
 
     for &point in [3, 4, 5, 7, 9, 11, 13].iter() {
         println!("=================");
         println!("Playing move at {}", point);
         p.play(point, Black);
-        println!("{:?}", &p);
+        print!("{:?}", &p);
     }
 }
 
