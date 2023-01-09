@@ -9,7 +9,9 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     let mut position = board.empty_position();
     position.play(2, Black);
-    position.play(5, White);
+    position.play(3, White);
+    position.play(4, White);
+    position.play(5, Black);
 
     // Compute the arbitrary-units stone size as half the minimum distance between
     // any two points.
@@ -59,8 +61,15 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
-            if event == Event::Closed {
-                window.close();
+            match event {
+                Event::Closed => {window.close();},
+                Event::Resized {width, height} => {
+                    println!("width and height are {} and {}", width, height);
+                    window.set_view(
+                        &View::from_rect(
+                            &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
+                }
+                _ => {}
             }
         }
 
@@ -106,10 +115,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         //&[Vertex::with_pos_color(Vector2::new(300.0, 300.0), line_color),
                           //Vertex::with_pos_color(Vector2::new(400.0, 400.0), line_color)];
 
-                    println!("{:?}", vertices);
-                    println!("{:?}", vertex_buffer.update(vertices, 0));
+                    //println!("{:?}", vertices);
+                    //println!("{:?}", vertex_buffer.update(vertices, 0));
                     //println!("{:?}", vertex_buffer);
 
+                    vertex_buffer.update(vertices, 0);
                     window.draw(&vertex_buffer);
                 }
             }
