@@ -57,21 +57,13 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     );
     window.set_framerate_limit(60);
 
+    // Track the closest point to the mouse.
+
+    let mut closest_point_to_mouse: Option<usize> = None;
+
     // Event loop.
 
     while window.is_open() {
-        while let Some(event) = window.poll_event() {
-            match event {
-                Event::Closed => {window.close();},
-                Event::Resized {width, height} => {
-                    println!("width and height are {} and {}", width, height);
-                    window.set_view(
-                        &View::from_rect(
-                            &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
-                }
-                _ => {}
-            }
-        }
 
         // From the size of the window and the arbitrary-units layout, compute the
         // layout in pixels.
@@ -93,6 +85,42 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                       .collect(),
              au_stone_size * squish_factor)
         };
+
+        // Handle events.
+
+        while let Some(event) = window.poll_event() {
+            match event {
+                // Close event: close the window.
+
+                Event::Closed => {window.close();}
+
+                // Resize event: update the "view" of the window.
+
+                Event::Resized {width, height} => {
+                    println!("Resize: width and height are {} and {}", width, height);
+                    window.set_view(
+                        &View::from_rect(
+                            &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
+                }
+
+                // MouseMoved event: update closest_point_to_mouse.
+
+                Event::MouseMoved {x, y} => {
+                    println!("Mouse moved: x and y are {} and {}", x, y);
+                    
+                    closest_point_to_mouse = None;
+                    for (i, point) in layout.iter().enumerate() {
+                        if (point.0 - x as f32).hypot(point.1 - y as f32) <= stone_size {
+                            closest_point_to_mouse = Some(i);
+                        }
+                    }
+                }
+
+                // Other events: ignore.
+
+                _ => {}
+            }
+        }
 
         // Draw the board background.
         
@@ -132,9 +160,24 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             if color == Empty {continue;}
 
             let mut cs = CircleShape::new(stone_size, 50);
-            cs.set_position(Vector2::new(layout[i].0 - stone_size, layout[i].1 - stone_size));
+            cs.set_position(Vector2::new(layout[i].0 - stone_size,
+                                         layout[i].1 - stone_size));
             cs.set_fill_color(if color == Black {Color::BLACK} else {Color::WHITE});
             window.draw(&cs);
+        }
+
+        // Draw the outline of the point the user is mousing over.
+        
+        if let Some(cptm) = closest_point_to_mouse {
+            if position[cptm] == Empty {
+                let mut cs = CircleShape::new(stone_size - 1.0, 50);
+                cs.set_position(Vector2::new(layout[cptm].0 - stone_size,
+                                             layout[cptm].1 - stone_size));
+                cs.set_fill_color(Color::TRANSPARENT);
+                cs.set_outline_color(Color::BLACK);
+                cs.set_outline_thickness(1.0);
+                window.draw(&cs);
+            }
         }
 
         window.set_active(true);
