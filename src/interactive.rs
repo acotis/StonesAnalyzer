@@ -3,8 +3,13 @@ use sfml::window::*;
 use sfml::graphics::*;
 use sfml::system::*;
 use crate::engine::Board;
+use crate::engine::Color::*;
 
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
+
+    let mut position = board.empty_position();
+    position.play(2, Black);
+    position.play(5, White);
 
     // Compute the arbitrary-units stone size as half the minimum distance between
     // any two points.
@@ -62,7 +67,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         // From the size of the window and the arbitrary-units layout, compute the
         // layout in pixels.
 
-        let layout: Vec<(f32, f32)> = {
+        let (layout, stone_size): (Vec<(f32, f32)>, f32) = {
             let win_w = window.size().x as f32;
             let win_h = window.size().y as f32;
 
@@ -73,10 +78,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             let offset_w = (win_w - au_width  * squish_factor) / 2.0;
             let offset_h = (win_h - au_height * squish_factor) / 2.0;
 
-            au_layout.iter()
-                     .map(|(x, y)| ((x - au_left) * squish_factor + offset_w,
+            (au_layout.iter()
+                      .map(|(x, y)| ((x - au_left) * squish_factor + offset_w,
                                     (y - au_top ) * squish_factor + offset_h))
-                     .collect()
+                      .collect(),
+             au_stone_size * squish_factor)
         };
 
         // Draw the board background.
@@ -109,10 +115,17 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             }
         }
 
-        // Draw a test circle
-        
-        let cs = CircleShape::new(100.0, 50);
-        //window.draw(&cs);
+        // Draw the stones currently on the board.
+
+        for i in 0..board.point_count() {
+            let color = position[i];
+            if color == Empty {continue;}
+
+            let mut cs = CircleShape::new(stone_size, 50);
+            cs.set_position(Vector2::new(layout[i].0 - stone_size, layout[i].1 - stone_size));
+            cs.set_fill_color(if color == Black {Color::BLACK} else {Color::WHITE});
+            window.draw(&cs);
+        }
 
         window.set_active(true);
         window.display();
