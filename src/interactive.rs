@@ -2,16 +2,13 @@
 use sfml::window::*;
 use sfml::graphics::*;
 use sfml::system::*;
+use sfml::window::mouse::Button::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
 
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     let mut position = board.empty_position();
-    position.play(2, Black);
-    position.play(3, White);
-    position.play(4, White);
-    position.play(5, Black);
 
     // Compute the arbitrary-units stone size as half the minimum distance between
     // any two points.
@@ -106,12 +103,29 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // MouseMoved event: update closest_point_to_mouse.
 
                 Event::MouseMoved {x, y} => {
-                    println!("Mouse moved: x and y are {} and {}", x, y);
+                    //println!("Mouse moved: x and y are {} and {}", x, y);
                     
                     closest_point_to_mouse = None;
                     for (i, point) in layout.iter().enumerate() {
                         if (point.0 - x as f32).hypot(point.1 - y as f32) <= stone_size {
                             closest_point_to_mouse = Some(i);
+                        }
+                    }
+                }
+
+                // MouseButtonPressed event: play a stone at the given point.
+
+                Event::MouseButtonPressed {button, x, y} => {
+                    println!("Mouse button pressed: button is {:?}, x and y are {} and {}",
+                             button, x, y);
+
+                    if let Some(cptm) = closest_point_to_mouse {
+                        if position[cptm] == Empty {
+                            match button {
+                                Left  => {position.play(cptm, Black)}
+                                Right => {position.play(cptm, White)}
+                                _ => {}
+                            }
                         }
                     }
                 }
