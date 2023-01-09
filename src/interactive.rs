@@ -13,9 +13,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         let mut auss: f32 = 0.0;
         for point_a in &au_layout {
             for point_b in &au_layout {
-                if point_a == point_b {continue;}
-                auss = f32::min(auss, (point_a.0 - point_b.0)
-                                .hypot(point_a.1 - point_b.1));
+                let hypot = (point_a.0 - point_b.0).hypot(point_a.1 - point_b.1);
+
+                if hypot > 0.0 || auss == 0.0 {
+                    auss = hypot;
+                }
             }
         }
         auss / 2.0
@@ -35,8 +37,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     // Display settings.
 
     let border: f32 = 20.0;
-    let board_color = Color {r: 212, g: 140, b: 30, a: 0};
-    let line_color  = Color {r: 0, g: 0, b: 0, a: 0};
+    let board_color = Color {r: 212, g: 140, b: 30, a: 255};
+    let line_color  = Color {r: 0, g: 0, b: 0, a: 255};
 
     // Create the RenderWindow.
 
@@ -86,22 +88,31 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         for i in 0..board.point_count() {
             for j in 0..board.point_count() {
                 if board.is_connected(i, j) {
-                    println!("{:?} {:?}", layout[i], layout[j]);
-                    println!("{}", VertexBuffer::available());
 
                     let mut vertex_buffer = VertexBuffer::new(
-                        PrimitiveType::LINES, 3, VertexBufferUsage::STATIC);
+                        PrimitiveType::LINE_STRIP, 2, VertexBufferUsage::STATIC);
 
-                    vertex_buffer.update(
-                        &[Vertex::with_pos_color(Vector2::new(layout[i].0, layout[i].1), line_color),
-                          Vertex::with_pos_color(Vector2::new(layout[j].0, layout[j].1), line_color)],
-                        0);
+                    let vertices = 
+                        &[Vertex::with_pos_color(Vector2::new(layout[i].0, layout[i].1), Color::BLACK),
+                          Vertex::with_pos_color(Vector2::new(layout[j].0, layout[j].1), Color::BLACK)];
+
+                    //let vertices = 
+                        //&[Vertex::with_pos_color(Vector2::new(300.0, 300.0), line_color),
+                          //Vertex::with_pos_color(Vector2::new(400.0, 400.0), line_color)];
+
+                    println!("{:?}", vertices);
+                    println!("{:?}", vertex_buffer.update(vertices, 0));
+                    //println!("{:?}", vertex_buffer);
 
                     window.draw(&vertex_buffer);
                 }
             }
         }
 
+        // Draw a test circle
+        
+        let cs = CircleShape::new(100.0, 50);
+        //window.draw(&cs);
 
         window.set_active(true);
         window.display();
