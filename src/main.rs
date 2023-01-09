@@ -32,7 +32,7 @@ fn main() {
         print!("{:?}", &p);
     }
 
-    let mut window = Window::new((800, 600), "Window", Style::NONE, &Default::default());
+    let mut window = Window::new((800, 600), "Window", Style::DEFAULT, &Default::default());
     window.set_framerate_limit(60);
 
     while window.is_open() {
