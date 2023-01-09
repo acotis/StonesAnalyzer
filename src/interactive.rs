@@ -150,8 +150,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         PrimitiveType::LINE_STRIP, 2, VertexBufferUsage::STATIC);
 
                     let vertices = 
-                        &[Vertex::with_pos_color(Vector2::new(layout[i].0, layout[i].1), Color::BLACK),
-                          Vertex::with_pos_color(Vector2::new(layout[j].0, layout[j].1), Color::BLACK)];
+                        &[Vertex::with_pos_color(Vector2::new(layout[i].0, layout[i].1), line_color),
+                          Vertex::with_pos_color(Vector2::new(layout[j].0, layout[j].1), line_color)];
 
                     //let vertices = 
                         //&[Vertex::with_pos_color(Vector2::new(300.0, 300.0), line_color),

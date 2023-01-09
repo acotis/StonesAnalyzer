@@ -114,7 +114,7 @@ impl fmt::Debug for Position<'_> {
         let str_height = self.board.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
         let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
 
-        for (i, &point) in self.board_state.iter().enumerate() {
+        for (i, _) in self.board_state.iter().enumerate() {
             let string = 
                 String::from(match self.chain_id_backref[i] {
                     0..=9 => char::from_u32((self.chain_id_backref[i] + 48) as u32).unwrap(),

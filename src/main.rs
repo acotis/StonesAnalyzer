@@ -6,7 +6,6 @@ mod boards;
 mod interactive;
 
 use engine::Color::*;
-use engine::Board;
 use engine::Position;
 use boards::*;
 use interactive::*;
