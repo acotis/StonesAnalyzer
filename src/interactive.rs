@@ -107,7 +107,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     
                     closest_point_to_mouse = None;
                     for (i, point) in layout.iter().enumerate() {
-                        if (point.0 - x as f32).hypot(point.1 - y as f32) <= stone_size {
+                        if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
                             closest_point_to_mouse = Some(i);
                         }
                     }

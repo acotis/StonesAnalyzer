@@ -217,7 +217,7 @@ impl Position<'_> {
 
     // Capture all surrounded chains of a given color.
 
-    pub fn capture(&mut self, color: Color) {
+    fn capture(&mut self, color: Color) {
         for id in 0..self.chains.len() {
             if self.chains[id].is_empty() {continue;}
             if self.board_state[self.chains[id][0]] != color {continue;}
@@ -233,6 +233,30 @@ impl Position<'_> {
             self.seed_chain(self.chains[id][0]);
         }
     }
+
+    // Check whether a given chain has another chain as a foot (a bubble whose
+    // every point is a liberty of the chain).
+
+    fn check_if_foot(&self, chain_id: usize, bubble_id: usize) -> bool {
+        if self.chains[bubble_id].is_empty() {return false;}
+        if self[self.chains[bubble_id][0]] != Empty {return false;}
+
+        self.chains[bubble_id].iter()
+            .all(|&point| self.board.neighbor_lists[point].iter()
+                          .any(|&neighbor| self.chain_id_backref[neighbor] == chain_id))
+    }
+
+    // Check whether a given chain has two feet.
+
+    //fn check_if_protected(&self, chain_id: usize) {
+        //let neighbors = 
+            //self.chains[chain_id].iter()
+                //.map(|&point| &self.board.neighbor_lists[point])
+                //.collect::<&Vec<usize>>().concat();
+
+    //}
+
+    // Play a stone of a given color at a given point.
 
     pub fn play(&mut self, point: usize, color: Color) {
         assert!(color != Empty);
