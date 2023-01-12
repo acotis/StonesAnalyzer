@@ -215,10 +215,10 @@ impl Position<'_> {
         id
     }
 
-    // Capture a given chain (i.e. set all its points to empty and update the
+    // Remove a given chain (i.e. set all its points to empty and update the
     // chain list).
 
-    fn capture_chain(&mut self, id: usize) {
+    fn remove_chain(&mut self, id: usize) {
         assert!(!self.chains[id].is_empty());
 
         for &point in self.chains[id].iter() {
@@ -239,15 +239,13 @@ impl Position<'_> {
                    .any(|&n| self.board.neighbor_lists[n].iter()
                                  .any(|&n| self.board_state[n] == Empty)) {continue;}
 
-            self.capture_chain(id);
+            self.remove_chain(id);
         }
     }
 
     // Check whether a given chain has another chain as a foot (a bubble whose
-    // every point is a liberty of the chain).
-
-    // TODO: This is completely incorrectly thought out, bubbles are not feet.
-    // Complement regions are feet.
+    // every point is a liberty of the chain). This only means anything after
+    // clearing all chains of the *opposite* color off the board.
 
     fn check_if_foot(&self, chain_id: usize, bubble_id: usize) -> bool {
         if self.chains[bubble_id].is_empty() {return false;}
@@ -258,7 +256,8 @@ impl Position<'_> {
                           .any(|&neighbor| self.chain_id_backref[neighbor] == chain_id))
     }
 
-    // Check whether a given chain has two feet.
+    // Check whether a given chain has two feet. This only means anything after
+    // clearing all chains of the *opposite* color off the board.
 
     fn check_if_protected(&self, chain_id: usize) -> bool {
         let mut adjacent_bubbles = Vec::<usize>::new();
@@ -286,6 +285,43 @@ impl Position<'_> {
         }
 
         return false;
+    }
+
+    // Clear all chains of a given color off the board.
+
+    fn clear_color(&mut self, color: Color) {
+        let chains_to_clear: Vec<usize> = 
+            (0..self.chains.len())
+                .filter(|&n| !self.chains[n].is_empty() && 
+                        self.board_state[self.chains[n][0]] == color)
+                .collect();
+
+        for chain in chains_to_clear {
+            self.remove_chain(chain);
+        }
+    }
+
+    // Keep only immortal chains of a given color.
+
+    pub fn keep_only_immortal(&mut self, color: Color) {
+        self.clear_color(match color {Black => White, White => Black, Empty => panic!()});
+        
+        loop {
+            let to_clear: Vec<usize> =
+                (0..self.chains.len())
+                .filter(|&n| !self.chains[n].is_empty() &&
+                        self.board_state[self.chains[n][0]] == color &&
+                        !self.check_if_protected(n))
+                .collect();
+
+            if to_clear.is_empty() {
+                break;
+            }
+
+            for chain in to_clear {
+                self.remove_chain(chain);
+            }
+        }
     }
 
     // Play a stone of a given color at a given point.
@@ -329,12 +365,6 @@ impl Position<'_> {
 
         //println!("play(): calling capture({})", color as usize);
         self.capture(color);
-    }
-
-    // Check whether the stone at a given point is protected.
-
-    pub fn is_stone_protected(&self, point: usize) -> bool {
-        self.check_if_protected(self.chain_id_backref[point])
     }
 }
 

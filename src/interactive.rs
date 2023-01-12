@@ -180,11 +180,17 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             window.draw(&cs);
         }
 
-        // Mark stones as protected when they are.
+        // Mark stones as immortal when they are.
+
+        let mut immortal_white = position.clone(); immortal_white.keep_only_immortal(White);
+        let mut immortal_black = position.clone(); immortal_black.keep_only_immortal(Black);
 
         for i in 0..board.point_count() {
-            if !position.is_stone_protected(i) {continue;}
             let color = position[i];
+
+            if color == Empty {continue;}
+            if color == Black && immortal_black[i] == Empty {continue;}
+            if color == White && immortal_white[i] == Empty {continue;}
 
             let mut cs = CircleShape::new(stone_size/2.0, 50);
             cs.set_position(Vector2::new(layout[i].0 - stone_size/2.0,
