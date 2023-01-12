@@ -180,6 +180,20 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             window.draw(&cs);
         }
 
+        // Mark stones as protected when they are.
+
+        for i in 0..board.point_count() {
+            if !position.is_stone_protected(i) {continue;}
+            let color = position[i];
+
+            let mut cs = CircleShape::new(stone_size/2.0, 50);
+            cs.set_position(Vector2::new(layout[i].0 - stone_size/2.0,
+                                         layout[i].1 - stone_size/2.0));
+            cs.set_fill_color(if color == Black {Color {r: 40,  g: 40,  b: 40,  a: 255}}
+                                           else {Color {r: 220, g: 220, b: 220, a: 255}});
+            window.draw(&cs);
+        }
+
         // Draw the outline of the point the user is mousing over.
         
         if let Some(cptm) = closest_point_to_mouse {

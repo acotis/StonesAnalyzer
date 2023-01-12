@@ -215,6 +215,19 @@ impl Position<'_> {
         id
     }
 
+    // Capture a given chain (i.e. set all its points to empty and update the
+    // chain list).
+
+    fn capture_chain(&mut self, id: usize) {
+        assert!(!self.chains[id].is_empty());
+
+        for &point in self.chains[id].iter() {
+            self.board_state[point] = Empty;
+        }
+
+        self.seed_chain(self.chains[id][0]);
+    }
+
     // Capture all surrounded chains of a given color.
 
     fn capture(&mut self, color: Color) {
@@ -226,16 +239,15 @@ impl Position<'_> {
                    .any(|&n| self.board.neighbor_lists[n].iter()
                                  .any(|&n| self.board_state[n] == Empty)) {continue;}
 
-            for &point in self.chains[id].iter() {
-                self.board_state[point] = Empty;
-            }
-
-            self.seed_chain(self.chains[id][0]);
+            self.capture_chain(id);
         }
     }
 
     // Check whether a given chain has another chain as a foot (a bubble whose
     // every point is a liberty of the chain).
+
+    // TODO: This is completely incorrectly thought out, bubbles are not feet.
+    // Complement regions are feet.
 
     fn check_if_foot(&self, chain_id: usize, bubble_id: usize) -> bool {
         if self.chains[bubble_id].is_empty() {return false;}
@@ -248,13 +260,33 @@ impl Position<'_> {
 
     // Check whether a given chain has two feet.
 
-    //fn check_if_protected(&self, chain_id: usize) {
-        //let neighbors = 
-            //self.chains[chain_id].iter()
-                //.map(|&point| &self.board.neighbor_lists[point])
-                //.collect::<&Vec<usize>>().concat();
+    fn check_if_protected(&self, chain_id: usize) -> bool {
+        let mut adjacent_bubbles = Vec::<usize>::new();
 
-    //}
+        for &point in self.chains[chain_id].iter() {
+            for &neighbor in self.board.neighbor_lists[point].iter() {
+                if self.board_state[neighbor] == Empty {
+                    adjacent_bubbles.push(self.chain_id_backref[neighbor]);
+                }
+            }
+        }
+
+        adjacent_bubbles.sort();
+        adjacent_bubbles.dedup();
+
+        let mut foot_count = 0;
+
+        for ab in adjacent_bubbles {
+            if self.check_if_foot(chain_id, ab) {
+                foot_count += 1;
+                if foot_count == 2 {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     // Play a stone of a given color at a given point.
 
@@ -297,6 +329,12 @@ impl Position<'_> {
 
         //println!("play(): calling capture({})", color as usize);
         self.capture(color);
+    }
+
+    // Check whether the stone at a given point is protected.
+
+    pub fn is_stone_protected(&self, point: usize) -> bool {
+        self.check_if_protected(self.chain_id_backref[point])
     }
 }
 
