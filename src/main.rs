@@ -9,8 +9,8 @@ use boards::*;
 use interactive::*;
 
 fn main() {
-    let (board, layout) = make_rectangular_board(3, 2);
-    //let (board, layout) = make_loop_board(10);
+    let (board, layout) = make_rectangular_board(6, 2);
+    //let (board, layout) = make_loop_board(9);
 
     interactive_app(board, layout);
 }

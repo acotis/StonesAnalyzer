@@ -337,11 +337,8 @@ impl Position<'_> {
         // Place the stone and seed a new chain from it. This will merge any
         // existing chains that are adjacent to the point it was played at.
         
-        //println!("play(): Setting color and seeding chain");
         self.board_state[point] = color;
         self.seed_chain(point);
-
-        //print!("{:?}", self);
 
         // This move may be splitting the bubble it was played in into multiple
         // parts. For each empty point adjacent to the move, we will seed a new
@@ -349,7 +346,6 @@ impl Position<'_> {
         // seeding process initiated by a previous adjacent point, we do not
         // need to seed a new chain there.
 
-        //println!("play(): Seeding bubbles");
         for &neighbor in self.board.neighbor_lists[point].iter() {
             if self.chain_id_backref[neighbor] == bubble_id {
                 self.seed_chain(neighbor);
@@ -358,12 +354,7 @@ impl Position<'_> {
 
         // Perform captures.
         
-        let opposite_color = match color {Black => White, White => Black, _ => panic!()};
-
-        //println!("play(): calling capture({})", opposite_color as usize);
-        self.capture(opposite_color);
-
-        //println!("play(): calling capture({})", color as usize);
+        self.capture(match color {Black => White, White => Black, _ => panic!()});
         self.capture(color);
     }
 }

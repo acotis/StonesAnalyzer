@@ -130,6 +130,17 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     }
                 }
 
+                // KeyPressed event: handle according to key.
+                
+                Event::KeyPressed {code, ..} => {
+                    println!("Key pressed: code is {:?}", code);
+
+                    match code {
+                        Escape => {position = board.empty_position(); println!("code is {:?}", code)},
+                        _ => {}
+                    }
+                }
+
                 // Other events: ignore.
 
                 _ => {}
