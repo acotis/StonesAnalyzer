@@ -122,8 +122,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     if let Some(cptm) = closest_point_to_mouse {
                         if position[cptm] == Empty {
                             match button {
-                                Left  => {position.play(cptm, Black)}
-                                Right => {position.play(cptm, White)}
+                                Left  => {position.play(Black, cptm)}
+                                Right => {position.play(White, cptm)}
                                 _ => {}
                             }
                         }

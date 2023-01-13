@@ -326,7 +326,7 @@ impl Position<'_> {
 
     // Play a stone of a given color at a given point.
 
-    pub fn play(&mut self, point: usize, color: Color) {
+    pub fn play(&mut self, color: Color, point: usize) {
         assert!(color != Empty);
         assert!(self.board_state[point] == Empty);
         
