@@ -136,7 +136,9 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     println!("Key pressed: code is {:?}", code);
 
                     match code {
-                        Escape => {position = board.empty_position(); println!("code is {:?}", code)},
+                        Key::Escape => {
+                            position = board.empty_position();
+                        },
                         _ => {}
                     }
                 }
