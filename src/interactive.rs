@@ -17,11 +17,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         let mut auss: f32 = 0.0;
         for point_a in &au_layout {
             for point_b in &au_layout {
-                let hypot = (point_a.0 - point_b.0).hypot(point_a.1 - point_b.1);
-
-                if hypot > 0.0 || auss == 0.0 {
-                    auss = hypot;
-                }
+                let hypot = f32::hypot(point_a.0 - point_b.0, point_a.1 - point_b.1);
+                if hypot > 0.0 || auss == 0.0 {auss = hypot;}
             }
         }
         auss / 2.0
