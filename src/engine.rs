@@ -158,8 +158,6 @@ impl Position<'_> {
     // in that chain.
 
     fn remove_from_chain(&mut self, id: usize, point: usize) {
-        //println!("remove_from_chain({}, {}, {})", color as usize, id, point);
-
         let index =
             self.chains[id].iter()
             .position(|x| *x == point)
@@ -181,27 +179,15 @@ impl Position<'_> {
         self.chains[id].push(point);
         self.chain_id_backref[point] = id;
 
-        //println!("Seeding chain at {} (color is {}, id is {})", 
-                 //point, color as usize, id);
-
         let mut next = 0;
 
         while next < self.chains[id].len() {
             let point = self.chains[id][next];
 
-            //println!("  Visiting point {}", point);
-
             for &neighbor in self.board.neighbor_lists[point].iter() {
-                //println!("    Neighbor: {}", neighbor);
-
                 if self.board_state[neighbor] == color {
-                    //println!("      Same color...");
-
                     let current_chain = self.chain_id_backref[neighbor];
-
                     if current_chain != id {
-                        //println!("      Currently in different chain: {}", current_chain);
-
                         self.remove_from_chain(current_chain, neighbor);
                         self.chains[id].push(neighbor);
                         self.chain_id_backref[neighbor] = id;

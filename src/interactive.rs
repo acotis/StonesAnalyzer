@@ -45,7 +45,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     let mut window = RenderWindow::new(
         (800, 600),
-        "Window",
+        "Stones analyzer",
         Style::DEFAULT,
         &Default::default()
     );
