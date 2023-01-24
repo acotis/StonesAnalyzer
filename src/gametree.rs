@@ -1,5 +1,5 @@
 
-use crate::engine::{Board, Color};
+use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::PlayResult::*;
 
@@ -12,37 +12,54 @@ enum PlayResult {
     FailKoRule,
 }
 
-//struct GameTreeNode {
-    //position:   Position,
-    //parent:     Option<&GameTreeNode>,
-    //last_move:  Option<usize>,
-//}
-
-struct GameTree {
-    board:      Board,
+struct GameTreeNode<'a> {
+    position:   Position<'a>,
+    parent:     Option<&'a GameTreeNode<'a>>,
+    last_move:  Option<usize>,
 }
 
-impl GameTree {
-    //pub fn new(board: Board) -> Self {
-        // TODO: implement this
-    //}
+struct GameTree<'a> {
+    board:      &'a Board,
+    cursor:     GameTreeNode<'a>,
+}
+
+impl<'a> GameTree<'a> {
+    pub fn new(board: &'a Board) -> Self {
+        GameTree {
+            board: &board,
+            cursor: GameTreeNode {
+                position: board.empty_position(),
+                parent: None,
+                last_move: None,
+            }
+        }
+    }
 
     pub fn play(&mut self, color: Color, point: Option<usize>) -> PlayResult {
-        return Success; // TODO: implement this
+        let new =
+            GameTreeNode {
+                position: self.cursor.position.clone(),
+                parent: Some(&self.cursor),
+                last_move: point,
+            };
+
+        self.cursor = new;
+
+        return Success;
     }
 
-    pub fn pop(&mut self) {
-        // TODO: implement this
-    }
+    //pub fn pop(&mut self) {
+        //// TODO: implement this
+    //}
 
-    pub fn pop_to_last_placement(&mut self) {
-        // TODO: implement this
-    }
+    //pub fn pop_to_last_placement(&mut self) {
+        //// TODO: implement this
+    //}
 
-    pub fn next_to_move(&self) -> Color {
-        // TODO: implement this
-        return Empty;
-    }
+    //pub fn next_to_move(&self) -> Color {
+        //// TODO: implement this
+        //return Empty;
+    //}
 
 
 
@@ -64,5 +81,4 @@ impl GameTree {
 
     //string to_string();
 }
-
 
