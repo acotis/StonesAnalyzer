@@ -1,4 +1,55 @@
 
+Desired user experience:
+    1. I open an "analysis file" using the Stones analyzer.
+    2. On the screen, I see a board with an intial position on it. 
+    3. I can manipulate the position with the mouse and navigate through an existing
+       tree of positions, with branches being added automatically if I go off the
+       existing tree.
+    4. Associated with each position is an initially empty text field which I can
+       type notes into that are remembered the next time I open the file.
+    5. Each position additionally contains
+
+Analysis file format:
+    Board structure (list of edges)
+    Layout (list of locations)
+    Initial position (list of colors)
+    ...marked-up tree in JSON format...
+
+Example:
+    {
+        "board-structure": [[1, 2], [2, 3], [3, 4], [4, 1]],
+        "board-layout": [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0,-1.0]],
+        "initial-position": [".", ".", ".", "."],
+
+        "analysis-tree": {
+            "comment": "This is the initial position",
+            "markup": "* . . .",
+            "children": {
+                "1": {
+                    "comment": "This is black's first move",
+                    "markup": ". . * ."
+                },
+                "2": {
+                    "comment": "This is equivalent to the other move.",
+                    "markup": ". . . ."
+                }
+            }
+        }
+    }
+
+
+
+\   \   | '\'
+    "   | '"'
+    n   | '\n'
+    .   | ERROR
+"       | end text
+\n      | ERROR
+.       | whatever . is
+
+
+
+
 Old, maybe faster algorithm for updating the chains after adding a newly-placed stone to the board:
 
         // Create a sorted, de-dupped list of all the ID's of the same-colored
