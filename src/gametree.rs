@@ -14,38 +14,35 @@ enum PlayResult {
 
 struct GameTreeNode<'a> {
     position:   Position<'a>,
-    parent:     Option<&'a GameTreeNode<'a>>,
+    children:   Vec<(usize, usize)>,    // (move, index of child)
+
+    parent:     Option<usize>,          // index of parent
     last_move:  Option<usize>,
 }
 
 struct GameTree<'a> {
     board:      &'a Board,
-    cursor:     GameTreeNode<'a>,
+    tree:       Vec<GameTreeNode<'a>>,
+    cursor:     usize,
 }
 
 impl<'a> GameTree<'a> {
     pub fn new(board: &'a Board) -> Self {
         GameTree {
             board: &board,
-            cursor: GameTreeNode {
-                position: board.empty_position(),
-                parent: None,
-                last_move: None,
-            }
+            tree: vec![
+                GameTreeNode {
+                    position: board.empty_position(),
+                    children: vec![],
+                    parent: None,
+                    last_move: None,
+                }
+            ],
+            cursor: 0,
         }
     }
 
     pub fn play(&mut self, color: Color, point: Option<usize>) -> PlayResult {
-        let new =
-            GameTreeNode {
-                position: self.cursor.position.clone(),
-                parent: Some(&self.cursor),
-                last_move: point,
-            };
-
-        self.cursor = new;
-
-        return Success;
     }
 
     //pub fn pop(&mut self) {

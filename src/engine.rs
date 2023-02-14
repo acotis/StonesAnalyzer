@@ -1,15 +1,30 @@
 
+/* engine.rs
+ *
+ * This module provides three fundamental constructs:
+ *
+ *     pub enum Color {Empty, Black, White};
+ *     pub struct Board;
+ *     pub struct Position;
+ *
+ * Color is self-explanatory. Board is a struct represneting a board structure, and
+ * is instantiated from
+ *
+ */
+
 use std::fmt;
 use std::ops::Index;
 use crate::engine::Color::*;
 use colored::*;
 
-// COLOR
+// 
 
 #[derive(Clone, PartialEq, Copy)]
-pub enum Color {Empty = 0, Black, White}
-
-// BOARD
+pub enum Color {
+    Empty = 0,
+    Black,
+    White,
+}
 
 pub struct Board {
     point_count: usize,
@@ -18,6 +33,18 @@ pub struct Board {
 
     tui_layout: Vec<(usize, usize)>, // debug only
 }
+
+#[derive(Clone)]
+pub struct Position<'a> {
+    board: &'a Board,
+
+    board_state: Vec<Color>,
+    chains: Vec<Vec<usize>>,
+    chain_id_backref: Vec<usize>,
+}
+
+
+
 
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -90,17 +117,6 @@ impl Board {
         // when we call seed_chain we need to make one more on top of the ones
         // that already exist.
     }
-}
-
-// POSITION
-
-#[derive(Clone)]
-pub struct Position<'a> {
-    board: &'a Board,
-
-    board_state: Vec<Color>,
-    chains: Vec<Vec<usize>>,
-    chain_id_backref: Vec<usize>,
 }
 
 impl Index<usize> for Position<'_> {
