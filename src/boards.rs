@@ -21,7 +21,6 @@ pub fn make_rectangular_board(width: usize, height: usize) -> Bal {
     }
 
     let mut board = Board::new(size, edges);
-    board.set_tui_layout((0..size).map(|n| (n % width, n / width)).collect());
     (board, layout)
 }
 

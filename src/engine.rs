@@ -30,8 +30,6 @@ pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
     connectivity_matrix: Vec<Vec<bool>>,
-
-    tui_layout: Vec<(usize, usize)>, // debug only
 }
 
 #[derive(Clone)]
@@ -44,35 +42,12 @@ pub struct Position<'a> {
 }
 
 
-
-
-impl fmt::Debug for Board {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let connection_count = 
-            self.neighbor_lists.iter().map(|ls| ls.len()).sum::<usize>() / 2;
-
-        write!(f, "{{Board; {} points, {} connection{}}}",
-               self.point_count,
-               connection_count,
-               if connection_count == 1 {""} else {"s"})
-    }
-}
-
-impl Board {
-    pub fn set_tui_layout(&mut self, tui_layout: Vec<(usize, usize)>) {
-        self.tui_layout = tui_layout;
-    }
-}
-
 impl Board {
     pub fn new(point_count: usize, connections: Vec<(usize, usize)>) -> Board {
         let mut board = Board {
             point_count: point_count,
             neighbor_lists: vec![vec![]; point_count],
             connectivity_matrix: vec![vec![false; point_count]; point_count],
-
-            // debug only
-            tui_layout: (0..point_count).map(|n| (n, 0)).collect(),
         };
 
         for connection in connections.iter() {
@@ -124,39 +99,6 @@ impl Index<usize> for Position<'_> {
     fn index(&self, index: usize) -> &Color {&self.board_state[index]}
 }
 
-impl fmt::Debug for Position<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let str_width  = self.board.tui_layout.iter().map(|item| item.0).max().unwrap() + 1;
-        let str_height = self.board.tui_layout.iter().map(|item| item.1).max().unwrap() + 1;
-        let mut pretty = vec![vec![ColoredString::from(" "); str_width]; str_height];
-
-        for (i, _) in self.board_state.iter().enumerate() {
-            let string = 
-                String::from(match self.chain_id_backref[i] {
-                    0..=9 => char::from_u32((self.chain_id_backref[i] + 48) as u32).unwrap(),
-                    10.. => char::from_u32((self.chain_id_backref[i] - 10 + 97) as u32).unwrap(),
-                    _ => '?',
-                });
-
-            pretty[self.board.tui_layout[i].1][self.board.tui_layout[i].0] =
-                match self.board_state[i] {
-                    Empty => string.truecolor(80, 30, 10).italic(),
-                    Black => string.truecolor(0, 0, 0).bold(),
-                    White => string.truecolor(255, 255, 255).bold(),
-                }.on_truecolor(212, 140, 30);
-        }
-
-        for line in pretty {
-            for item in line {
-                write!(f, "{}", item)?;
-            }
-            write!(f, "\n")?;
-        }
-
-        writeln!(f, "chains: {:?}", self.chains)?;
-        Ok(())
-    }
-}
 
 impl Position<'_> {
 
