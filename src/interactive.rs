@@ -8,6 +8,12 @@ use crate::engine::Color::*;
 
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
+    assert!(
+        board.point_count() == au_layout.len(),
+        "Tried to run interactive app but the board has {} points and the layout has {} points.",
+        board.point_count(), au_layout.len()
+    );
+
     let mut position = board.empty_position();
 
     // Compute the arbitrary-units stone size as half the minimum distance between

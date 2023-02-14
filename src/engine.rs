@@ -44,11 +44,24 @@ pub struct Position<'a> {
 
 impl Board {
     pub fn new(connections: Vec<(usize, usize)>) -> Board {
+
+        // Deduce the point count of the board.
+
         let point_count = 
             1 + connections.iter()
                             .map(|&n| max(n.0, n.1))
                             .reduce(max)
                             .unwrap();
+
+        // Make sure every point has at least one edge.
+
+        for i in 0..point_count {
+            assert!(
+                connections.iter().any(|&n| n.0 == i || n.1 == i),
+                "Tried to create a board with {} points but point {} isn't connected to anything.",
+                point_count, i
+            );
+        }
 
         // Todo: modify this to panic if not every point up to the point count
         // is connected to something.
