@@ -9,11 +9,11 @@
  *
  * Color is self-explanatory. Board is a struct represneting a board structure, and
  * is instantiated from
- *
  */
 
 use std::fmt;
 use std::ops::Index;
+use std::cmp::max;
 use crate::engine::Color::*;
 use colored::*;
 
@@ -43,7 +43,16 @@ pub struct Position<'a> {
 
 
 impl Board {
-    pub fn new(point_count: usize, connections: Vec<(usize, usize)>) -> Board {
+    pub fn new(connections: Vec<(usize, usize)>) -> Board {
+        let point_count = 
+            1 + connections.iter()
+                            .map(|&n| max(n.0, n.1))
+                            .reduce(max)
+                            .unwrap();
+
+        // Todo: modify this to panic if not every point up to the point count
+        // is connected to something.
+
         let mut board = Board {
             point_count: point_count,
             neighbor_lists: vec![vec![]; point_count],
