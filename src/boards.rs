@@ -20,8 +20,7 @@ pub fn make_rectangular_board(width: usize, height: usize) -> Bal {
         layout.push((x as f32, y as f32));
     }
 
-    let mut board = Board::new(edges);
-    (board, layout)
+    (Board::new(edges), layout)
 }
 
 pub fn make_loop_board(n: usize) -> Bal {

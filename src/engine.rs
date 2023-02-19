@@ -11,11 +11,9 @@
  * is instantiated from
  */
 
-use std::fmt;
 use std::ops::Index;
 use std::cmp::max;
 use crate::engine::Color::*;
-use colored::*;
 
 // 
 
@@ -63,8 +61,7 @@ impl Board {
             );
         }
 
-        // Todo: modify this to panic if not every point up to the point count
-        // is connected to something.
+        // Create and return the board struct.
 
         let mut board = Board {
             point_count: point_count,
