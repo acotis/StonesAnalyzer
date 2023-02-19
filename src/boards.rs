@@ -1,4 +1,10 @@
 
+/* boards.rs
+ *
+ * This method provides some convenience methods for generating boards
+ * and reasonable corresponding layouts.
+ */
+
 use crate::engine::Board;
 
 type Layout = Vec::<(f32, f32)>;
