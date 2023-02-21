@@ -11,7 +11,7 @@ use interactive::*;
 use engine::Board;
 
 fn main() {
-    let (board, layout) = make_rectangular_board(4, 2);
+    let (board, layout) = make_rectangular_board(9, 9);
     //let (board, layout) = make_loop_board(9);
 
     //let mut layout = vec![(0.0,0.0),(-1.0,0.0),(0.0,-1.0),(1.0,0.0),(0.0,1.0),];
@@ -55,7 +55,7 @@ fn main() {
     //layout.push(( 0.83,  0.83));
     //layout.push(( 0.83, -0.83));
 
-    //let board = Board::new(8, edges);
+    //let board = Board::new(edges);
 
     interactive_app(board, layout);
 }
