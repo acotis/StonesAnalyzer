@@ -3,8 +3,8 @@
  * 
  * This module provides the GameTree struct. It is used to represent a game
  * of Go, possibly with branching paths. You construct a GameTree from a Board
- * struct (which it consumes). Initially, the tree has only one node, at the
- * empty position for that board. You can perform operations such as playing
+ * struct (which it can't outlive). Initially, the tree has only one node, at
+ * the empty position for that board. You can perform operations such as playing
  * a move, undoing the current move without deleting the branch it's on, and
  * resetting the tree to just the initial position. Here is the current set
  * of methods:
@@ -12,13 +12,14 @@
  *     pub fun play(&mut self, Color, Option<usize>) -> PlayResult;
  *     pub fun reset(&mut self);
  *     pub fun get_last_move(&self) -> Option<Option<usize>>;
+ *     pub fun color_at() -> Color;
  */
 
 use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::PlayResult::*;
 
-enum PlayResult {
+pub enum PlayResult {
     FailGameAlreadyOver,
     FailNotYourTurn,
     FailStoneAlreadyThere,
@@ -37,7 +38,7 @@ struct GameTreeNode<'a> {
     last_move:  Option<Option<usize>>,  // None for root node, Some(None) for passes.
 }
 
-struct GameTree<'a> {
+pub struct GameTree<'a> {
     board:      &'a Board,
     tree:       Vec<GameTreeNode<'a>>,
     cursor:     usize,
@@ -135,6 +136,10 @@ impl<'a> GameTree<'a> {
 
     pub fn last_move(&self) -> Option<Option<usize>> {
         self.tree[self.cursor].last_move
+    }
+
+    pub fn color_at(&self, point: usize) -> Color {
+        self.tree[self.cursor].position[point]
     }
 
     //pub fn pop(&mut self) {

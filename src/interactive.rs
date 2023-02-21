@@ -5,6 +5,7 @@ use sfml::system::*;
 use sfml::window::mouse::Button::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
+use crate::gametree::GameTree;
 
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
@@ -14,7 +15,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         board.point_count(), au_layout.len()
     );
 
-    let mut position = board.empty_position();
+    let mut gametree = GameTree::new(&board);
+    //let mut position = board.empty_position();
 
     // Compute the arbitrary-units stone size as half the minimum distance between
     // any two points.
@@ -123,12 +125,10 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                              button, x, y);
 
                     if let Some(cptm) = closest_point_to_mouse {
-                        if position[cptm] == Empty {
-                            match button {
-                                Left  => {position.play(Black, cptm)}
-                                Right => {position.play(White, cptm)}
-                                _ => {}
-                            }
+                        match button {
+                            Left  => {gametree.play(Black, closest_point_to_mouse);}
+                            Right => {gametree.play(White, closest_point_to_mouse);}
+                            _ => {}
                         }
                     }
                 }
@@ -140,7 +140,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
                     match code {
                         Key::Escape => {
-                            position = board.empty_position();
+                            gametree.reset();
                         },
                         _ => {}
                     }
@@ -186,7 +186,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         // Draw the stones currently on the board.
 
         for i in 0..board.point_count() {
-            let color = position[i];
+            let color = gametree.color_at(i);
             if color == Empty {continue;}
 
             let mut cs = CircleShape::new(stone_size, 50);
@@ -198,28 +198,28 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         // Mark stones as immortal when they are.
 
-        let mut immortal_white = position.clone(); immortal_white.keep_only_immortal(White);
-        let mut immortal_black = position.clone(); immortal_black.keep_only_immortal(Black);
+        //let mut immortal_white = position.clone(); immortal_white.keep_only_immortal(White);
+        //let mut immortal_black = position.clone(); immortal_black.keep_only_immortal(Black);
 
-        for i in 0..board.point_count() {
-            let color = position[i];
+        //for i in 0..board.point_count() {
+            //let color = position[i];
 
-            if color == Empty {continue;}
-            if color == Black && immortal_black[i] == Empty {continue;}
-            if color == White && immortal_white[i] == Empty {continue;}
+            //if color == Empty {continue;}
+            //if color == Black && immortal_black[i] == Empty {continue;}
+            //if color == White && immortal_white[i] == Empty {continue;}
 
-            let mut cs = CircleShape::new(stone_size/2.0, 50);
-            cs.set_position(Vector2::new(layout[i].0 - stone_size/2.0,
-                                         layout[i].1 - stone_size/2.0));
-            cs.set_fill_color(if color == Black {Color {r: 40,  g: 40,  b: 40,  a: 255}}
-                                           else {Color {r: 220, g: 220, b: 220, a: 255}});
-            window.draw(&cs);
-        }
+            //let mut cs = CircleShape::new(stone_size/2.0, 50);
+            //cs.set_position(Vector2::new(layout[i].0 - stone_size/2.0,
+                                         //layout[i].1 - stone_size/2.0));
+            //cs.set_fill_color(if color == Black {Color {r: 40,  g: 40,  b: 40,  a: 255}}
+                                           //else {Color {r: 220, g: 220, b: 220, a: 255}});
+            //window.draw(&cs);
+        //}
 
         // Draw the outline of the point the user is mousing over.
         
         if let Some(cptm) = closest_point_to_mouse {
-            if position[cptm] == Empty {
+            if gametree.color_at(cptm) == Empty {
                 let mut cs = CircleShape::new(stone_size - 1.0, 50);
                 cs.set_position(Vector2::new(layout[cptm].0 - stone_size,
                                              layout[cptm].1 - stone_size));
