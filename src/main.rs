@@ -9,8 +9,11 @@ mod gametree;
 use boards::*;
 use interactive::*;
 use engine::Board;
+use std::env;
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
+
     let (board, layout) = make_rectangular_board(9, 9);
     //let (board, layout) = make_loop_board(9);
 

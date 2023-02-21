@@ -13,6 +13,7 @@
  *     pub fun reset(&mut self);
  *     pub fun get_last_move(&self) -> Option<Option<usize>>;
  *     pub fun color_at() -> Color;
+ *     pub fun whose_turn() -> Color;
  */
 
 use crate::engine::{Board, Position, Color};
@@ -117,7 +118,7 @@ impl<'a> GameTree<'a> {
             }
         );
 
-        let new_cursor = self.tree.len();
+        let new_cursor = self.tree.len()-1;
         self.tree[self.cursor].children.push(new_cursor);
         self.cursor = new_cursor;
 
@@ -140,6 +141,10 @@ impl<'a> GameTree<'a> {
 
     pub fn color_at(&self, point: usize) -> Color {
         self.tree[self.cursor].position[point]
+    }
+
+    pub fn whose_turn(&self) -> Color {
+        self.tree[self.cursor].to_play
     }
 
     //pub fn pop(&mut self) {

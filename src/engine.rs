@@ -37,7 +37,7 @@ use crate::engine::Color::*;
 
 // Structs.
 
-#[derive(Clone, PartialEq, Copy)]
+#[derive(Clone, PartialEq, Copy, Debug)]
 pub enum Color {
     Empty = 0,
     Black,

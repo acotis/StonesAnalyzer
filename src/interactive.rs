@@ -8,7 +8,6 @@ use crate::engine::Color::*;
 use crate::gametree::GameTree;
 
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
-
     assert!(
         board.point_count() == au_layout.len(),
         "Tried to run interactive app but the board has {} points and the layout has {} points.",
@@ -121,13 +120,16 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // MouseButtonPressed event: play a stone at the given point.
 
                 Event::MouseButtonPressed {button, x, y} => {
-                    println!("Mouse button pressed: button is {:?}, x and y are {} and {}",
-                             button, x, y);
-
                     if let Some(cptm) = closest_point_to_mouse {
                         match button {
-                            Left  => {gametree.play(Black, closest_point_to_mouse);}
-                            Right => {gametree.play(White, closest_point_to_mouse);}
+                            Left => {
+                                gametree.play(gametree.whose_turn(), 
+                                              closest_point_to_mouse);
+                            }
+                            Right => {}
+                            Middle => {
+                                gametree.play(gametree.whose_turn(), None);
+                            }
                             _ => {}
                         }
                     }
@@ -136,8 +138,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // KeyPressed event: handle according to key.
                 
                 Event::KeyPressed {code, ..} => {
-                    println!("Key pressed: code is {:?}", code);
-
                     match code {
                         Key::Escape => {
                             gametree.reset();
