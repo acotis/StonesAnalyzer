@@ -59,7 +59,6 @@ pub struct Position<'a> {
     chain_id_backref: Vec<usize>,
 }
 
-
 impl Board {
     pub fn new(connections: Vec<(usize, usize)>) -> Board {
 
@@ -137,6 +136,13 @@ impl Index<usize> for Position<'_> {
     type Output = Color;
     fn index(&self, index: usize) -> &Color {&self.board_state[index]}
 }
+
+impl PartialEq for Position<'_> {
+   fn eq(&self, other: &Self) -> bool {self.board_state == other.board_state}
+}
+
+impl Eq for Position<'_> {}
+
 
 impl Position<'_> {
 

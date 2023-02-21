@@ -63,47 +63,40 @@ impl<'a> GameTree<'a> {
 
     fn last_two_moves_passes(&self) -> bool {
         if self.tree[self.cursor].last_move == Some(None) {
-            let prev = self.tree[self.cursor].parent;
+            let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
             if self.tree[prev].last_move == Some(None) {
                 return true;
             }
         }
+
+        return false;
     }
 
-    pub fn play(&mut self, color: Color, point: Option<usize>) -> PlayResult {
-        
-        // If the game is already over, fail.
-        
-        if self.last_two_moves_passes() {
-            return FailGameAlreadyOver;
-        }
+    pub fn play(&mut self, color: Color, play: Option<usize>) -> PlayResult {
+        if self.last_two_moves_passes() {return FailGameAlreadyOver;}
+        if self.tree[self.cursor].to_play != color {return FailNotYourTurn;}
 
-        // If it is not this player's turn, fail.
+        let mut new_pos = self.tree[self.cursor].position.clone();
 
-        if self.tree[self.cursor].to_play != color {
-            return FailNotYourturn;
-        }
-
-        // If there is already a stone in the desired position, fail.
-        
-        if self.tree[self.cursor][point] != Empty {
-            return FailStoneAlreadyThere;
-        }
-
-        // Construct the position that would result from this move. Walk up
-        // the tree of parents to this node. If we have seen this position
-        // before, fail.
-
-        let mut new_pos = self.tree[self.cursor].clone().play(color, point);
-        let mut walk = self.cursor;
-
-        loop {
-            if self.tree[walk].position == new_pos {
-                return FailKoRule;
+        if let Some(point) = play {
+            if self.tree[self.cursor].position[point] != Empty {
+                return FailStoneAlreadyThere;
             }
 
-            if walk == 0 {break;}
-            walk = self.tree[walk].parent.expect("getting parent from non-root node");
+            // Play the move in question, check if it violates ko rule by walking
+            // back up the tree to visit each ancestor of this node.
+
+            new_pos.play(color, point);
+            let mut walk = self.cursor;
+
+            loop {
+                if self.tree[walk].position == new_pos {
+                    return FailKoRule;
+                }
+
+                if walk == 0 {break;}
+                walk = self.tree[walk].parent.expect("getting parent from non-root node");
+            }
         }
 
         // Add this to the tree and succeed.
@@ -111,11 +104,15 @@ impl<'a> GameTree<'a> {
         self.tree.push(
             GameTreeNode {
                 position: new_pos,
-                to_play: match color {Black => White, White => Black, Empty => panic!();}
+                to_play: match color {
+                    Black => White,
+                    White => Black,
+                    Empty => {panic!();}
+                },
 
                 children: vec![],
-                parent: self.cursor,
-                last_move: Some(point),
+                parent: Some(self.cursor),
+                last_move: Some(play),
             }
         );
 
@@ -137,7 +134,7 @@ impl<'a> GameTree<'a> {
     }
 
     pub fn last_move(&self) -> Option<Option<usize>> {
-        self.tree[self.cursor].last_move;
+        self.tree[self.cursor].last_move
     }
 
     //pub fn pop(&mut self) {

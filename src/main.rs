@@ -4,7 +4,7 @@
 mod engine;
 mod boards;
 mod interactive;
-//mod gametree;
+mod gametree;
 
 use boards::*;
 use interactive::*;
