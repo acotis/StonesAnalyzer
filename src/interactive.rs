@@ -98,7 +98,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // Resize event: update the "view" of the window.
 
                 Event::Resized {width, height} => {
-                    println!("Resize: width and height are {} and {}", width, height);
                     window.set_view(
                         &View::from_rect(
                             &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
@@ -107,8 +106,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // MouseMoved event: update closest_point_to_mouse.
 
                 Event::MouseMoved {x, y} => {
-                    //println!("Mouse moved: x and y are {} and {}", x, y);
-                    
                     closest_point_to_mouse = None;
                     for (i, point) in layout.iter().enumerate() {
                         if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
