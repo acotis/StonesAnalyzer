@@ -19,8 +19,12 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     // Display settings.
 
     let border: f32 = 20.0;
-    let board_color = Color {r: 212, g: 140, b: 30, a: 255};
-    let line_color  = Color {r: 0, g: 0, b: 0, a: 255};
+    let board_color = Color {r: 212, g: 140, b:  30, a: 255};
+    let line_color  = Color {r:   0, g:   0, b:   0, a: 255};
+    let black_color = Color {r:   0, g:   0, b:   0, a: 255};
+    let white_color = Color {r: 255, g: 255, b: 255, a: 255};
+    let black_hover = Color {r:   0, g:   0, b:   0, a:  80};
+    let white_hover = Color {r: 255, g: 255, b: 255, a:  80};
 
     // Create the RenderWindow.
 
@@ -63,9 +67,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 }
 
                 Event::MouseButtonPressed {button, x, y} => {
-                    // TODO: middle clicking should probably pass if you click
-                    // anywhere in the play area, not just if you're near a point.
-
                     match button {
                         Left => {
                             if let Some(cptm) = closest_point_to_mouse {
@@ -128,14 +129,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         // Draw the stones currently on the board.
 
         for i in 0..board.point_count() {
-            let color = gametree.color_at(i);
-            if color == Empty {continue;}
-
-            let mut cs = CircleShape::new(stone_size, 50);
-            cs.set_position(Vector2::new(layout[i].0 - stone_size,
-                                         layout[i].1 - stone_size));
-            cs.set_fill_color(if color == Black {Color::BLACK} else {Color::WHITE});
-            window.draw(&cs);
+            match gametree.color_at(i) {
+                Black => {draw_stone(&mut window, layout[i], stone_size, black_color);}
+                White => {draw_stone(&mut window, layout[i], stone_size, white_color);}
+                Empty => {}
+            }
         }
 
         // Mark stones as immortal when they are.
@@ -162,19 +160,33 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         
         if let Some(cptm) = closest_point_to_mouse {
             if gametree.color_at(cptm) == Empty {
-                let mut cs = CircleShape::new(stone_size - 1.0, 50);
-                cs.set_position(Vector2::new(layout[cptm].0 - stone_size,
-                                             layout[cptm].1 - stone_size));
-                cs.set_fill_color(Color::TRANSPARENT);
-                cs.set_outline_color(Color::BLACK);
-                cs.set_outline_thickness(1.0);
-                window.draw(&cs);
+                draw_stone(
+                    &mut window,
+                    layout[cptm],
+                    stone_size,
+                    match gametree.whose_turn() {
+                        Black => black_hover,
+                        White => white_hover,
+                        Empty => {panic!();}
+                    }
+                );
             }
         }
 
         window.set_active(true);
         window.display();
     }
+}
+
+
+// Helper function to draw a circle of a given radius and color with its center
+// at a given point. Note that this is an SFML Color, not an Engine color.
+
+fn draw_stone(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+    let mut cs = CircleShape::new(radius, 50);
+    cs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
+    cs.set_fill_color(color);
+    win.draw(&cs);
 }
 
 

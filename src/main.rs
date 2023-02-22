@@ -14,7 +14,7 @@ use std::env;
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
 
-    //let (board, layout) = make_rectangular_board(3, 2);
+    let (board, layout) = make_rectangular_board(3, 2);
     //let (board, layout) = make_loop_board(7);
 
     //let mut layout = vec![(0.0,0.0),(-1.0,0.0),(0.0,-1.0),(1.0,0.0),(0.0,1.0),];
@@ -25,21 +25,21 @@ fn main() {
 
     //let board = Board::new(edges.len(), edges);
 
-    let mut edges = Vec::<(usize, usize)>::new();
-    edges.push((0, 1));
-    edges.push((1, 2));
-    edges.push((2, 3));
-    edges.push((3, 0));
-    edges.push((4, 5));
-    edges.push((5, 6));
-    edges.push((6, 7));
-    edges.push((7, 4));
-    edges.push((0, 4));
-    edges.push((1, 5));
-    edges.push((2, 6));
-    edges.push((3, 7));
+    //let mut edges = Vec::<(usize, usize)>::new();
+    //edges.push((0, 1));
+    //edges.push((1, 2));
+    //edges.push((2, 3));
+    //edges.push((3, 0));
+    //edges.push((4, 5));
+    //edges.push((5, 6));
+    //edges.push((6, 7));
+    //edges.push((7, 4));
+    //edges.push((0, 4));
+    //edges.push((1, 5));
+    //edges.push((2, 6));
+    //edges.push((3, 7));
 
-    let mut layout = Vec::<(f32, f32)>::new();
+    //let mut layout = Vec::<(f32, f32)>::new();
     //layout.push((0.0, -0.0));
     //layout.push((1.0, 0.0));
     //layout.push((2.0, 0.0));
@@ -49,16 +49,16 @@ fn main() {
     //layout.push((2.0, 1.0));
     //layout.push((3.0, 1.0));
 
-    layout.push((-2.0, -2.0));
-    layout.push((-2.0,  2.0));
-    layout.push(( 2.0,  2.0));
-    layout.push(( 2.0, -2.0));
-    layout.push((-0.83, -0.83));
-    layout.push((-0.83,  0.83));
-    layout.push(( 0.83,  0.83));
-    layout.push(( 0.83, -0.83));
+    //layout.push((-2.0, -2.0));
+    //layout.push((-2.0,  2.0));
+    //layout.push(( 2.0,  2.0));
+    //layout.push(( 2.0, -2.0));
+    //layout.push((-0.83, -0.83));
+    //layout.push((-0.83,  0.83));
+    //layout.push(( 0.83,  0.83));
+    //layout.push(( 0.83, -0.83));
 
-    let board = Board::new(edges);
+    //let board = Board::new(edges);
 
     interactive_app(board, layout);
 }
