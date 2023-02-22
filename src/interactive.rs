@@ -9,55 +9,6 @@ use crate::gametree::GameTree;
 
 type Layout = Vec<(f32, f32)>;
 
-fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout, f32) {
-
-    // Compute the arbitrary-units stone size as half the minimum distance
-    // between any two points in the arbitrary-units layout.
-
-    let mut au_stone_size: f32 = f32::INFINITY;
-
-    for a in au_layout {
-        for b in au_layout {
-            let half_dist = f32::hypot(a.0 - b.0, a.1 - b.1) / 2.0;
-
-            if half_dist > 0.0 && half_dist < au_stone_size {
-                au_stone_size = half_dist;
-            }
-        }
-    }
-
-    // Compute the arbitrary-units bounding box of the board's layout,
-    // accounting for how far out the stones may go.
-
-    let au_left   = au_layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - au_stone_size;
-    let au_right  = au_layout.iter().map(|&n| n.0).reduce(f32::max).unwrap() + au_stone_size;
-    let au_top    = au_layout.iter().map(|&n| n.1).reduce(f32::min).unwrap() - au_stone_size;
-    let au_bottom = au_layout.iter().map(|&n| n.1).reduce(f32::max).unwrap() + au_stone_size;
-
-    let au_width  = au_right  - au_left;
-    let au_height = au_bottom - au_top;
-
-    // From the size of the window and the arbitrary-units layout, compute the
-    // layout in pixels.
-
-    let win_w = win.size().x as f32;
-    let win_h = win.size().y as f32;
-
-    let squish_factor_w = (win_w - 2.0 * border) / au_width;
-    let squish_factor_h = (win_h - 2.0 * border) / au_height;
-    let squish_factor = f32::min(squish_factor_w, squish_factor_h);
-
-    let offset_w = (win_w - au_width  * squish_factor) / 2.0;
-    let offset_h = (win_h - au_height * squish_factor) / 2.0;
-
-    let layout = au_layout.iter()
-                          .map(|(x, y)| ((x - au_left) * squish_factor + offset_w,
-                                         (y - au_top ) * squish_factor + offset_h))
-                          .collect();
-    let stone_size = au_stone_size * squish_factor;
-    (layout, stone_size)
-}
-
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     assert!(
         board.point_count() == au_layout.len(),
@@ -93,11 +44,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     while window.is_open() {
         while let Some(event) = window.poll_event() {
             match event {
-                // Close event: close the window.
-
                 Event::Closed => {window.close();}
-
-                // Resize event: update the "view" of the window.
 
                 Event::Resized {width, height} => {
                     window.set_view(
@@ -105,8 +52,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                             &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
                     (layout, stone_size) = sizing_in_px(&au_layout, &window, border);
                 }
-
-                // MouseMoved event: update closest_point_to_mouse.
 
                 Event::MouseMoved {x, y} => {
                     closest_point_to_mouse = None;
@@ -116,8 +61,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         }
                     }
                 }
-
-                // MouseButtonPressed event: play a stone at the given point.
 
                 Event::MouseButtonPressed {button, x, y} => {
                     // TODO: middle clicking should probably pass if you click
@@ -137,8 +80,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         }
                     }
                 }
-
-                // KeyPressed event: handle according to key.
                 
                 Event::KeyPressed {code, ..} => {
                     match code {
@@ -148,8 +89,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         _ => {}
                     }
                 }
-
-                // Other events: ignore.
 
                 _ => {}
             }
@@ -236,5 +175,57 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         window.set_active(true);
         window.display();
     }
+}
+
+
+// Helper function to compute the layout of the board in window coordinates
+
+fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout, f32) {
+
+    // Compute the arbitrary-units stone size as half the minimum distance
+    // between any two points in the arbitrary-units layout.
+
+    let mut au_stone_size: f32 = f32::INFINITY;
+
+    for a in au_layout {
+        for b in au_layout {
+            let half_dist = f32::hypot(a.0 - b.0, a.1 - b.1) / 2.0;
+
+            if half_dist > 0.0 && half_dist < au_stone_size {
+                au_stone_size = half_dist;
+            }
+        }
+    }
+
+    // Compute the arbitrary-units bounding box of the board's layout,
+    // accounting for how far out the stones may go.
+
+    let au_left   = au_layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - au_stone_size;
+    let au_right  = au_layout.iter().map(|&n| n.0).reduce(f32::max).unwrap() + au_stone_size;
+    let au_top    = au_layout.iter().map(|&n| n.1).reduce(f32::min).unwrap() - au_stone_size;
+    let au_bottom = au_layout.iter().map(|&n| n.1).reduce(f32::max).unwrap() + au_stone_size;
+
+    let au_width  = au_right  - au_left;
+    let au_height = au_bottom - au_top;
+
+    // From the size of the window and the arbitrary-units layout, compute the
+    // layout in pixels.
+
+    let win_w = win.size().x as f32;
+    let win_h = win.size().y as f32;
+
+    let squish_factor_w = (win_w - 2.0 * border) / au_width;
+    let squish_factor_h = (win_h - 2.0 * border) / au_height;
+    let squish_factor = f32::min(squish_factor_w, squish_factor_h);
+
+    let offset_w = (win_w - au_width  * squish_factor) / 2.0;
+    let offset_h = (win_h - au_height * squish_factor) / 2.0;
+
+    let layout = au_layout.iter()
+                          .map(|(x, y)| ((x - au_left) * squish_factor + offset_w,
+                                         (y - au_top ) * squish_factor + offset_h))
+                          .collect();
+    let stone_size = au_stone_size * squish_factor;
+    (layout, stone_size)
 }
 
