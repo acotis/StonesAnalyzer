@@ -66,18 +66,18 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     // TODO: middle clicking should probably pass if you click
                     // anywhere in the play area, not just if you're near a point.
 
-                    if let Some(cptm) = closest_point_to_mouse {
-                        match button {
-                            Left => {
+                    match button {
+                        Left => {
+                            if let Some(cptm) = closest_point_to_mouse {
                                 gametree.play(gametree.whose_turn(), 
                                               closest_point_to_mouse);
                             }
-                            Right => {}
-                            Middle => {
-                                gametree.play(gametree.whose_turn(), None);
-                            }
-                            _ => {}
                         }
+                        Right => {}
+                        Middle => {
+                            gametree.play(gametree.whose_turn(), None);
+                        }
+                        _ => {}
                     }
                 }
                 
@@ -178,7 +178,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 }
 
 
-// Helper function to compute the layout of the board in window coordinates
+// Helper function to compute the layout of the board in window coordinates.
 
 fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout, f32) {
 
