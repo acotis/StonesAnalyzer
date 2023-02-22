@@ -1,4 +1,11 @@
 
+Todo:
+    + Make the hover state show which color of stone is about to be placed.
+    + Make the board mark what the last move was.
+    + Recover the ability to mark which stones are immortal.
+    + Make it possible to undo one move.
+
+
 Desired user experience:
     1. I open an "analysis file" using the Stones analyzer.
     2. On the screen, I see a board with an intial position on it. 

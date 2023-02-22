@@ -117,6 +117,9 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 // MouseButtonPressed event: play a stone at the given point.
 
                 Event::MouseButtonPressed {button, x, y} => {
+                    // TODO: middle clicking should probably pass if you click
+                    // anywhere in the play area, not just if you're near a point.
+
                     if let Some(cptm) = closest_point_to_mouse {
                         match button {
                             Left => {
