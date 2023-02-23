@@ -1,8 +1,5 @@
 
 Todo:
-    + Make the hover state show which color of stone is about to be placed.
-    + Make the board mark what the last move was.
-    + Recover the ability to mark which stones are immortal.
     + Make it possible to undo one move.
 
 

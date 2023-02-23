@@ -37,6 +37,8 @@ struct GameTreeNode<'a> {
     children:   Vec<usize>,             // Indices of children.
     parent:     Option<usize>,          // None for root node, Some for all others.
     last_move:  Option<Option<usize>>,  // None for root node, Some(None) for passes.
+
+    only_immortal: Position<'a>,
 }
 
 pub struct GameTree<'a> {
@@ -57,21 +59,12 @@ impl<'a> GameTree<'a> {
                     children: vec![],
                     parent: None,
                     last_move: None,
+
+                    only_immortal: board.empty_position(),
                 }
             ],
             cursor: 0,
         }
-    }
-
-    pub fn game_over(&self) -> bool {
-        if self.tree[self.cursor].last_move == Some(None) {
-            let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
-            if self.tree[prev].last_move == Some(None) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     pub fn play(&mut self, color: Color, play: Option<usize>) -> PlayResult {
@@ -101,7 +94,21 @@ impl<'a> GameTree<'a> {
             }
         }
 
-        // Add this to the tree and succeed.
+        // Create the only-immortal board.
+
+        let mut immortal_all   = new_pos.clone();
+        let mut immortal_white = new_pos.clone();
+
+        immortal_all  .keep_only_immortal(Black);
+        immortal_white.keep_only_immortal(White);
+
+        for i in 0..self.board.point_count() {
+            if immortal_white[i] == White {
+                immortal_all.play(White, i);
+            }
+        }
+
+        // Add this to the tree.
 
         self.tree.push(
             GameTreeNode {
@@ -115,12 +122,16 @@ impl<'a> GameTree<'a> {
                 children: vec![],
                 parent: Some(self.cursor),
                 last_move: Some(play),
+
+                only_immortal: immortal_all,
             }
         );
 
         let new_cursor = self.tree.len()-1;
         self.tree[self.cursor].children.push(new_cursor);
         self.cursor = new_cursor;
+
+        // Suceed.
 
         if self.game_over() {
             return SuccessGameOver;
@@ -135,12 +146,27 @@ impl<'a> GameTree<'a> {
         self.cursor = 0;
     }
 
+    pub fn game_over(&self) -> bool {
+        if self.tree[self.cursor].last_move == Some(None) {
+            let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
+            if self.tree[prev].last_move == Some(None) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     pub fn last_move(&self) -> Option<Option<usize>> {
         self.tree[self.cursor].last_move
     }
 
     pub fn color_at(&self, point: usize) -> Color {
         self.tree[self.cursor].position[point]
+    }
+
+    pub fn is_immortal(&self, point: usize) -> bool {
+        self.tree[self.cursor].only_immortal[point] != Empty
     }
 
     pub fn whose_turn(&self) -> Option<Color> {

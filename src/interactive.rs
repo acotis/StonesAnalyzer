@@ -19,13 +19,15 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     // Display settings.
 
     let border: f32 = 20.0;
-    let board_color  = Color {r: 212, g: 140, b:  30, a: 255};
-    let line_color   = Color {r:   0, g:   0, b:   0, a: 255};
-    let marker_color = Color {r:   0, g:   0, b: 255, a: 255};
-    let black_color  = Color {r:   0, g:   0, b:   0, a: 255};
-    let white_color  = Color {r: 255, g: 255, b: 255, a: 255};
-    let black_hover  = Color {r:   0, g:   0, b:   0, a:  80};
-    let white_hover  = Color {r: 255, g: 255, b: 255, a:  80};
+    let board_color    = Color {r: 212, g: 140, b:  30, a: 255};
+    let line_color     = Color {r:   0, g:   0, b:   0, a: 255};
+    let marker_color   = Color {r:   0, g:   0, b: 255, a: 255};
+    let black_color    = Color {r:   0, g:   0, b:   0, a: 255};
+    let white_color    = Color {r: 255, g: 255, b: 255, a: 255};
+    let black_hover    = Color {r:   0, g:   0, b:   0, a:  80};
+    let white_hover    = Color {r: 255, g: 255, b: 255, a:  80};
+    let black_immortal = Color {r: 40,  g: 40,  b: 40,  a: 255};
+    let white_immortal = Color {r: 220, g: 220, b: 220, a: 255};
 
     // Create the RenderWindow.
 
@@ -116,9 +118,26 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         for i in 0..board.point_count() {
             match gametree.color_at(i) {
-                Black => {draw_stone(&mut window, layout[i], stone_size, black_color);}
-                White => {draw_stone(&mut window, layout[i], stone_size, white_color);}
+                Black => {draw_circle(&mut window, layout[i], stone_size, black_color);}
+                White => {draw_circle(&mut window, layout[i], stone_size, white_color);}
                 Empty => {}
+            }
+        }
+
+        // Mark stones as immortal when they are.
+
+        for i in 0..board.point_count() {
+            if gametree.is_immortal(i) {
+                draw_circle(
+                    &mut window,
+                    layout[i],
+                    stone_size * 0.5,
+                    match gametree.color_at(i) {
+                        Black => black_immortal,
+                        White => white_immortal,
+                        _ => {panic!();}
+                    }
+                );
             }
         }
 
@@ -126,7 +145,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         match gametree.last_move() {
             Some(Some(point)) => {
-                draw_marker(&mut window, layout[point], stone_size / 5.0, marker_color);
+                draw_marker(&mut window, layout[point], stone_size * 0.15, marker_color);
             }
             _ => {}
         }
@@ -137,7 +156,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         if !gametree.game_over() {
             if let Some(cptm) = closest_point_to_mouse {
                 if gametree.color_at(cptm) == Empty {
-                    draw_stone(
+                    draw_circle(
                         &mut window,
                         layout[cptm],
                         stone_size,
@@ -151,29 +170,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             }
         }
 
-
-
-
-        // Mark stones as immortal when they are.
-
-        //let mut immortal_white = position.clone(); immortal_white.keep_only_immortal(White);
-        //let mut immortal_black = position.clone(); immortal_black.keep_only_immortal(Black);
-
-        //for i in 0..board.point_count() {
-            //let color = position[i];
-
-            //if color == Empty {continue;}
-            //if color == Black && immortal_black[i] == Empty {continue;}
-            //if color == White && immortal_white[i] == Empty {continue;}
-
-            //let mut cs = CircleShape::new(stone_size/2.0, 50);
-            //cs.set_position(Vector2::new(layout[i].0 - stone_size/2.0,
-                                         //layout[i].1 - stone_size/2.0));
-            //cs.set_fill_color(if color == Black {Color {r: 40,  g: 40,  b: 40,  a: 255}}
-                                           //else {Color {r: 220, g: 220, b: 220, a: 255}});
-            //window.draw(&cs);
-        //}
-
         window.set_active(true);
         window.display();
     }
@@ -183,7 +179,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 // Helper function to draw a circle of a given radius and color with its center
 // at a given point. Note that this is an SFML Color, not an Engine color.
 
-fn draw_stone(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
     let mut cs = CircleShape::new(radius, 50);
     cs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
     cs.set_fill_color(color);
