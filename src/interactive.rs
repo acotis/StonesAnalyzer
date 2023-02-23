@@ -26,8 +26,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     let white_color    = Color {r: 255, g: 255, b: 255, a: 255};
     let black_hover    = Color {r:   0, g:   0, b:   0, a:  80};
     let white_hover    = Color {r: 255, g: 255, b: 255, a:  80};
-    let black_immortal = Color {r: 40,  g: 40,  b: 40,  a: 255};
-    let white_immortal = Color {r: 220, g: 220, b: 220, a: 255};
+    let white_immortal = Color {r:   0, g:   0, b:   0, a:  40};
+    let black_immortal = Color {r: 255, g: 255, b: 255, a:  40};
+
+    //let black_immortal = Color {r: 40,  g: 40,  b: 40,  a: 255};
+    //let white_immortal = Color {r: 220, g: 220, b: 220, a: 255};
 
     // Create the RenderWindow.
 
@@ -124,6 +127,15 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             }
         }
 
+        // Draw the marker for the most recent move, if there is one.
+
+        match gametree.last_move() {
+            Some(Some(point)) => {
+                draw_marker(&mut window, layout[point], stone_size * 0.2, marker_color);
+            }
+            _ => {}
+        }
+
         // Mark stones as immortal when they are.
 
         for i in 0..board.point_count() {
@@ -139,15 +151,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     }
                 );
             }
-        }
-
-        // Draw the marker for the most recent move, if there is one.
-
-        match gametree.last_move() {
-            Some(Some(point)) => {
-                draw_marker(&mut window, layout[point], stone_size * 0.2, marker_color);
-            }
-            _ => {}
         }
 
         // Draw a translucent stone where the player is hovering, if the game is
