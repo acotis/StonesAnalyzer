@@ -52,17 +52,8 @@ impl<'a> GameTree<'a> {
 
         // Create the only-immortal board.
 
-        let mut immortal_all   = position.clone();
-        let mut immortal_white = position.clone();
-
-        immortal_all  .keep_only_immortal(Black);
-        immortal_white.keep_only_immortal(White);
-
-        for i in 0..self.board.point_count() {
-            if immortal_white[i] == White {
-                immortal_all.play(White, i);
-            }
-        }
+        let mut only_immortal = position.clone();
+        only_immortal.keep_only_immortal();
 
         // Add a new GameTreeNode to the tree.
 
@@ -79,7 +70,7 @@ impl<'a> GameTree<'a> {
                 parent: Some(self.cursor),
                 last_move: Some(play),
 
-                only_immortal: immortal_all,
+                only_immortal: only_immortal,
             }
         );
 

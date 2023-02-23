@@ -14,7 +14,7 @@
  *
  *     pub struct Position {
  *         pub play(&mut self, Color, usize);
- *         pub keep_only_immortal(&mut self, Color)
+ *         pub keep_only_immortal(&mut self)
  *     }
  *
  * Color is self-explanatory. Board is a struct representing a board structure
@@ -289,25 +289,16 @@ impl Position<'_> {
         }
     }
 
-    // Keep only immortal chains of a given color.
+    // Keep only immortal stones.
 
-    pub fn keep_only_immortal(&mut self, color: Color) {
-        self.clear_color(match color {Black => White, White => Black, Empty => panic!()});
-        
-        loop {
-            let to_clear: Vec<usize> =
-                (0..self.chains.len())
-                .filter(|&n| !self.chains[n].is_empty() &&
-                        self.board_state[self.chains[n][0]] == color &&
-                        !self.check_if_protected(n))
-                .collect();
+    pub fn keep_only_immortal(&mut self) {
+        let mut immortal_white = self.clone();
+        immortal_white.keep_only_immortal_one_color(White);
+        self.keep_only_immortal_one_color(Black);
 
-            if to_clear.is_empty() {
-                break;
-            }
-
-            for chain in to_clear {
-                self.remove_chain(chain);
+        for i in 0..self.board.point_count {
+            if immortal_white[i] == White {
+                self.play(White, i);
             }
         }
     }
@@ -345,5 +336,29 @@ impl Position<'_> {
         self.capture(match color {Black => White, White => Black, _ => panic!()});
         self.capture(color);
     }
+
+    // Keep only immortal chains of a given color.
+
+    fn keep_only_immortal_one_color(&mut self, color: Color) {
+        self.clear_color(match color {Black => White, White => Black, Empty => panic!()});
+        
+        loop {
+            let to_clear: Vec<usize> =
+                (0..self.chains.len())
+                .filter(|&n| !self.chains[n].is_empty() &&
+                        self.board_state[self.chains[n][0]] == color &&
+                        !self.check_if_protected(n))
+                .collect();
+
+            if to_clear.is_empty() {
+                break;
+            }
+
+            for chain in to_clear {
+                self.remove_chain(chain);
+            }
+        }
+    }
+
 }
 
