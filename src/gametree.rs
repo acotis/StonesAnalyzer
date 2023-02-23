@@ -48,6 +48,48 @@ pub struct GameTree<'a> {
 }
 
 impl<'a> GameTree<'a> {
+    fn add_child(&mut self, play: Option<usize>, position: Position<'a>) {
+
+        // Create the only-immortal board.
+
+        let mut immortal_all   = position.clone();
+        let mut immortal_white = position.clone();
+
+        immortal_all  .keep_only_immortal(Black);
+        immortal_white.keep_only_immortal(White);
+
+        for i in 0..self.board.point_count() {
+            if immortal_white[i] == White {
+                immortal_all.play(White, i);
+            }
+        }
+
+        // Add a new GameTreeNode to the tree.
+
+        self.tree.push(
+            GameTreeNode {
+                position: position,
+                to_play: match self.tree[self.cursor].to_play {
+                    Black => White,
+                    White => Black,
+                    Empty => {panic!();}
+                },
+
+                children: vec![],
+                parent: Some(self.cursor),
+                last_move: Some(play),
+
+                only_immortal: immortal_all,
+            }
+        );
+
+        // Add this as a child to its parent, and update the cursor.
+
+        let new_cursor = self.tree.len()-1;
+        self.tree[self.cursor].children.push(new_cursor);
+        self.cursor = new_cursor;
+    }
+
     pub fn new(board: &'a Board) -> Self {
         GameTree {
             board: &board,
@@ -94,44 +136,9 @@ impl<'a> GameTree<'a> {
             }
         }
 
-        // Create the only-immortal board.
+        // Add this to the tree and suceed.
 
-        let mut immortal_all   = new_pos.clone();
-        let mut immortal_white = new_pos.clone();
-
-        immortal_all  .keep_only_immortal(Black);
-        immortal_white.keep_only_immortal(White);
-
-        for i in 0..self.board.point_count() {
-            if immortal_white[i] == White {
-                immortal_all.play(White, i);
-            }
-        }
-
-        // Add this to the tree.
-
-        self.tree.push(
-            GameTreeNode {
-                position: new_pos,
-                to_play: match color {
-                    Black => White,
-                    White => Black,
-                    Empty => {panic!();}
-                },
-
-                children: vec![],
-                parent: Some(self.cursor),
-                last_move: Some(play),
-
-                only_immortal: immortal_all,
-            }
-        );
-
-        let new_cursor = self.tree.len()-1;
-        self.tree[self.cursor].children.push(new_cursor);
-        self.cursor = new_cursor;
-
-        // Suceed.
+        self.add_child(play, new_pos);
 
         if self.game_over() {
             return SuccessGameOver;

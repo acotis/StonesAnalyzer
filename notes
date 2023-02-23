@@ -1,5 +1,7 @@
 
 Todo:
+    + Move the responsibility for keeping only immortal stones of *both* colors
+      to the Position class itself.
     + Make it possible to undo one move.
 
 
