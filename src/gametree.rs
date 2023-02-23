@@ -11,8 +11,10 @@
  *
  *     pub fun play(&mut self, Color, Option<usize>) -> PlayResult;
  *     pub fun reset(&mut self);
+ *     pub fun game_over(&self) -> bool;
  *     pub fun get_last_move(&self) -> Option<Option<usize>>;
- *     pub fun color_at() -> Color;
+ *     pub fun color_at(usize) -> Color;
+ *     pub fun is_immortal(usize) -> bool
  *     pub fun whose_turn() -> Color;
  */
 
@@ -50,7 +52,7 @@ pub struct GameTree<'a> {
 impl<'a> GameTree<'a> {
     fn add_child(&mut self, play: Option<usize>, position: Position<'a>) {
 
-        // Create the only-immortal board.
+        // Create the only-immortal position.
 
         let mut only_immortal = position.clone();
         only_immortal.keep_only_immortal();

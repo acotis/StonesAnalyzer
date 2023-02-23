@@ -66,9 +66,9 @@ impl Board {
 
         let point_count = 
             1 + connections.iter()
-                            .map(|&n| max(n.0, n.1))
-                            .reduce(max)
-                            .unwrap();
+                           .map(|&n| max(n.0, n.1))
+                           .reduce(max)
+                           .unwrap();
 
         // Make sure every point has at least one edge.
 

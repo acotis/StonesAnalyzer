@@ -1,7 +1,6 @@
 
 Todo:
-    + Move the responsibility for keeping only immortal stones of *both* colors
-      to the Position class itself.
+    + Try having the "last move" marker be under the immortal stones markers.
     + Make it possible to undo one move.
 
 

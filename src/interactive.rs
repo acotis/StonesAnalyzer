@@ -69,11 +69,11 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     }
                 }
 
-                Event::MouseButtonPressed {button, x, y} => {
+                Event::MouseButtonPressed {button, ..} => {
                     if !gametree.game_over() {
                         match button {
                             Left => {
-                                if let Some(cptm) = closest_point_to_mouse {
+                                if let Some(_) = closest_point_to_mouse {
                                     gametree.play(gametree.whose_turn().unwrap(), 
                                                   closest_point_to_mouse);
                                 }
