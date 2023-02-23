@@ -145,7 +145,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         match gametree.last_move() {
             Some(Some(point)) => {
-                draw_marker(&mut window, layout[point], stone_size * 0.15, marker_color);
+                draw_marker(&mut window, layout[point], stone_size * 0.2, marker_color);
             }
             _ => {}
         }

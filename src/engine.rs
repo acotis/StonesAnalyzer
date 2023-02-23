@@ -146,6 +146,54 @@ impl Eq for Position<'_> {}
 
 impl Position<'_> {
 
+    // Play a stone of a given color at a given point.
+
+    pub fn play(&mut self, color: Color, point: usize) {
+        assert!(color != Empty);
+        assert!(self.board_state[point] == Empty);
+        
+        // For later, note the ID of the bubble at this point.
+
+        let bubble_id = self.chain_id_backref[point];
+
+        // Place the stone and seed a new chain from it. This will merge any
+        // existing chains that are adjacent to the point it was played at.
+        
+        self.board_state[point] = color;
+        self.seed_chain(point);
+
+        // This move may be splitting the bubble it was played in into multiple
+        // parts. For each empty point adjacent to the move, we will seed a new
+        // empty chain on that point. If an adjacent point is grabbed by the
+        // seeding process initiated by a previous adjacent point, we do not
+        // need to seed a new chain there.
+
+        for &neighbor in self.board.neighbor_lists[point].iter() {
+            if self.chain_id_backref[neighbor] == bubble_id {
+                self.seed_chain(neighbor);
+            }
+        }
+
+        // Perform captures.
+        
+        self.capture(match color {Black => White, White => Black, _ => panic!()});
+        self.capture(color);
+    }
+
+    // Keep only immortal stones.
+
+    pub fn keep_only_immortal(&mut self) {
+        let mut immortal_white = self.clone();
+        immortal_white.keep_only_immortal_one_color(White);
+        self.keep_only_immortal_one_color(Black);
+
+        for i in 0..self.board.point_count {
+            if immortal_white[i] == White {
+                self.play(White, i);
+            }
+        }
+    }
+
     // Return the ID of a currently unused chain vector.
 
     fn fresh_chain_id(&mut self) -> usize {
@@ -289,54 +337,6 @@ impl Position<'_> {
         }
     }
 
-    // Keep only immortal stones.
-
-    pub fn keep_only_immortal(&mut self) {
-        let mut immortal_white = self.clone();
-        immortal_white.keep_only_immortal_one_color(White);
-        self.keep_only_immortal_one_color(Black);
-
-        for i in 0..self.board.point_count {
-            if immortal_white[i] == White {
-                self.play(White, i);
-            }
-        }
-    }
-
-    // Play a stone of a given color at a given point.
-
-    pub fn play(&mut self, color: Color, point: usize) {
-        assert!(color != Empty);
-        assert!(self.board_state[point] == Empty);
-        
-        // For later, note the ID of the bubble at this point.
-
-        let bubble_id = self.chain_id_backref[point];
-
-        // Place the stone and seed a new chain from it. This will merge any
-        // existing chains that are adjacent to the point it was played at.
-        
-        self.board_state[point] = color;
-        self.seed_chain(point);
-
-        // This move may be splitting the bubble it was played in into multiple
-        // parts. For each empty point adjacent to the move, we will seed a new
-        // empty chain on that point. If an adjacent point is grabbed by the
-        // seeding process initiated by a previous adjacent point, we do not
-        // need to seed a new chain there.
-
-        for &neighbor in self.board.neighbor_lists[point].iter() {
-            if self.chain_id_backref[neighbor] == bubble_id {
-                self.seed_chain(neighbor);
-            }
-        }
-
-        // Perform captures.
-        
-        self.capture(match color {Black => White, White => Black, _ => panic!()});
-        self.capture(color);
-    }
-
     // Keep only immortal chains of a given color.
 
     fn keep_only_immortal_one_color(&mut self, color: Color) {
@@ -359,6 +359,5 @@ impl Position<'_> {
             }
         }
     }
-
 }
 
