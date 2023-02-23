@@ -68,18 +68,20 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 }
 
                 Event::MouseButtonPressed {button, x, y} => {
-                    match button {
-                        Left => {
-                            if let Some(cptm) = closest_point_to_mouse {
-                                gametree.play(gametree.whose_turn(), 
-                                              closest_point_to_mouse);
+                    if !gametree.game_over() {
+                        match button {
+                            Left => {
+                                if let Some(cptm) = closest_point_to_mouse {
+                                    gametree.play(gametree.whose_turn().unwrap(), 
+                                                  closest_point_to_mouse);
+                                }
                             }
+                            Right => {}
+                            Middle => {
+                                gametree.play(gametree.whose_turn().unwrap(), None);
+                            }
+                            _ => {}
                         }
-                        Right => {}
-                        Middle => {
-                            gametree.play(gametree.whose_turn(), None);
-                        }
-                        _ => {}
                     }
                 }
                 
@@ -129,20 +131,23 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             _ => {}
         }
 
-        // Draw the outline of the point the user is mousing over.
+        // Draw a translucent stone where the player is hovering, if the game is
+        // not over yet.
 
-        if let Some(cptm) = closest_point_to_mouse {
-            if gametree.color_at(cptm) == Empty {
-                draw_stone(
-                    &mut window,
-                    layout[cptm],
-                    stone_size,
-                    match gametree.whose_turn() {
-                        Black => black_hover,
-                        White => white_hover,
-                        Empty => {panic!();}
-                    }
-                );
+        if !gametree.game_over() {
+            if let Some(cptm) = closest_point_to_mouse {
+                if gametree.color_at(cptm) == Empty {
+                    draw_stone(
+                        &mut window,
+                        layout[cptm],
+                        stone_size,
+                        match gametree.whose_turn() {
+                            Some(Black) => black_hover,
+                            Some(White) => white_hover,
+                            _ => {panic!();}
+                        }
+                    );
+                }
             }
         }
 

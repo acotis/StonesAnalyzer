@@ -63,7 +63,7 @@ impl<'a> GameTree<'a> {
         }
     }
 
-    fn last_two_moves_passes(&self) -> bool {
+    pub fn game_over(&self) -> bool {
         if self.tree[self.cursor].last_move == Some(None) {
             let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
             if self.tree[prev].last_move == Some(None) {
@@ -75,7 +75,7 @@ impl<'a> GameTree<'a> {
     }
 
     pub fn play(&mut self, color: Color, play: Option<usize>) -> PlayResult {
-        if self.last_two_moves_passes() {return FailGameAlreadyOver;}
+        if self.game_over() {return FailGameAlreadyOver;}
         if self.tree[self.cursor].to_play != color {return FailNotYourTurn;}
 
         let mut new_pos = self.tree[self.cursor].position.clone();
@@ -122,7 +122,7 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].children.push(new_cursor);
         self.cursor = new_cursor;
 
-        if self.last_two_moves_passes() {
+        if self.game_over() {
             return SuccessGameOver;
         }
 
@@ -143,8 +143,12 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].position[point]
     }
 
-    pub fn whose_turn(&self) -> Color {
-        self.tree[self.cursor].to_play
+    pub fn whose_turn(&self) -> Option<Color> {
+        if self.game_over() {
+            None
+        } else {
+            Some(self.tree[self.cursor].to_play)
+        }
     }
 
     //pub fn pop(&mut self) {
