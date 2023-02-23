@@ -19,12 +19,13 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     // Display settings.
 
     let border: f32 = 20.0;
-    let board_color = Color {r: 212, g: 140, b:  30, a: 255};
-    let line_color  = Color {r:   0, g:   0, b:   0, a: 255};
-    let black_color = Color {r:   0, g:   0, b:   0, a: 255};
-    let white_color = Color {r: 255, g: 255, b: 255, a: 255};
-    let black_hover = Color {r:   0, g:   0, b:   0, a:  80};
-    let white_hover = Color {r: 255, g: 255, b: 255, a:  80};
+    let board_color  = Color {r: 212, g: 140, b:  30, a: 255};
+    let line_color   = Color {r:   0, g:   0, b:   0, a: 255};
+    let marker_color = Color {r:   0, g:   0, b: 255, a: 255};
+    let black_color  = Color {r:   0, g:   0, b:   0, a: 255};
+    let white_color  = Color {r: 255, g: 255, b: 255, a: 255};
+    let black_hover  = Color {r:   0, g:   0, b:   0, a:  80};
+    let white_hover  = Color {r: 255, g: 255, b: 255, a:  80};
 
     // Create the RenderWindow.
 
@@ -104,24 +105,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         for i in 0..board.point_count() {
             for j in 0..board.point_count() {
                 if board.is_connected(i, j) {
-
-                    let mut vertex_buffer = VertexBuffer::new(
-                        PrimitiveType::LINE_STRIP, 2, VertexBufferUsage::STATIC);
-
-                    let vertices = 
-                        &[Vertex::with_pos_color(Vector2::new(layout[i].0, layout[i].1), line_color),
-                          Vertex::with_pos_color(Vector2::new(layout[j].0, layout[j].1), line_color)];
-
-                    //let vertices = 
-                        //&[Vertex::with_pos_color(Vector2::new(300.0, 300.0), line_color),
-                          //Vertex::with_pos_color(Vector2::new(400.0, 400.0), line_color)];
-
-                    //println!("{:?}", vertices);
-                    //println!("{:?}", vertex_buffer.update(vertices, 0));
-                    //println!("{:?}", vertex_buffer);
-
-                    vertex_buffer.update(vertices, 0);
-                    window.draw(&vertex_buffer);
+                    draw_line(&mut window, layout[i], layout[j], line_color);
                 }
             }
         }
@@ -135,6 +119,35 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 Empty => {}
             }
         }
+
+        // Draw the marker for the most recent move, if there is one.
+
+        match gametree.last_move() {
+            Some(Some(point)) => {
+                draw_marker(&mut window, layout[point], stone_size / 5.0, marker_color);
+            }
+            _ => {}
+        }
+
+        // Draw the outline of the point the user is mousing over.
+
+        if let Some(cptm) = closest_point_to_mouse {
+            if gametree.color_at(cptm) == Empty {
+                draw_stone(
+                    &mut window,
+                    layout[cptm],
+                    stone_size,
+                    match gametree.whose_turn() {
+                        Black => black_hover,
+                        White => white_hover,
+                        Empty => {panic!();}
+                    }
+                );
+            }
+        }
+
+
+
 
         // Mark stones as immortal when they are.
 
@@ -156,23 +169,6 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             //window.draw(&cs);
         //}
 
-        // Draw the outline of the point the user is mousing over.
-        
-        if let Some(cptm) = closest_point_to_mouse {
-            if gametree.color_at(cptm) == Empty {
-                draw_stone(
-                    &mut window,
-                    layout[cptm],
-                    stone_size,
-                    match gametree.whose_turn() {
-                        Black => black_hover,
-                        White => white_hover,
-                        Empty => {panic!();}
-                    }
-                );
-            }
-        }
-
         window.set_active(true);
         window.display();
     }
@@ -189,6 +185,31 @@ fn draw_stone(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Co
     win.draw(&cs);
 }
 
+// Helper function to draw the "last move" marker with a given radius (i.e. distance
+// from center to the middle of an edge of the square) with its center at a given
+// point and of a given color.
+
+fn draw_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+    let mut rs = RectangleShape::new();
+    rs.set_size    (Vector2::new(radius * 2.0, radius * 2.0));
+    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
+    rs.set_fill_color(color);
+    win.draw(&rs);
+}
+
+// Helper function to draw a line from one point to another.
+
+fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color) {
+    let mut vertex_buffer = VertexBuffer::new(
+        PrimitiveType::LINE_STRIP, 2, VertexBufferUsage::STATIC);
+
+    let vertices = 
+        &[Vertex::with_pos_color(Vector2::new(a.0, a.1), color),
+          Vertex::with_pos_color(Vector2::new(b.0, b.1), color)];
+
+    vertex_buffer.update(vertices, 0);
+    win.draw(&vertex_buffer);
+}
 
 // Helper function to compute the layout of the board in window coordinates.
 
