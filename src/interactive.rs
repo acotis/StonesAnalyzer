@@ -6,6 +6,7 @@ use sfml::window::mouse::Button::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
 use crate::gametree::GameTree;
+use crate::gametree::Turn::*;
 
 type Layout = Vec<(f32, f32)>;
 
@@ -76,14 +77,14 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     if !gametree.game_over() {
                         match button {
                             Left => {
-                                if let Some(_) = closest_point_to_mouse {
-                                    gametree.play(gametree.whose_turn().unwrap(), 
-                                                  closest_point_to_mouse);
+                                if let Some(cptm) = closest_point_to_mouse {
+                                    gametree.turn(gametree.whose_turn().unwrap(), 
+                                                  Play(cptm));
                                 }
                             }
                             Right => {}
                             Middle => {
-                                gametree.play(gametree.whose_turn().unwrap(), None);
+                                gametree.turn(gametree.whose_turn().unwrap(), Pass);
                             }
                             _ => {}
                         }
@@ -129,8 +130,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         // Draw the marker for the most recent move, if there is one.
 
-        match gametree.last_move() {
-            Some(Some(point)) => {
+        match gametree.last_turn() {
+            Some(Play(point)) => {
                 draw_marker(&mut window, layout[point], stone_size * 0.2, marker_color);
             }
             _ => {}

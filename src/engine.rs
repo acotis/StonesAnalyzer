@@ -59,6 +59,16 @@ pub struct Position<'a> {
     chain_id_backref: Vec<usize>,
 }
 
+impl Color {
+    pub fn reverse(&self) -> Color {
+        match self {
+            Black => White,
+            White => Black,
+            Empty => {panic!();}
+        }
+    }
+}
+
 impl Board {
     pub fn new(connections: Vec<(usize, usize)>) -> Board {
 

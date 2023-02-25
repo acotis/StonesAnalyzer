@@ -20,9 +20,16 @@
 
 use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
-use crate::gametree::PlayResult::*;
+use crate::gametree::Turn::*;
+use crate::gametree::TurnResult::*;
 
-pub enum PlayResult {
+#[derive(Copy, Clone, PartialEq)]
+pub enum Turn {
+    Pass,
+    Play(usize),
+}
+
+pub enum TurnResult {
     FailGameAlreadyOver,
     FailNotYourTurn,
     FailStoneAlreadyThere,
@@ -33,14 +40,14 @@ pub enum PlayResult {
 
 #[derive(Clone)]
 struct GameTreeNode<'a> {
-    position:   Position<'a>,
-    to_play:    Color,
+    children:       Vec<(Turn, usize)>,     // (turn, index of child)
 
-    children:   Vec<usize>,             // Indices of children.
-    parent:     Option<usize>,          // None for root node, Some for all others.
-    last_move:  Option<Option<usize>>,  // None for root node, Some(None) for passes.
+    parent:         Option<usize>,          // None for root node, Some for all others.
+    last_turn:      Option<Turn>,           // None for root node, Some for all others.
+    to_play:        Color,
 
-    only_immortal: Position<'a>,
+    position:       Position<'a>,
+    only_immortal:  Position<'a>,
 }
 
 pub struct GameTree<'a> {
@@ -50,93 +57,42 @@ pub struct GameTree<'a> {
 }
 
 impl<'a> GameTree<'a> {
-    fn add_child(&mut self, play: Option<usize>, position: Position<'a>) {
-
-        // Create the only-immortal position.
-
-        let mut only_immortal = position.clone();
-        only_immortal.keep_only_immortal();
-
-        // Add a new GameTreeNode to the tree.
-
-        self.tree.push(
-            GameTreeNode {
-                position: position,
-                to_play: match self.tree[self.cursor].to_play {
-                    Black => White,
-                    White => Black,
-                    Empty => {panic!();}
-                },
-
-                children: vec![],
-                parent: Some(self.cursor),
-                last_move: Some(play),
-
-                only_immortal: only_immortal,
-            }
-        );
-
-        // Add this as a child to its parent, and update the cursor.
-
-        let new_cursor = self.tree.len()-1;
-        self.tree[self.cursor].children.push(new_cursor);
-        self.cursor = new_cursor;
-    }
-
     pub fn new(board: &'a Board) -> Self {
         GameTree {
             board: &board,
             tree: vec![
                 GameTreeNode {
-                    position: board.empty_position(),
-                    to_play: Black,
+                    children:       vec![],
 
-                    children: vec![],
-                    parent: None,
-                    last_move: None,
+                    parent:         None,
+                    last_turn:      None,
+                    to_play:        Black,
 
-                    only_immortal: board.empty_position(),
+                    position:       board.empty_position(),
+                    only_immortal:  board.empty_position(),
                 }
             ],
             cursor: 0,
         }
     }
 
-    pub fn play(&mut self, color: Color, play: Option<usize>) -> PlayResult {
+    pub fn turn(&mut self, color: Color, turn: Turn) -> TurnResult {
         if self.game_over() {return FailGameAlreadyOver;}
         if self.tree[self.cursor].to_play != color {return FailNotYourTurn;}
+        if let Play(point) = turn {
+            if self.tree[self.cursor].position[point] != Empty {return FailStoneAlreadyThere;}
+        }
 
         let mut new_pos = self.tree[self.cursor].position.clone();
 
-        if let Some(point) = play {
-            if self.tree[self.cursor].position[point] != Empty {
-                return FailStoneAlreadyThere;
-            }
-
-            // Play the move in question, check if it violates ko rule by walking
-            // back up the tree to visit each ancestor of this node.
-
+        if let Play(point) = turn {
             new_pos.play(color, point);
-            let mut walk = self.cursor;
-
-            loop {
-                if self.tree[walk].position == new_pos {
-                    return FailKoRule;
-                }
-
-                if walk == 0 {break;}
-                walk = self.tree[walk].parent.expect("getting parent from non-root node");
-            }
+            if self.seen_in_this_branch(&new_pos) {return FailKoRule;}
         }
 
-        // Add this to the tree and suceed.
+        self.add_child(turn, new_pos);
 
-        self.add_child(play, new_pos);
-
-        if self.game_over() {
-            return SuccessGameOver;
-        }
-
+        if self.game_over() {return SuccessGameOver;}
         return Success;
     }
 
@@ -147,9 +103,9 @@ impl<'a> GameTree<'a> {
     }
 
     pub fn game_over(&self) -> bool {
-        if self.tree[self.cursor].last_move == Some(None) {
+        if self.tree[self.cursor].last_turn == Some(Pass) {
             let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
-            if self.tree[prev].last_move == Some(None) {
+            if self.tree[prev].last_turn == Some(Pass) {
                 return true;
             }
         }
@@ -157,8 +113,8 @@ impl<'a> GameTree<'a> {
         return false;
     }
 
-    pub fn last_move(&self) -> Option<Option<usize>> {
-        self.tree[self.cursor].last_move
+    pub fn last_turn(&self) -> Option<Turn> {
+        self.tree[self.cursor].last_turn
     }
 
     pub fn color_at(&self, point: usize) -> Color {
@@ -177,37 +133,37 @@ impl<'a> GameTree<'a> {
         }
     }
 
-    //pub fn pop(&mut self) {
-        //// TODO: implement this
-    //}
+    // Private methods.
 
-    //pub fn pop_to_last_placement(&mut self) {
-        //// TODO: implement this
-    //}
+    fn add_child(&mut self, turn: Turn, position: Position<'a>) {
+        let mut new_node =
+            GameTreeNode {
+                children:       vec![],
 
-    //pub fn next_to_move(&self) -> Color {
-        //// TODO: implement this
-        //return Empty;
-    //}
+                parent:         Some(self.cursor),
+                last_turn:      Some(turn),
+                to_play:        self.tree[self.cursor].to_play.reverse(),
 
+                position:       position.clone(),
+                only_immortal:  position,
+            };
 
+        new_node.only_immortal.keep_only_immortal();
+        self.tree.push(new_node);
 
-    //Game(BoardStructure structure);
+        let new_cursor = self.tree.len() - 1;
+        self.tree[self.cursor].children.push((turn, new_cursor));
+        self.cursor = new_cursor;
+    }
 
-    //playResult black_play(ull point);
-    //playResult white_play(ull point);
-    //playResult black_pass();
-    //playResult white_pass();
+    fn seen_in_this_branch(&self, position: &Position) -> bool {
+        let mut walk = self.cursor;
 
-    //void undo();
-    //void undo_to_last_placement();
-
-    //uchar current_player();
-    //ull turn_count();
-    //sll running_score();
-    //uchar at(ull point, ull turns_ago = 0);
-    //optional<ull> get_move(ull index);
-
-    //string to_string();
+        loop {
+            if &(self.tree[walk].position) == position {return true;}
+            if walk == 0 {return false;}
+            walk = self.tree[walk].parent.expect("getting parent from non-root node");
+        }
+    }
 }
 
