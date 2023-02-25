@@ -10,6 +10,7 @@
  * of methods:
  *
  *     pub fun play(&mut self, Color, Option<usize>) -> PlayResult;
+ *     pub fun undo(&mut self);
  *     pub fun reset(&mut self);
  *     pub fun game_over(&self) -> bool;
  *     pub fun get_last_move(&self) -> Option<Option<usize>>;
@@ -79,26 +80,35 @@ impl<'a> GameTree<'a> {
     pub fn turn(&mut self, color: Color, turn: Turn) -> TurnResult {
         if self.game_over() {return FailGameAlreadyOver;}
         if self.tree[self.cursor].to_play != color {return FailNotYourTurn;}
-        if let Play(point) = turn {
-            if self.tree[self.cursor].position[point] != Empty {return FailStoneAlreadyThere;}
+
+        if let Some(child) = self.tree[self.cursor].children.iter().filter(|c| c.0 == turn).next() {
+            println!("Reusing existing child");
+            self.cursor = child.1;
+        } else {
+            let mut new_pos = self.tree[self.cursor].position.clone();
+
+            if let Play(point) = turn {
+                if self.tree[self.cursor].position[point] != Empty {
+                    return FailStoneAlreadyThere;
+                }
+                new_pos.play(color, point);
+                if self.seen_in_this_branch(&new_pos) {return FailKoRule;}
+            }
+
+            self.add_child(turn, new_pos);
         }
-
-        let mut new_pos = self.tree[self.cursor].position.clone();
-
-        if let Play(point) = turn {
-            new_pos.play(color, point);
-            if self.seen_in_this_branch(&new_pos) {return FailKoRule;}
-        }
-
-        self.add_child(turn, new_pos);
 
         if self.game_over() {return SuccessGameOver;}
         return Success;
     }
 
+    pub fn undo(&mut self) {
+        if let Some(parent) = self.tree[self.cursor].parent {
+            self.cursor = parent;
+        }
+    }
+
     pub fn reset(&mut self) {
-        while self.tree.len() > 1 {self.tree.pop();}
-        self.tree[0].children = vec![];
         self.cursor = 0;
     }
 
@@ -125,12 +135,8 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].only_immortal[point] != Empty
     }
 
-    pub fn whose_turn(&self) -> Option<Color> {
-        if self.game_over() {
-            None
-        } else {
-            Some(self.tree[self.cursor].to_play)
-        }
+    pub fn whose_turn(&self) -> Color {
+        self.tree[self.cursor].to_play
     }
 
     // Private methods.

@@ -74,20 +74,19 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 }
 
                 Event::MouseButtonPressed {button, ..} => {
-                    if !gametree.game_over() {
-                        match button {
-                            Left => {
-                                if let Some(cptm) = closest_point_to_mouse {
-                                    gametree.turn(gametree.whose_turn().unwrap(), 
-                                                  Play(cptm));
-                                }
+                    match button {
+                        Left => {
+                            if let Some(cptm) = closest_point_to_mouse {
+                                gametree.turn(gametree.whose_turn(), Play(cptm));
                             }
-                            Right => {}
-                            Middle => {
-                                gametree.turn(gametree.whose_turn().unwrap(), Pass);
-                            }
-                            _ => {}
                         }
+                        Middle => {
+                            gametree.turn(gametree.whose_turn(), Pass);
+                        }
+                        Right => {
+                            gametree.undo();
+                        }
+                        _ => {}
                     }
                 }
                 
@@ -165,8 +164,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         layout[cptm],
                         stone_size,
                         match gametree.whose_turn() {
-                            Some(Black) => black_hover,
-                            Some(White) => white_hover,
+                            Black => black_hover,
+                            White => white_hover,
                             _ => {panic!();}
                         }
                     );

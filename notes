@@ -1,7 +1,5 @@
 
 Todo:
-    + Make it possible to undo one move.
-    + Create a Turn construct with members Pass and Play(usize).
 
 
 Desired user experience:
