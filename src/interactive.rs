@@ -41,9 +41,9 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     // Stuff we track.
 
-    let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window, BORDER);
+    let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
     let mut hover_point: Option<usize> = None;
-    let mut middle_mouse_button_down: Option<Instant>;
+    let mut mid_down: Option<Instant>;
 
     let mut gametree = GameTree::new(&board);
 
@@ -56,7 +56,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
                 Event::Resized {..} => {
                     update_view(&mut window);
-                    (layout, stone_size) = sizing_in_px(&au_layout, &window, BORDER);
+                    (layout, stone_size) = sizing_in_px(&au_layout, &window);
                 }
 
                 Event::MouseMoved {x, y} => {
@@ -64,8 +64,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                 }
 
                 Event::MouseButtonPressed {button: Left, ..} => {
-                    if let Some(cptm) = hover_point {
-                        gametree.turn(gametree.whose_turn(), Play(cptm));
+                    if let Some(pt) = hover_point {
+                        gametree.turn(gametree.whose_turn(), Play(pt));
                     }
                 }
 
@@ -248,7 +248,7 @@ fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color)
 
 // Compute the layout of the board in window coordinates.
 
-fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout, f32) {
+fn sizing_in_px(au_layout: &Layout, win: &RenderWindow) -> (Layout, f32) {
 
     // Compute the arbitrary-units stone size as half the minimum distance
     // between any two points in the arbitrary-units layout.
@@ -282,8 +282,8 @@ fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout,
     let win_w = win.size().x as f32;
     let win_h = win.size().y as f32;
 
-    let squish_factor_w = (win_w - 2.0 * border) / au_width;
-    let squish_factor_h = (win_h - 2.0 * border) / au_height;
+    let squish_factor_w = (win_w - 2.0 * BORDER) / au_width;
+    let squish_factor_h = (win_h - 2.0 * BORDER) / au_height;
     let squish_factor = f32::min(squish_factor_w, squish_factor_h);
 
     let offset_w = (win_w - au_width  * squish_factor) / 2.0;

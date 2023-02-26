@@ -1,7 +1,6 @@
 
 Todo:
-    + Refactor each "chunk" of the board-drawing process to a fn.
-    + Make it record the isntant at which the middle mouse button was pressed.
+    + Make it record the instant at which the middle mouse button was pressed.
     + Give the interface a second mode where it is prompting you to choose a mark
       to drop on the selected point (including "blank").
     + Make it possible to adorn positions with markers on different points.
