@@ -22,7 +22,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     let border: f32 = 20.0;
     let board_color    = Color {r: 212, g: 140, b:  30, a: 255};
     let line_color     = Color {r:   0, g:   0, b:   0, a: 255};
-    let marker_color   = Color {r:   0, g:   0, b: 255, a: 255};
+    let marker_color   = Color {r:   0, g: 200, b:   0, a: 255};
     let black_color    = Color {r:   0, g:   0, b:   0, a: 255};
     let white_color    = Color {r: 255, g: 255, b: 255, a: 255};
     let black_hover    = Color {r:   0, g:   0, b:   0, a:  80};
@@ -83,6 +83,12 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         Middle => {
                             gametree.turn(gametree.whose_turn(), Pass);
                         }
+                        _ => {}
+                    }
+                }
+
+                Event::MouseButtonReleased {button, ..} => {
+                    match button {
                         Right => {
                             gametree.undo();
                         }
