@@ -49,6 +49,8 @@ struct GameTreeNode<'a> {
 
     position:       Position<'a>,
     only_immortal:  Position<'a>,
+
+    marked:         bool,
 }
 
 pub struct GameTree<'a> {
@@ -71,6 +73,8 @@ impl<'a> GameTree<'a> {
 
                     position:       board.empty_position(),
                     only_immortal:  board.empty_position(),
+
+                    marked:         false,
                 }
             ],
             cursor: 0,
@@ -139,6 +143,16 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].to_play
     }
 
+    // Temporary experimental stuff.
+
+    pub fn toggle_marked(&mut self) {
+        self.tree[self.cursor].marked = !self.tree[self.cursor].marked;
+    }
+
+    pub fn is_marked(&self) -> bool {
+        self.tree[self.cursor].marked
+    }
+
     // Private methods.
 
     fn add_child(&mut self, turn: Turn, position: Position<'a>) {
@@ -152,6 +166,8 @@ impl<'a> GameTree<'a> {
 
                 position:       position.clone(),
                 only_immortal:  position,
+                
+                marked:         false,
             };
 
         new_node.only_immortal.keep_only_immortal();

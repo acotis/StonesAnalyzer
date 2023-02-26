@@ -1,10 +1,13 @@
 
 Todo:
-    + Add some trivial "marking" ability just to make sure we can store and
-      recover data associated with each node of the game tree.
+    + Refactor the graphical constants out of interactive_app().
+    + Make it record the isntant at which the middle mouse button was pressed.
+    + Give the interface a second mode where it is prompting you to choose a mark
+      to drop on the selected point (including "blank").
     + Make it possible to adorn positions with markers on different points.
         - (With or without stones on them)
         - Long click to bring up a radial menu of markers?
+    + Make it mark illegal moves (i.e. ko violations) somehow.
 
 
 Desired user experience:

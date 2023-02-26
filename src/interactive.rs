@@ -1,4 +1,5 @@
 
+use std::time::Instant;
 use sfml::window::*;
 use sfml::graphics::*;
 use sfml::system::*;
@@ -47,6 +48,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window, border);
     let mut closest_point_to_mouse: Option<usize> = None;
+    let mut middle_mouse_button_down: Option<Instant>;
 
     let mut gametree = GameTree::new(&board);
 
@@ -80,8 +82,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                                 gametree.turn(gametree.whose_turn(), Play(cptm));
                             }
                         }
-                        Middle => {
-                            gametree.turn(gametree.whose_turn(), Pass);
+                        Right => {
+                            gametree.undo();
                         }
                         _ => {}
                     }
@@ -89,8 +91,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
                 Event::MouseButtonReleased {button, ..} => {
                     match button {
-                        Right => {
-                            gametree.undo();
+                        Middle => {
+                            gametree.turn(gametree.whose_turn(), Pass);
                         }
                         _ => {}
                     }
@@ -101,6 +103,9 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         Key::Escape => {
                             gametree.reset();
                         },
+                        Key::Space => {
+                            gametree.toggle_marked();
+                        },
                         _ => {}
                     }
                 }
@@ -110,8 +115,12 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         }
 
         // Draw the board background.
-        
-        window.clear(board_color);
+       
+        if gametree.is_marked() {
+            window.clear(Color {r: 100, g: 70, b:  15, a: 255});
+        } else {
+            window.clear(board_color);
+        }
 
         // Draw the edges connecting adjacent points.
         
