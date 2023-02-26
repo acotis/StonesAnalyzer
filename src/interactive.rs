@@ -11,28 +11,23 @@ use crate::gametree::Turn::*;
 
 type Layout = Vec<(f32, f32)>;
 
+const BORDER: f32 = 20.0;
+const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
+const LINE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
+const MARKER_COLOR   : Color = Color {r:   0, g: 200, b:   0, a: 255};
+const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
+const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
+const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
+const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
+const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
+const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
+
 pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     assert!(
         board.point_count() == au_layout.len(),
         "Tried to run interactive app but the board has {} points and the layout has {} points.",
         board.point_count(), au_layout.len()
     );
-
-    // Display settings.
-
-    let border: f32 = 20.0;
-    let board_color    = Color {r: 212, g: 140, b:  30, a: 255};
-    let line_color     = Color {r:   0, g:   0, b:   0, a: 255};
-    let marker_color   = Color {r:   0, g: 200, b:   0, a: 255};
-    let black_color    = Color {r:   0, g:   0, b:   0, a: 255};
-    let white_color    = Color {r: 255, g: 255, b: 255, a: 255};
-    let black_hover    = Color {r:   0, g:   0, b:   0, a:  80};
-    let white_hover    = Color {r: 255, g: 255, b: 255, a:  80};
-    let white_immortal = Color {r:   0, g:   0, b:   0, a:  40};
-    let black_immortal = Color {r: 255, g: 255, b: 255, a:  40};
-
-    //let black_immortal = Color {r: 40,  g: 40,  b: 40,  a: 255};
-    //let white_immortal = Color {r: 220, g: 220, b: 220, a: 255};
 
     // Create the RenderWindow.
 
@@ -46,7 +41,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
     // Stuff we track.
 
-    let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window, border);
+    let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window, BORDER);
     let mut closest_point_to_mouse: Option<usize> = None;
     let mut middle_mouse_button_down: Option<Instant>;
 
@@ -63,7 +58,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     window.set_view(
                         &View::from_rect(
                             &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
-                    (layout, stone_size) = sizing_in_px(&au_layout, &window, border);
+                    (layout, stone_size) = sizing_in_px(&au_layout, &window, BORDER);
                 }
 
                 Event::MouseMoved {x, y} => {
@@ -119,7 +114,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         if gametree.is_marked() {
             window.clear(Color {r: 100, g: 70, b:  15, a: 255});
         } else {
-            window.clear(board_color);
+            window.clear(BOARD_COLOR);
         }
 
         // Draw the edges connecting adjacent points.
@@ -127,7 +122,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
         for i in 0..board.point_count() {
             for j in 0..board.point_count() {
                 if board.is_connected(i, j) {
-                    draw_line(&mut window, layout[i], layout[j], line_color);
+                    draw_line(&mut window, layout[i], layout[j], LINE_COLOR);
                 }
             }
         }
@@ -136,8 +131,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         for i in 0..board.point_count() {
             match gametree.color_at(i) {
-                Black => {draw_circle(&mut window, layout[i], stone_size, black_color);}
-                White => {draw_circle(&mut window, layout[i], stone_size, white_color);}
+                Black => {draw_circle(&mut window, layout[i], stone_size, BLACK_COLOR);}
+                White => {draw_circle(&mut window, layout[i], stone_size, WHITE_COLOR);}
                 Empty => {}
             }
         }
@@ -146,7 +141,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 
         match gametree.last_turn() {
             Some(Play(point)) => {
-                draw_marker(&mut window, layout[point], stone_size * 0.2, marker_color);
+                draw_marker(&mut window, layout[point], stone_size * 0.2, MARKER_COLOR);
             }
             _ => {}
         }
@@ -160,8 +155,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                     layout[i],
                     stone_size * 0.5,
                     match gametree.color_at(i) {
-                        Black => black_immortal,
-                        White => white_immortal,
+                        Black => BLACK_IMMORTAL,
+                        White => WHITE_IMMORTAL,
                         _ => {panic!();}
                     }
                 );
@@ -179,8 +174,8 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
                         layout[cptm],
                         stone_size,
                         match gametree.whose_turn() {
-                            Black => black_hover,
-                            White => white_hover,
+                            Black => BLACK_HOVER,
+                            White => WHITE_HOVER,
                             _ => {panic!();}
                         }
                     );
