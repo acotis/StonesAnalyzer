@@ -2,14 +2,15 @@
 //#![deny(warnings)]
 
 mod engine;
-mod boards;
 mod interactive;
 mod gametree;
 
-use boards::*;
 use interactive::*;
 use engine::Board;
 use std::env;
+
+//mod boards;
+//use boards::*;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");

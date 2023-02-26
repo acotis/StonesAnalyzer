@@ -13,7 +13,7 @@ type Layout = Vec<(f32, f32)>;
 
 const BORDER: f32 = 20.0;
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
-const LINE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
+const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const MARKER_COLOR   : Color = Color {r:   0, g: 200, b:   0, a: 255};
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
@@ -42,7 +42,7 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
     // Stuff we track.
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window, BORDER);
-    let mut closest_point_to_mouse: Option<usize> = None;
+    let mut hover_point: Option<usize> = None;
     let mut middle_mouse_button_down: Option<Instant>;
 
     let mut gametree = GameTree::new(&board);
@@ -54,134 +54,47 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
             match event {
                 Event::Closed => {window.close();}
 
-                Event::Resized {width, height} => {
-                    window.set_view(
-                        &View::from_rect(
-                            &FloatRect::new(0.0, 0.0, width as f32, height as f32)));
+                Event::Resized {..} => {
+                    update_view(&mut window);
                     (layout, stone_size) = sizing_in_px(&au_layout, &window, BORDER);
                 }
 
                 Event::MouseMoved {x, y} => {
-                    closest_point_to_mouse = None;
-                    for (i, point) in layout.iter().enumerate() {
-                        if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
-                            closest_point_to_mouse = Some(i);
-                        }
+                    hover_point = get_hover_point(&layout, stone_size, x, y);
+                }
+
+                Event::MouseButtonPressed {button: Left, ..} => {
+                    if let Some(cptm) = hover_point {
+                        gametree.turn(gametree.whose_turn(), Play(cptm));
                     }
                 }
 
-                Event::MouseButtonPressed {button, ..} => {
-                    match button {
-                        Left => {
-                            if let Some(cptm) = closest_point_to_mouse {
-                                gametree.turn(gametree.whose_turn(), Play(cptm));
-                            }
-                        }
-                        Right => {
-                            gametree.undo();
-                        }
-                        _ => {}
-                    }
+                Event::MouseButtonPressed {button: Right, ..} => {
+                    gametree.undo();
                 }
 
-                Event::MouseButtonReleased {button, ..} => {
-                    match button {
-                        Middle => {
-                            gametree.turn(gametree.whose_turn(), Pass);
-                        }
-                        _ => {}
-                    }
+                Event::MouseButtonReleased {button: Middle, ..} => {
+                    gametree.turn(gametree.whose_turn(), Pass);
                 }
                 
-                Event::KeyPressed {code, ..} => {
-                    match code {
-                        Key::Escape => {
-                            gametree.reset();
-                        },
-                        Key::Space => {
-                            gametree.toggle_marked();
-                        },
-                        _ => {}
-                    }
+                Event::KeyPressed {code: Key::Escape, ..} => {
+                    gametree.reset();
+                }
+
+                Event::KeyPressed {code: Key::Space, ..} => {
+                    gametree.toggle_marked();
                 }
 
                 _ => {}
             }
         }
 
-        // Draw the board background.
-       
-        if gametree.is_marked() {
-            window.clear(Color {r: 100, g: 70, b:  15, a: 255});
-        } else {
-            window.clear(BOARD_COLOR);
-        }
-
-        // Draw the edges connecting adjacent points.
-        
-        for i in 0..board.point_count() {
-            for j in 0..board.point_count() {
-                if board.is_connected(i, j) {
-                    draw_line(&mut window, layout[i], layout[j], LINE_COLOR);
-                }
-            }
-        }
-
-        // Draw the stones currently on the board.
-
-        for i in 0..board.point_count() {
-            match gametree.color_at(i) {
-                Black => {draw_circle(&mut window, layout[i], stone_size, BLACK_COLOR);}
-                White => {draw_circle(&mut window, layout[i], stone_size, WHITE_COLOR);}
-                Empty => {}
-            }
-        }
-
-        // Draw the marker for the most recent move, if there is one.
-
-        match gametree.last_turn() {
-            Some(Play(point)) => {
-                draw_marker(&mut window, layout[point], stone_size * 0.2, MARKER_COLOR);
-            }
-            _ => {}
-        }
-
-        // Mark stones as immortal when they are.
-
-        for i in 0..board.point_count() {
-            if gametree.is_immortal(i) {
-                draw_circle(
-                    &mut window,
-                    layout[i],
-                    stone_size * 0.5,
-                    match gametree.color_at(i) {
-                        Black => BLACK_IMMORTAL,
-                        White => WHITE_IMMORTAL,
-                        _ => {panic!();}
-                    }
-                );
-            }
-        }
-
-        // Draw a translucent stone where the player is hovering, if the game is
-        // not over yet.
-
-        if !gametree.game_over() {
-            if let Some(cptm) = closest_point_to_mouse {
-                if gametree.color_at(cptm) == Empty {
-                    draw_circle(
-                        &mut window,
-                        layout[cptm],
-                        stone_size,
-                        match gametree.whose_turn() {
-                            Black => BLACK_HOVER,
-                            White => WHITE_HOVER,
-                            _ => {panic!();}
-                        }
-                    );
-                }
-            }
-        }
+        draw_bg(&mut window, &gametree);
+        draw_board(&mut window, &board, &layout);
+        draw_stones(&mut window, &board, &layout, stone_size, &gametree);
+        draw_move_marker(&mut window, &layout, stone_size, &gametree);
+        draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
+        draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
 
         window.set_active(true);
         window.display();
@@ -189,8 +102,116 @@ pub fn interactive_app(board: Board, au_layout: Vec<(f32, f32)>) {
 }
 
 
-// Helper function to draw a circle of a given radius and color with its center
-// at a given point. Note that this is an SFML Color, not an Engine color.
+// Determine which point on the board, if any, the mouse is within a stone's radius of.
+
+fn get_hover_point(layout: &Layout, stone_size: f32, x: i32, y: i32) -> Option<usize> {
+    for (i, point) in layout.iter().enumerate() {
+        if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
+            return Some(i);
+        }
+    }
+
+    return None;
+}
+
+// Update the "view" of the window (call this after a resize event to stop it from
+// getting all stretched out).
+
+fn update_view(win: &mut RenderWindow) {
+    let size = win.size();
+    win.set_view(
+        &View::from_rect(
+            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
+}
+
+// Draw the background of the board.
+
+fn draw_bg(win: &mut RenderWindow, gametree: &GameTree) {
+    if gametree.is_marked() {
+        win.clear(Color {r: 100, g: 70, b:  15, a: 255});
+    } else {
+        win.clear(BOARD_COLOR);
+    }
+}
+
+// Draw the edges of the board.
+
+fn draw_board(win: &mut RenderWindow, board: &Board, layout: &Layout) {
+    for i in 0..board.point_count() {
+        for j in 0..board.point_count() {
+            if board.is_connected(i, j) {
+                draw_line(win, layout[i], layout[j], EDGE_COLOR);
+            }
+        }
+    }
+}
+
+// Draw the stones on the board.
+
+fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout, 
+               stone_size: f32, gametree: &GameTree) {
+    for i in 0..board.point_count() {
+        match gametree.color_at(i) {
+            Black => {draw_circle(win, layout[i], stone_size, BLACK_COLOR);}
+            White => {draw_circle(win, layout[i], stone_size, WHITE_COLOR);}
+            Empty => {}
+        }
+    }
+}
+
+// Draw the last-move marker.
+
+fn draw_move_marker(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
+                    gametree: &GameTree) {
+    if let Some(Play(point)) = gametree.last_turn() {
+        draw_marker(win, layout[point], stone_size * 0.2, MARKER_COLOR);
+    }
+}
+
+// Draw the immortal-stone markers.
+
+fn draw_immortal_markers(win: &mut RenderWindow, layout: &Layout, board: &Board,
+                         stone_size: f32, gametree: &GameTree) {
+    for i in 0..board.point_count() {
+        if gametree.is_immortal(i) {
+            draw_circle(
+                win,
+                layout[i],
+                stone_size * 0.5,
+                match gametree.color_at(i) {
+                    Black => BLACK_IMMORTAL,
+                    White => WHITE_IMMORTAL,
+                    _ => {panic!();}
+                }
+            );
+        }
+    }
+}
+
+// Draw the hover stone.
+
+fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
+                    gametree: &GameTree, hover_point: Option<usize>) {
+    if !gametree.game_over() {
+        if let Some(cptm) = hover_point {
+            if gametree.color_at(cptm) == Empty {
+                draw_circle(
+                    win,
+                    layout[cptm],
+                    stone_size,
+                    match gametree.whose_turn() {
+                        Black => BLACK_HOVER,
+                        White => WHITE_HOVER,
+                        _ => {panic!();}
+                    }
+                );
+            }
+        }
+    }
+}
+
+// Draw a circle of a given radius and color with its center at a given point.
+// Note that this is an SFML Color, not an Engine color.
 
 fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
     let mut cs = CircleShape::new(radius, 50);
@@ -199,9 +220,9 @@ fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: C
     win.draw(&cs);
 }
 
-// Helper function to draw the "last move" marker with a given radius (i.e. distance
-// from center to the middle of an edge of the square) with its center at a given
-// point and of a given color.
+// Draw the "last move" marker with a given radius (i.e. distance from center to
+// the middle of an edge of the square) with its center at a given point and of a
+// given color.
 
 fn draw_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
     let mut rs = RectangleShape::new();
@@ -211,7 +232,7 @@ fn draw_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: C
     win.draw(&rs);
 }
 
-// Helper function to draw a line from one point to another.
+// Draw a line from one point to another.
 
 fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color) {
     let mut vertex_buffer = VertexBuffer::new(
@@ -225,7 +246,7 @@ fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color)
     win.draw(&vertex_buffer);
 }
 
-// Helper function to compute the layout of the board in window coordinates.
+// Compute the layout of the board in window coordinates.
 
 fn sizing_in_px(au_layout: &Layout, win: &RenderWindow, border: f32) -> (Layout, f32) {
 

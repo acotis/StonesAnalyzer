@@ -1,6 +1,5 @@
 
 Todo:
-    + Refactor the graphical constants out of interactive_app().
     + Refactor each "chunk" of the board-drawing process to a fn.
     + Make it record the isntant at which the middle mouse button was pressed.
     + Give the interface a second mode where it is prompting you to choose a mark
