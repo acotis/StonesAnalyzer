@@ -39,6 +39,14 @@ pub enum TurnResult {
     SuccessGameOver,
 }
 
+pub enum Marker {
+    Circle,
+    Square,
+    Triangle,
+    Cross,
+    Blank,
+}
+
 #[derive(Clone)]
 struct GameTreeNode<'a> {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
@@ -141,16 +149,6 @@ impl<'a> GameTree<'a> {
 
     pub fn whose_turn(&self) -> Color {
         self.tree[self.cursor].to_play
-    }
-
-    // Temporary experimental stuff.
-
-    pub fn toggle_marked(&mut self) {
-        self.tree[self.cursor].marked = !self.tree[self.cursor].marked;
-    }
-
-    pub fn is_marked(&self) -> bool {
-        self.tree[self.cursor].marked
     }
 
     // Private methods.

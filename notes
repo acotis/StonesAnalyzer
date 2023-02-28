@@ -8,6 +8,16 @@ Todo:
     + Make it mark illegal moves (i.e. ko violations) somehow.
 
 
+Normal mode:
+    - Draw bg, board, stones, immortality markers, and last move marker.
+    - 
+
+    - Normal mode:
+        - Draw hover stone.
+    - 
+
+
+
 Desired user experience:
     1. I open an "analysis file" using the Stones analyzer.
     2. On the screen, I see a board with an intial position on it. 

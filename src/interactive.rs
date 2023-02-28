@@ -26,8 +26,11 @@ const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
 
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
-#[derive(PartialEq)]
-enum Mode {Normal, SymbolSelect}
+#[derive(PartialEq, Copy, Clone)]
+enum Mode {
+    Normal(Option<(usize, Instant)>),
+    SymbolSelect(usize),
+}
 
 pub fn interactive_app(board: Board, au_layout: Layout) {
     assert!(
@@ -50,8 +53,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
     let mut hover_point: Option<usize> = None;
-    let mut mid_down: Option<Instant> = None;
-    let mut mode = Normal;
+    let mut mode = Normal(None);
 
     let mut gametree = GameTree::new(&board);
 
@@ -59,62 +61,68 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
-            match event {
-                Closed => {window.close();}
+            match (mode, hover_point, event) {
 
-                Resized {..} => {
+                // Universal event handling.
+
+                (_, _, Closed) => {window.close();}
+
+                (_, _, Resized {..}) => {
                     update_view(&mut window);
                     (layout, stone_size) = sizing_in_px(&au_layout, &window);
                 }
 
-                MouseMoved {x, y} => {
+                (_, _, MouseMoved {x, y}) => {
                     hover_point = get_hover_point(&layout, stone_size, x, y);
                 }
 
-                MouseButtonPressed {button: Left, ..} => {
-                    if let Some(pt) = hover_point {
-                        gametree.turn(gametree.whose_turn(), Play(pt));
-                    }
+                // Normal-mode event handling.
+
+                (Normal(_), Some(hp), MouseButtonPressed {button: Left, ..}) => {
+                    gametree.turn(gametree.whose_turn(), Play(hp));
                 }
 
-                MouseButtonPressed {button: Right, ..} => {
+                (Normal(_), Some(hp), MouseButtonPressed {button: Middle, ..}) => {
+                    mode = Normal(Some((hp, Instant::now())));
+                }
+
+                (Normal(_), _, MouseButtonPressed {button: Right, ..}) => {
                     gametree.undo();
                 }
 
-                MouseButtonPressed {button: Middle, ..} => {
-                    mid_down = Some(Instant::now());
-                }
-
-                MouseButtonReleased {button: Middle, ..} => {
-                    mid_down = None;
+                (Normal(_), _, MouseButtonReleased {button: Middle, ..}) => {
+                    mode = Normal(None);
                     gametree.turn(gametree.whose_turn(), Pass);
                 }
                 
-                KeyPressed {code: Key::Escape, ..} => {
+                (Normal(_), _, KeyPressed {code: Key::Escape, ..}) => {
                     gametree.reset();
                 }
 
-                KeyPressed {code: Key::Space, ..} => {
-                    gametree.toggle_marked();
+                // SymbolSelect-mode event handling.
+
+                (SymbolSelect(_), _, MouseButtonPressed {button: Left, ..}) => {
+                    println!("Leaving SymbolSelect mode");
+                    mode = Normal(None);
                 }
 
                 _ => {}
             }
         }
 
-        if let Some(md) = mid_down {
-            if Instant::now() - md > SYMBOL_HOLD_DURATION {
-                mode = SymbolSelect;
+        if let Normal(Some((point, instant))) = mode {
+            if Instant::now() - instant > SYMBOL_HOLD_DURATION {
+                mode = SymbolSelect(point);
             }
         }
 
-        draw_bg(&mut window);
+        draw_bg(&mut window, mode);
         draw_board(&mut window, &board, &layout);
         draw_stones(&mut window, &board, &layout, stone_size, &gametree);
         draw_move_marker(&mut window, &layout, stone_size, &gametree);
         draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
 
-        if mode == Normal {
+        if let Normal(_) = mode {
             draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
         } else {
 
@@ -122,6 +130,8 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
         window.set_active(true);
         window.display();
+
+        std::thread::sleep(Duration::from_millis(10));
     }
 }
 
@@ -149,8 +159,12 @@ fn update_view(win: &mut RenderWindow) {
 
 // Draw the background of the board.
 
-fn draw_bg(win: &mut RenderWindow) {
-    win.clear(BOARD_COLOR);
+fn draw_bg(win: &mut RenderWindow, mode: Mode) {
+    if let Normal(_) = mode {
+        win.clear(BOARD_COLOR);
+    } else {
+        win.clear(Color {r: 100, g: 70, b:  15, a: 255});
+    }
 }
 
 // Draw the edges of the board.
