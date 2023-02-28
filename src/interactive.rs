@@ -7,7 +7,7 @@ use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
-use crate::gametree::GameTree;
+use crate::gametree::{GameTree, Turn::*, Marker, Marker::*};
 use crate::gametree::Turn::*;
 use crate::interactive::Mode::*;
 
@@ -52,14 +52,22 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
     // Stuff we track.
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
-    let mut hover_point: Option<usize> = None;
     let mut mode = Normal(None);
-
     let mut gametree = GameTree::new(&board);
 
     // Event loop.
 
     while window.is_open() {
+        let mouse_pos = window.mouse_position();
+        let hover_point = match mode {
+            Normal(_)       => get_hover_point(&layout, stone_size, mouse_pos.x, mouse_pos.y),
+            SymbolSelect(_) => None,
+        };
+        let quad_point  = match mode {
+            Normal(_)       => None,
+            SymbolSelect(p) => Some(1), //get_quad_point(&layout, p, stone_size, x, y),
+        };
+
         while let Some(event) = window.poll_event() {
             match (mode, hover_point, event) {
 
@@ -70,10 +78,6 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
                 (_, _, Resized {..}) => {
                     update_view(&mut window);
                     (layout, stone_size) = sizing_in_px(&au_layout, &window);
-                }
-
-                (_, _, MouseMoved {x, y}) => {
-                    hover_point = get_hover_point(&layout, stone_size, x, y);
                 }
 
                 // Normal-mode event handling.
