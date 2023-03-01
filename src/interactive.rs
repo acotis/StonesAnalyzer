@@ -126,6 +126,10 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
                     }
                 }
 
+                (SymbolSelect(_), _, KeyPressed {code: Key::Escape, ..}) => {
+                    mode = Normal(None);
+                }
+
                 _ => {}
             }
         }
