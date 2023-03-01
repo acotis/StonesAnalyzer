@@ -26,8 +26,8 @@ const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
 const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
 const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
 const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
-const BUTTON_COLOR   : Color = Color {r: 255, g: 255, b: 255, a:  80};
-const BUTTON_HOVER   : Color = Color {r: 255, g: 255, b: 255, a: 160};
+const BUTTON_COLOR   : Color = Color {r: 200, g: 200, b: 200, a:  80};
+const BUTTON_HOVER   : Color = Color {r: 200, g: 200, b: 200, a: 160};
 
 #[derive(PartialEq, Copy, Clone)]
 enum Mode {
