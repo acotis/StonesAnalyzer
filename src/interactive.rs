@@ -13,6 +13,9 @@ use crate::interactive::Mode::*;
 type Layout = Vec<(f32, f32)>;
 
 const BORDER: f32 = 20.0;
+const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
+const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
+
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const MARKER_COLOR   : Color = Color {r:   0, g:   0, b: 255, a: 255};
@@ -23,8 +26,8 @@ const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
 const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
 const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
 const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
-
-const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
+const BUTTON_COLOR   : Color = Color {r: 255, g: 255, b: 255, a:  80};
+const BUTTON_HOVER   : Color = Color {r: 255, g: 255, b: 255, a: 160};
 
 #[derive(PartialEq, Copy, Clone)]
 enum Mode {
@@ -277,21 +280,24 @@ fn draw_symbol_select_overlay(win: &mut RenderWindow, center: (f32, f32), stone_
     let rad = std::cmp::max(win.size().x, win.size().y) as f32 * 2.0;
     //draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
 
-    let q1 = (center.0 + stone_size * 0.5, center.1 - stone_size * 0.5);
-    let q2 = (center.0 - stone_size * 0.5, center.1 - stone_size * 0.5);
-    let q3 = (center.0 - stone_size * 0.5, center.1 + stone_size * 0.5);
-    let q4 = (center.0 + stone_size * 0.5, center.1 + stone_size * 0.5);
-    let smol = stone_size * 0.7;
+    let offset  = stone_size * (1.0 + SYMBOL_BUTTON_INNER_MARGIN) / 2.0;
+    let sidelen = stone_size * (1.0 - SYMBOL_BUTTON_INNER_MARGIN);
+    let radius  = sidelen / f32::sqrt(2.0);
 
-    draw_square_plain(win, q1, smol, Color::WHITE);
-    draw_square_plain(win, q2, smol, Color::WHITE);
-    draw_square_plain(win, q3, smol, Color::WHITE);
-    draw_square_plain(win, q4, smol, Color::WHITE);
+    let q1 = (center.0 + offset, center.1 - offset);
+    let q2 = (center.0 - offset, center.1 - offset);
+    let q3 = (center.0 - offset, center.1 + offset);
+    let q4 = (center.0 + offset, center.1 + offset);
 
-    draw_symbol(win, q1, smol, Square);
-    draw_symbol(win, (q2.0, q2.1 + stone_size * 0.06), smol, Triangle);
-    draw_symbol(win, (q3.0, q3.1 + stone_size * 0.02), smol, Pentagon);
-    draw_symbol(win, q4, smol, Circle);
+    draw_square_plain(win, q1, radius, if hover_quad == Some(0) {BUTTON_HOVER} else {BUTTON_COLOR});
+    draw_square_plain(win, q2, radius, if hover_quad == Some(1) {BUTTON_HOVER} else {BUTTON_COLOR});
+    draw_square_plain(win, q3, radius, if hover_quad == Some(2) {BUTTON_HOVER} else {BUTTON_COLOR});
+    draw_square_plain(win, q4, radius, if hover_quad == Some(3) {BUTTON_HOVER} else {BUTTON_COLOR});
+
+    draw_symbol(win, q1, radius, Square);
+    draw_symbol(win, (q2.0, q2.1 + stone_size * 0.06), radius, Triangle);
+    draw_symbol(win, (q3.0, q3.1 + stone_size * 0.02), radius, Pentagon);
+    draw_symbol(win, q4, radius, Circle);
 }
 
 
@@ -363,11 +369,12 @@ fn update_view(win: &mut RenderWindow) {
 fn get_hover_quad(layout: &Layout, point: usize, stone_size: f32, x: i32, y: i32) -> Option<usize> {
     let x = x as f32;
     let y = y as f32;
+    let margin = SYMBOL_BUTTON_INNER_MARGIN * stone_size;
 
-    let right = layout[point].0 < x && x < layout[point].0 + stone_size;
-    let left  = layout[point].0 > x && x > layout[point].0 - stone_size;
-    let bot   = layout[point].1 < y && y < layout[point].1 + stone_size;
-    let top   = layout[point].1 > y && y > layout[point].1 - stone_size;
+    let right = layout[point].0 + margin < x && x < layout[point].0 + stone_size;
+    let left  = layout[point].0 - margin > x && x > layout[point].0 - stone_size;
+    let bot   = layout[point].1 + margin < y && y < layout[point].1 + stone_size;
+    let top   = layout[point].1 - margin > y && y > layout[point].1 - stone_size;
 
     if right && top {return Some(0);}
     if left  && top {return Some(1);}
