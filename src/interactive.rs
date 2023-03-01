@@ -144,8 +144,9 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         draw_symbols(&mut window, &board, &layout, stone_size, &gametree);
 
         match mode {
-            Normal(_) => {draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);}
+            Normal(None) => {draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);}
             SymbolSelect(pt) => {draw_symbol_select_overlay(&mut window, layout[pt], stone_size, hover_quad);}
+            _ => {}
         }
 
         window.set_active(true);
@@ -270,7 +271,7 @@ fn draw_symbol(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, symb
 
 fn draw_symbol_select_overlay(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, hover_quad: Option<usize>) {
     let rad = std::cmp::max(win.size().x, win.size().y) as f32 * 2.0;
-    draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
+    //draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
 
     let q1 = (center.0 + stone_size * 0.5, center.1 - stone_size * 0.5);
     let q2 = (center.0 - stone_size * 0.5, center.1 - stone_size * 0.5);
@@ -284,8 +285,8 @@ fn draw_symbol_select_overlay(win: &mut RenderWindow, center: (f32, f32), stone_
     draw_square_plain(win, q4, smol, Color::WHITE);
 
     draw_symbol(win, q1, smol, Square);
-    draw_symbol(win, (q2.0, q2.1 + stone_size * 0.06),  smol, Triangle);
-    draw_symbol(win, (q3.0, q3.1 + stone_size * 0.015), smol, Pentagon);
+    draw_symbol(win, (q2.0, q2.1 + stone_size * 0.06), smol, Triangle);
+    draw_symbol(win, (q3.0, q3.1 + stone_size * 0.02), smol, Pentagon);
     draw_symbol(win, q4, smol, Circle);
 }
 
