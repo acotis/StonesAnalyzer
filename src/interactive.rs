@@ -16,13 +16,13 @@ type Layout = Vec<(f32, f32)>;
 const BORDER: f32 = 20.0;
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
-const MARKER_COLOR   : Color = Color {r:   0, g: 200, b:   0, a: 255};
+const MARKER_COLOR   : Color = Color {r:   0, g:   0, b: 255, a: 255};
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
 const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
 const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
-const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
 const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
+const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
 
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
@@ -108,9 +108,21 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
                 (SymbolSelect(pt), _, MouseButtonPressed {button: Left, ..}) => {
                     println!("Leaving SymbolSelect mode");
                     mode = Normal(None);
+                    
+                    if let Some(hq) = hover_quad {
+                        let symbol = match hq {
+                            1 => Triangle,
+                            0 => Square,
+                            2 => Pentagon,
+                            3 => Circle,
+                            _ => {panic!()},
+                        };
 
-                    if hover_quad == Some(0) {
-                        gametree.mark(pt, Square);
+                        if gametree.symbol_at(pt) == symbol {
+                            gametree.mark(pt, Blank);
+                        } else {
+                            gametree.mark(pt, symbol);
+                        }
                     }
                 }
 
@@ -184,7 +196,7 @@ fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout,
 fn draw_move_marker(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
                     gametree: &GameTree) {
     if let Some(Play(point)) = gametree.last_turn() {
-        draw_square_plain(win, layout[point], stone_size * 0.2, MARKER_COLOR);
+        draw_square_plain(win, layout[point], stone_size * 0.3, MARKER_COLOR);
     }
 }
 
@@ -236,9 +248,18 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
                 stone_size: f32, gametree: &GameTree) {
     for pt in 0..board.point_count() {
-        match gametree.symbol_at(pt) {
-            Square => {draw_symbol_square(win, layout[pt], stone_size, Color{r:100, g:0, b:0, a:255});}
-            _ => {}
+        let (sides, rotation) = match gametree.symbol_at(pt) {
+            Triangle => ( 3, 0.0),
+            Square   => ( 4, 0.125),
+            Pentagon => ( 5, 0.0),
+            Circle   => (50, 0.0),
+            Blank    => (0, 0.0),
+        };
+
+        if sides != 0 {
+            draw_polygon(win, sides, rotation, layout[pt],
+                         stone_size * 0.5, Color::TRANSPARENT,
+                         stone_size * 0.12, Color{r:150, g:0, b:0, a:255});
         }
     }
 }

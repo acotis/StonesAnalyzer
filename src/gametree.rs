@@ -44,9 +44,9 @@ pub enum TurnResult {
 #[derive(Copy, Clone, PartialEq)]
 pub enum Symbol {
     Circle,
-    Square,
     Triangle,
-    Cross,
+    Square,
+    Pentagon,
     Blank,
 }
 
