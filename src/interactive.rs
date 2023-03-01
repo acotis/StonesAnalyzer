@@ -144,62 +144,6 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
     }
 }
 
-fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
-                stone_size: f32, gametree: &GameTree) {
-    for pt in 0..board.point_count() {
-        match gametree.symbol_at(pt) {
-            Square => {draw_symbol_square(win, layout[pt], stone_size, Color{r:100, g:0, b:0, a:255});}
-            _ => {}
-        }
-    }
-}
-
-// Draw a square mark.
-
-fn draw_symbol_square(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, color: Color) {
-    draw_square(win, center, stone_size * 0.4, Color::TRANSPARENT, stone_size * 0.12, color);
-}
-
-// Determine which quadrant surrounding a given point, if any, the mouse is inside.
-
-fn get_hover_quad(layout: &Layout, point: usize, stone_size: f32, x: i32, y: i32) -> Option<usize> {
-    let x = x as f32;
-    let y = y as f32;
-
-    let right = layout[point].0 < x && x < layout[point].0 + stone_size;
-    let left  = layout[point].0 > x && x > layout[point].0 - stone_size;
-    let bot   = layout[point].1 < y && y < layout[point].1 + stone_size;
-    let top   = layout[point].1 > y && y > layout[point].1 - stone_size;
-
-    if right && top {return Some(0);}
-    if left  && top {return Some(1);}
-    if left  && bot {return Some(2);}
-    if right && bot {return Some(3);}
-
-    return None;
-}
-
-// Determine which point on the board, if any, the mouse is within a stone's radius of.
-
-fn get_hover_point(layout: &Layout, stone_size: f32, x: i32, y: i32) -> Option<usize> {
-    for (i, point) in layout.iter().enumerate() {
-        if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
-            return Some(i);
-        }
-    }
-
-    return None;
-}
-
-// Update the "view" of the window (call this after a resize event to stop it from
-// getting all stretched out).
-
-fn update_view(win: &mut RenderWindow) {
-    let size = win.size();
-    win.set_view(
-        &View::from_rect(
-            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
-}
 
 // Draw the background of the board.
 
@@ -287,40 +231,61 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 }
 
 
-// Draw a square with a given center, radius, color, outline thickness, and outline color.
+// Draw the symbols that have been dropped on the board.
+
+fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
+                stone_size: f32, gametree: &GameTree) {
+    for pt in 0..board.point_count() {
+        match gametree.symbol_at(pt) {
+            Square => {draw_symbol_square(win, layout[pt], stone_size, Color{r:100, g:0, b:0, a:255});}
+            _ => {}
+        }
+    }
+}
+
+// Draw a square mark.
+
+fn draw_symbol_square(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, color: Color) {
+    draw_square(win, center, stone_size * 0.5, Color::TRANSPARENT, stone_size * 0.12, color);
+}
+
+
+// Proxy functions to put calls in to draw_polygon.
 
 fn draw_square(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
                outline_thickness: f32, outline_color: Color) {
-    let mut rs = RectangleShape::new();
-    rs.set_size(Vector2::new(radius * 2.0, radius * 2.0));
-    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
-    rs.set_fill_color(color);
-    rs.set_outline_thickness(outline_thickness);
-    rs.set_outline_color(outline_color);
-    win.draw(&rs);
+    draw_polygon(win, 4, 0.125, center, radius, color, outline_thickness, outline_color);
 }
 
 fn draw_square_plain(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
     draw_square(win, center, radius, color, 0.0, Color::TRANSPARENT);
 }
 
-
-// Draw a circle with a given center, radius, color, outline thickness, and outline color.
-
 fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
                outline_thickness: f32, outline_color: Color) {
-    let mut cs = CircleShape::new(radius, 50);
-    cs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
-    cs.set_fill_color(color);
-    cs.set_outline_thickness(outline_thickness);
-    cs.set_outline_color(outline_color);
-    win.draw(&cs);
+    draw_polygon(win, 50, 0.0, center, radius, color, outline_thickness, outline_color);
 }
 
 fn draw_circle_plain(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
     draw_circle(win, center, radius, color, 0.0, Color::TRANSPARENT);
 }
 
+
+// Draw a regular polygon with a given number of sides, rotation from its default
+// orientation, center, radius, color, outline thickness, and outline color.
+
+fn draw_polygon(win: &mut RenderWindow, side_count: u32, rotation: f32,
+                center: (f32, f32), radius: f32, color: Color,
+                outline_thickness: f32, outline_color: Color) {
+    let mut cs = CircleShape::new(radius, side_count);
+    cs.set_origin(Vector2::new(radius, radius));
+    cs.set_position(Vector2::new(center.0, center.1));
+    cs.rotate(rotation * 360.0);
+    cs.set_fill_color(color);
+    cs.set_outline_thickness(outline_thickness);
+    cs.set_outline_color(outline_color);
+    win.draw(&cs);
+}
 
 // Draw a line from one point to another.
 
@@ -334,6 +299,49 @@ fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color)
 
     vertex_buffer.update(vertices, 0);
     win.draw(&vertex_buffer);
+}
+
+
+// Update the "view" of the window (call this after a resize event to stop it from
+// getting all stretched out).
+
+fn update_view(win: &mut RenderWindow) {
+    let size = win.size();
+    win.set_view(
+        &View::from_rect(
+            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
+}
+
+
+// Determine which quadrant surrounding a given point, if any, the mouse is inside.
+
+fn get_hover_quad(layout: &Layout, point: usize, stone_size: f32, x: i32, y: i32) -> Option<usize> {
+    let x = x as f32;
+    let y = y as f32;
+
+    let right = layout[point].0 < x && x < layout[point].0 + stone_size;
+    let left  = layout[point].0 > x && x > layout[point].0 - stone_size;
+    let bot   = layout[point].1 < y && y < layout[point].1 + stone_size;
+    let top   = layout[point].1 > y && y > layout[point].1 - stone_size;
+
+    if right && top {return Some(0);}
+    if left  && top {return Some(1);}
+    if left  && bot {return Some(2);}
+    if right && bot {return Some(3);}
+
+    return None;
+}
+
+// Determine which point on the board, if any, the mouse is within a stone's radius of.
+
+fn get_hover_point(layout: &Layout, stone_size: f32, x: i32, y: i32) -> Option<usize> {
+    for (i, point) in layout.iter().enumerate() {
+        if f32::hypot(point.0 - x as f32, point.1 - y as f32) <= stone_size {
+            return Some(i);
+        }
+    }
+
+    return None;
 }
 
 // Compute the layout of the board in window coordinates.
