@@ -17,6 +17,7 @@ const BORDER: f32 = 20.0;
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const MARKER_COLOR   : Color = Color {r:   0, g:   0, b: 255, a: 255};
+const SYMBOL_COLOR   : Color = Color {r: 200, g:   0, b:   0, a: 255};
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
 const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
@@ -248,18 +249,18 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
                 stone_size: f32, gametree: &GameTree) {
     for pt in 0..board.point_count() {
-        let (sides, rotation) = match gametree.symbol_at(pt) {
-            Triangle => ( 3, 0.0),
-            Square   => ( 4, 0.125),
-            Pentagon => ( 5, 0.0),
-            Circle   => (50, 0.0),
-            Blank    => (0, 0.0),
+        let (sides, rotation, offset) = match gametree.symbol_at(pt) {
+            Triangle => ( 3, 0.0,   stone_size * 0.05),
+            Square   => ( 4, 0.125, 0.0),
+            Pentagon => ( 5, 0.0,   0.0),
+            Circle   => (50, 0.0,   0.0),
+            Blank    => ( 0, 0.0,   0.0),
         };
 
         if sides != 0 {
-            draw_polygon(win, sides, rotation, layout[pt],
+            draw_polygon(win, sides, rotation, (layout[pt].0, layout[pt].1 + offset),
                          stone_size * 0.5, Color::TRANSPARENT,
-                         stone_size * 0.12, Color{r:150, g:0, b:0, a:255});
+                         stone_size * 0.12, SYMBOL_COLOR);
         }
     }
 }
