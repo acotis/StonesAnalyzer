@@ -7,8 +7,7 @@ use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
-use crate::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
-use crate::gametree::Turn::*;
+use crate::gametree::{GameTree, Turn::*, Symbol::*};
 use crate::interactive::Mode::*;
 
 type Layout = Vec<(f32, f32)>;
@@ -137,7 +136,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
             }
         }
 
-        draw_bg(&mut window, mode);
+        draw_bg(&mut window);
         draw_board(&mut window, &board, &layout);
         draw_stones(&mut window, &board, &layout, stone_size, &gametree);
         draw_move_marker(&mut window, &layout, stone_size, &gametree);
@@ -147,7 +146,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         if let Normal(_) = mode {
             draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
         } else {
-
+            draw_symbol_select_overlay(&mut window);
         }
 
         window.set_active(true);
@@ -160,12 +159,8 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
 // Draw the background of the board.
 
-fn draw_bg(win: &mut RenderWindow, mode: Mode) {
-    if let Normal(_) = mode {
-        win.clear(BOARD_COLOR);
-    } else {
-        win.clear(Color {r: 100, g: 70, b:  15, a: 255});
-    }
+fn draw_bg(win: &mut RenderWindow) {
+    win.clear(BOARD_COLOR);
 }
 
 // Draw the edges of the board.
@@ -265,10 +260,12 @@ fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout,
     }
 }
 
-// Draw a square mark.
 
-fn draw_symbol_square(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, color: Color) {
-    draw_square(win, center, stone_size * 0.5, Color::TRANSPARENT, stone_size * 0.12, color);
+// Draw the symbol-select overlay.
+
+fn draw_symbol_select_overlay(win: &mut RenderWindow) {
+    let rad = std::cmp::max(win.size().x, win.size().y) as f32 * 2.0;
+    draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
 }
 
 

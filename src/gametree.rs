@@ -61,8 +61,6 @@ struct GameTreeNode<'a> {
 
     position:       Position<'a>,
     only_immortal:  Position<'a>,
-
-    marked:         bool,
 }
 
 pub struct GameTree<'a> {
@@ -86,8 +84,6 @@ impl<'a> GameTree<'a> {
 
                     position:       board.empty_position(),
                     only_immortal:  board.empty_position(),
-
-                    marked:         false,
                 }
             ],
             cursor: 0,
@@ -178,8 +174,6 @@ impl<'a> GameTree<'a> {
 
                 position:       position.clone(),
                 only_immortal:  position,
-                
-                marked:         false,
             };
 
         new_node.only_immortal.keep_only_immortal();
