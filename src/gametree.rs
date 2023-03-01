@@ -23,6 +23,7 @@ use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::Turn::*;
 use crate::gametree::TurnResult::*;
+use crate::gametree::Marker::*;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Turn {
@@ -30,6 +31,7 @@ pub enum Turn {
     Play(usize),
 }
 
+#[derive(Copy, Clone, PartialEq)]
 pub enum TurnResult {
     FailGameAlreadyOver,
     FailNotYourTurn,
@@ -39,6 +41,7 @@ pub enum TurnResult {
     SuccessGameOver,
 }
 
+#[derive(Copy, Clone, PartialEq)]
 pub enum Marker {
     Circle,
     Square,
@@ -50,6 +53,7 @@ pub enum Marker {
 #[derive(Clone)]
 struct GameTreeNode<'a> {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
+    markers:        Vec<Marker>,
 
     parent:         Option<usize>,          // None for root node, Some for all others.
     last_turn:      Option<Turn>,           // None for root node, Some for all others.
@@ -74,6 +78,7 @@ impl<'a> GameTree<'a> {
             tree: vec![
                 GameTreeNode {
                     children:       vec![],
+                    markers:        vec![Blank; board.point_count()],
 
                     parent:         None,
                     last_turn:      None,
@@ -124,6 +129,10 @@ impl<'a> GameTree<'a> {
         self.cursor = 0;
     }
 
+    pub fn mark(&mut self, point: usize, marker: Marker) {
+        self.tree[self.cursor].markers[point] = marker;
+    }
+
     pub fn game_over(&self) -> bool {
         if self.tree[self.cursor].last_turn == Some(Pass) {
             let prev = self.tree[self.cursor].parent.expect("getting parent of node that passed");
@@ -143,6 +152,10 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].position[point]
     }
 
+    pub fn marker_at(&self, point: usize) -> Marker {
+        self.tree[self.cursor].markers[point]
+    }
+
     pub fn is_immortal(&self, point: usize) -> bool {
         self.tree[self.cursor].only_immortal[point] != Empty
     }
@@ -157,6 +170,7 @@ impl<'a> GameTree<'a> {
         let mut new_node =
             GameTreeNode {
                 children:       vec![],
+                markers:        vec![Blank; self.board.point_count()],
 
                 parent:         Some(self.cursor),
                 last_turn:      Some(turn),

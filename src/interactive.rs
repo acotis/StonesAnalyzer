@@ -63,9 +63,9 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
             Normal(_)       => get_hover_point(&layout, stone_size, mouse_pos.x, mouse_pos.y),
             SymbolSelect(_) => None,
         };
-        let quad_point  = match mode {
+        let hover_quad  = match mode {
             Normal(_)       => None,
-            SymbolSelect(p) => Some(1), //get_quad_point(&layout, p, stone_size, x, y),
+            SymbolSelect(p) => get_hover_quad(&layout, p, stone_size, mouse_pos.x, mouse_pos.y),
         };
 
         while let Some(event) = window.poll_event() {
@@ -105,9 +105,13 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
                 // SymbolSelect-mode event handling.
 
-                (SymbolSelect(_), _, MouseButtonPressed {button: Left, ..}) => {
+                (SymbolSelect(pt), _, MouseButtonPressed {button: Left, ..}) => {
                     println!("Leaving SymbolSelect mode");
                     mode = Normal(None);
+
+                    if hover_quad == Some(0) {
+                        gametree.mark(pt, Square);
+                    }
                 }
 
                 _ => {}
@@ -125,6 +129,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         draw_stones(&mut window, &board, &layout, stone_size, &gametree);
         draw_move_marker(&mut window, &layout, stone_size, &gametree);
         draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
+        draw_markers(&mut window, &board, &layout, stone_size, &gametree);
 
         if let Normal(_) = mode {
             draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
@@ -137,6 +142,47 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
         std::thread::sleep(Duration::from_millis(10));
     }
+}
+
+fn draw_markers(win: &mut RenderWindow, board: &Board, layout: &Layout, 
+                stone_size: f32, gametree: &GameTree) {
+    for pt in 0..board.point_count() {
+        match gametree.marker_at(pt) {
+            Square => {draw_square_marker(win, layout[pt], stone_size*0.4, Color{r:100, g:0, b:0, a:255});}
+            _ => {}
+        }
+    }
+}
+
+// Draw a square mark.
+
+fn draw_square_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+    let mut rs = RectangleShape::new();
+    rs.set_size(Vector2::new(radius * 2.0, radius * 2.0));
+    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
+    rs.set_fill_color(Color {r: 0, g: 0, b: 0, a: 0});
+    rs.set_outline_color(color);
+    rs.set_outline_thickness(radius * 0.3);
+    win.draw(&rs);
+}
+
+// Determine which quadrant surrounding a given point, if any, the mouse is inside.
+
+fn get_hover_quad(layout: &Layout, point: usize, stone_size: f32, x: i32, y: i32) -> Option<usize> {
+    let x = x as f32;
+    let y = y as f32;
+
+    let right = layout[point].0 < x && x < layout[point].0 + stone_size;
+    let left  = layout[point].0 > x && x > layout[point].0 - stone_size;
+    let bot   = layout[point].1 < y && y < layout[point].1 + stone_size;
+    let top   = layout[point].1 > y && y > layout[point].1 - stone_size;
+
+    if right && top {return Some(0);}
+    if left  && top {return Some(1);}
+    if left  && bot {return Some(2);}
+    if right && bot {return Some(3);}
+
+    return None;
 }
 
 // Determine which point on the board, if any, the mouse is within a stone's radius of.
