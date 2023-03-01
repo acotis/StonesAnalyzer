@@ -43,10 +43,10 @@ pub enum TurnResult {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Symbol {
-    Circle,
     Triangle,
     Square,
     Pentagon,
+    Circle,
     Blank,
 }
 

@@ -7,7 +7,7 @@ use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
-use crate::gametree::{GameTree, Turn::*, Symbol::*};
+use crate::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
 use crate::interactive::Mode::*;
 
 type Layout = Vec<(f32, f32)>;
@@ -143,10 +143,9 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
         draw_symbols(&mut window, &board, &layout, stone_size, &gametree);
 
-        if let Normal(_) = mode {
-            draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
-        } else {
-            draw_symbol_select_overlay(&mut window);
+        match mode {
+            Normal(_) => {draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);}
+            SymbolSelect(pt) => {draw_symbol_select_overlay(&mut window, layout[pt], stone_size, hover_quad);}
         }
 
         window.set_active(true);
@@ -244,28 +243,50 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
                 stone_size: f32, gametree: &GameTree) {
     for pt in 0..board.point_count() {
-        let (sides, rotation, offset) = match gametree.symbol_at(pt) {
-            Triangle => ( 3, 0.0,   stone_size * 0.05),
-            Square   => ( 4, 0.125, 0.0),
-            Pentagon => ( 5, 0.0,   0.0),
-            Circle   => (50, 0.0,   0.0),
-            Blank    => ( 0, 0.0,   0.0),
-        };
+        draw_symbol(win, layout[pt], stone_size, gametree.symbol_at(pt));
+    }
+}
 
-        if sides != 0 {
-            draw_polygon(win, sides, rotation, (layout[pt].0, layout[pt].1 + offset),
-                         stone_size * 0.5, Color::TRANSPARENT,
-                         stone_size * 0.12, SYMBOL_COLOR);
-        }
+// Draw a single symbol.
+
+fn draw_symbol(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, symbol: Symbol) {
+    let (sides, rotation, multiple, offset) = match symbol {
+        Triangle => ( 3, 0.0,   0.43, stone_size * 0.05),
+        Square   => ( 4, 0.125, 0.50, 0.0),
+        Pentagon => ( 5, 0.0,   0.48, 0.0),
+        Circle   => (50, 0.0,   0.45, 0.0),
+        Blank    => ( 0, 0.0,   0.0,  0.0),
+    };
+
+    if sides != 0 {
+        draw_polygon(win, sides, rotation, (center.0, center.1 + offset),
+                     stone_size * multiple, Color::TRANSPARENT,
+                     stone_size * 0.12, SYMBOL_COLOR);
     }
 }
 
 
 // Draw the symbol-select overlay.
 
-fn draw_symbol_select_overlay(win: &mut RenderWindow) {
+fn draw_symbol_select_overlay(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, hover_quad: Option<usize>) {
     let rad = std::cmp::max(win.size().x, win.size().y) as f32 * 2.0;
     draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
+
+    let q1 = (center.0 + stone_size * 0.5, center.1 - stone_size * 0.5);
+    let q2 = (center.0 - stone_size * 0.5, center.1 - stone_size * 0.5);
+    let q3 = (center.0 - stone_size * 0.5, center.1 + stone_size * 0.5);
+    let q4 = (center.0 + stone_size * 0.5, center.1 + stone_size * 0.5);
+    let smol = stone_size * 0.7;
+
+    draw_square_plain(win, q1, smol, Color::WHITE);
+    draw_square_plain(win, q2, smol, Color::WHITE);
+    draw_square_plain(win, q3, smol, Color::WHITE);
+    draw_square_plain(win, q4, smol, Color::WHITE);
+
+    draw_symbol(win, q1, smol, Square);
+    draw_symbol(win, (q2.0, q2.1 + stone_size * 0.06),  smol, Triangle);
+    draw_symbol(win, (q3.0, q3.1 + stone_size * 0.015), smol, Pentagon);
+    draw_symbol(win, q4, smol, Circle);
 }
 
 
