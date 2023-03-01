@@ -23,7 +23,7 @@ use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::Turn::*;
 use crate::gametree::TurnResult::*;
-use crate::gametree::Marker::*;
+use crate::gametree::Symbol::*;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Turn {
@@ -42,7 +42,7 @@ pub enum TurnResult {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum Marker {
+pub enum Symbol {
     Circle,
     Square,
     Triangle,
@@ -53,7 +53,7 @@ pub enum Marker {
 #[derive(Clone)]
 struct GameTreeNode<'a> {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
-    markers:        Vec<Marker>,
+    symbols:        Vec<Symbol>,
 
     parent:         Option<usize>,          // None for root node, Some for all others.
     last_turn:      Option<Turn>,           // None for root node, Some for all others.
@@ -78,7 +78,7 @@ impl<'a> GameTree<'a> {
             tree: vec![
                 GameTreeNode {
                     children:       vec![],
-                    markers:        vec![Blank; board.point_count()],
+                    symbols:        vec![Blank; board.point_count()],
 
                     parent:         None,
                     last_turn:      None,
@@ -129,8 +129,8 @@ impl<'a> GameTree<'a> {
         self.cursor = 0;
     }
 
-    pub fn mark(&mut self, point: usize, marker: Marker) {
-        self.tree[self.cursor].markers[point] = marker;
+    pub fn mark(&mut self, point: usize, symbol: Symbol) {
+        self.tree[self.cursor].symbols[point] = symbol;
     }
 
     pub fn game_over(&self) -> bool {
@@ -152,8 +152,8 @@ impl<'a> GameTree<'a> {
         self.tree[self.cursor].position[point]
     }
 
-    pub fn marker_at(&self, point: usize) -> Marker {
-        self.tree[self.cursor].markers[point]
+    pub fn symbol_at(&self, point: usize) -> Symbol {
+        self.tree[self.cursor].symbols[point]
     }
 
     pub fn is_immortal(&self, point: usize) -> bool {
@@ -170,7 +170,7 @@ impl<'a> GameTree<'a> {
         let mut new_node =
             GameTreeNode {
                 children:       vec![],
-                markers:        vec![Blank; self.board.point_count()],
+                symbols:        vec![Blank; self.board.point_count()],
 
                 parent:         Some(self.cursor),
                 last_turn:      Some(turn),

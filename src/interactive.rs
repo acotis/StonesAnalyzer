@@ -7,7 +7,7 @@ use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use crate::engine::Board;
 use crate::engine::Color::*;
-use crate::gametree::{GameTree, Turn::*, Marker, Marker::*};
+use crate::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
 use crate::gametree::Turn::*;
 use crate::interactive::Mode::*;
 
@@ -129,7 +129,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         draw_stones(&mut window, &board, &layout, stone_size, &gametree);
         draw_move_marker(&mut window, &layout, stone_size, &gametree);
         draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
-        draw_markers(&mut window, &board, &layout, stone_size, &gametree);
+        draw_symbols(&mut window, &board, &layout, stone_size, &gametree);
 
         if let Normal(_) = mode {
             draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);
@@ -144,11 +144,11 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
     }
 }
 
-fn draw_markers(win: &mut RenderWindow, board: &Board, layout: &Layout, 
+fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
                 stone_size: f32, gametree: &GameTree) {
     for pt in 0..board.point_count() {
-        match gametree.marker_at(pt) {
-            Square => {draw_square_marker(win, layout[pt], stone_size*0.4, Color{r:100, g:0, b:0, a:255});}
+        match gametree.symbol_at(pt) {
+            Square => {draw_symbol_square(win, layout[pt], stone_size, Color{r:100, g:0, b:0, a:255});}
             _ => {}
         }
     }
@@ -156,14 +156,8 @@ fn draw_markers(win: &mut RenderWindow, board: &Board, layout: &Layout,
 
 // Draw a square mark.
 
-fn draw_square_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
-    let mut rs = RectangleShape::new();
-    rs.set_size(Vector2::new(radius * 2.0, radius * 2.0));
-    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
-    rs.set_fill_color(Color {r: 0, g: 0, b: 0, a: 0});
-    rs.set_outline_color(color);
-    rs.set_outline_thickness(radius * 0.3);
-    win.draw(&rs);
+fn draw_symbol_square(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, color: Color) {
+    draw_square(win, center, stone_size * 0.4, Color::TRANSPARENT, stone_size * 0.12, color);
 }
 
 // Determine which quadrant surrounding a given point, if any, the mouse is inside.
@@ -235,12 +229,8 @@ fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout,
                stone_size: f32, gametree: &GameTree) {
     for i in 0..board.point_count() {
         if gametree.color_at(i) != Empty {
-            draw_circle(
-                win,
-                layout[i],
-                stone_size,
-                if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR}
-            );
+            let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
+            draw_circle_plain(win, layout[i], stone_size, color);
         }
     }
 }
@@ -250,7 +240,7 @@ fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout,
 fn draw_move_marker(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
                     gametree: &GameTree) {
     if let Some(Play(point)) = gametree.last_turn() {
-        draw_marker(win, layout[point], stone_size * 0.2, MARKER_COLOR);
+        draw_square_plain(win, layout[point], stone_size * 0.2, MARKER_COLOR);
     }
 }
 
@@ -260,7 +250,7 @@ fn draw_immortal_markers(win: &mut RenderWindow, layout: &Layout, board: &Board,
                          stone_size: f32, gametree: &GameTree) {
     for i in 0..board.point_count() {
         if gametree.is_immortal(i) {
-            draw_circle(
+            draw_circle_plain(
                 win,
                 layout[i],
                 stone_size * 0.5,
@@ -281,7 +271,7 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
     if !gametree.game_over() {
         if let Some(hp) = hover_point {
             if gametree.color_at(hp) == Empty {
-                draw_circle(
+                draw_circle_plain(
                     win,
                     layout[hp],
                     stone_size,
@@ -296,27 +286,41 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
     }
 }
 
-// Draw a circle of a given radius and color with its center at a given point.
-// Note that this is an SFML Color, not an Engine color.
 
-fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+// Draw a square with a given center, radius, color, outline thickness, and outline color.
+
+fn draw_square(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
+               outline_thickness: f32, outline_color: Color) {
+    let mut rs = RectangleShape::new();
+    rs.set_size(Vector2::new(radius * 2.0, radius * 2.0));
+    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
+    rs.set_fill_color(color);
+    rs.set_outline_thickness(outline_thickness);
+    rs.set_outline_color(outline_color);
+    win.draw(&rs);
+}
+
+fn draw_square_plain(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+    draw_square(win, center, radius, color, 0.0, Color::TRANSPARENT);
+}
+
+
+// Draw a circle with a given center, radius, color, outline thickness, and outline color.
+
+fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
+               outline_thickness: f32, outline_color: Color) {
     let mut cs = CircleShape::new(radius, 50);
     cs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
     cs.set_fill_color(color);
+    cs.set_outline_thickness(outline_thickness);
+    cs.set_outline_color(outline_color);
     win.draw(&cs);
 }
 
-// Draw the "last move" marker with a given radius (i.e. distance from center to
-// the middle of an edge of the square) with its center at a given point and of a
-// given color.
-
-fn draw_marker(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
-    let mut rs = RectangleShape::new();
-    rs.set_size    (Vector2::new(radius * 2.0, radius * 2.0));
-    rs.set_position(Vector2::new(center.0 - radius, center.1 - radius));
-    rs.set_fill_color(color);
-    win.draw(&rs);
+fn draw_circle_plain(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color) {
+    draw_circle(win, center, radius, color, 0.0, Color::TRANSPARENT);
 }
+
 
 // Draw a line from one point to another.
 
