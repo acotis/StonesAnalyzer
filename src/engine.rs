@@ -51,9 +51,7 @@ pub struct Board {
 }
 
 #[derive(Clone)]
-pub struct Position<'a> {
-    board: &'a Board,
-
+pub struct Position {
     board_state: Vec<Color>,
     chains: Vec<Vec<usize>>,
     chain_id_backref: Vec<usize>,
@@ -132,8 +130,6 @@ impl Board {
         // that already exist.
 
         Position {
-            board: self,
-
             board_state: vec![Empty; self.point_count],
             chain_id_backref: vec![0; self.point_count],
             chains: [vec![(0..self.point_count).collect()],
@@ -142,23 +138,13 @@ impl Board {
     }
 }
 
-impl Index<usize> for Position<'_> {
-    type Output = Color;
-    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
-}
-
-impl PartialEq for Position<'_> {
-   fn eq(&self, other: &Self) -> bool {self.board_state == other.board_state}
-}
-
-impl Eq for Position<'_> {}
 
 
-impl Position<'_> {
+impl Position {
 
     // Play a stone of a given color at a given point.
 
-    pub fn play(&mut self, color: Color, point: usize) {
+    pub fn play(&mut self, board: &Board, color: Color, point: usize) {
         assert!(color != Empty);
         assert!(self.board_state[point] == Empty);
         
@@ -170,7 +156,7 @@ impl Position<'_> {
         // existing chains that are adjacent to the point it was played at.
         
         self.board_state[point] = color;
-        self.seed_chain(point);
+        self.seed_chain(board, point);
 
         // This move may be splitting the bubble it was played in into multiple
         // parts. For each empty point adjacent to the move, we will seed a new
@@ -178,28 +164,28 @@ impl Position<'_> {
         // seeding process initiated by a previous adjacent point, we do not
         // need to seed a new chain there.
 
-        for &neighbor in self.board.neighbor_lists[point].iter() {
+        for &neighbor in board.neighbor_lists[point].iter() {
             if self.chain_id_backref[neighbor] == bubble_id {
-                self.seed_chain(neighbor);
+                self.seed_chain(board, neighbor);
             }
         }
 
         // Perform captures.
         
-        self.capture(match color {Black => White, White => Black, _ => panic!()});
-        self.capture(color);
+        self.capture(board, color.reverse());
+        self.capture(board, color);
     }
 
     // Keep only immortal stones.
 
-    pub fn keep_only_immortal(&mut self) {
+    pub fn keep_only_immortal(&mut self, board: &Board) {
         let mut immortal_white = self.clone();
-        immortal_white.keep_only_immortal_one_color(White);
-        self.keep_only_immortal_one_color(Black);
+        immortal_white.keep_only_immortal_one_color(board, White);
+        self.keep_only_immortal_one_color(board, Black);
 
-        for i in 0..self.board.point_count {
+        for i in 0..board.point_count {
             if immortal_white[i] == White {
-                self.play(White, i);
+                self.play(board, White, i);
             }
         }
     }
@@ -231,7 +217,7 @@ impl Position<'_> {
     // started in and update the backref. The ID of the new chain is guaranteed
     // to be unequal to that of any chain that existed when the method was called.
 
-    fn seed_chain(&mut self, point: usize) -> usize {
+    fn seed_chain(&mut self, board: &Board, point: usize) -> usize {
         let id = self.fresh_chain_id();
         let color = self.board_state[point];
 
@@ -244,7 +230,7 @@ impl Position<'_> {
         while next < self.chains[id].len() {
             let point = self.chains[id][next];
 
-            for &neighbor in self.board.neighbor_lists[point].iter() {
+            for &neighbor in board.neighbor_lists[point].iter() {
                 if self.board_state[neighbor] == color {
                     let current_chain = self.chain_id_backref[neighbor];
                     if current_chain != id {
@@ -264,28 +250,28 @@ impl Position<'_> {
     // Remove a given chain (i.e. set all its points to empty and update the
     // chain list).
 
-    fn remove_chain(&mut self, id: usize) {
+    fn remove_chain(&mut self, board: &Board, id: usize) {
         assert!(!self.chains[id].is_empty());
 
         for &point in self.chains[id].iter() {
             self.board_state[point] = Empty;
         }
 
-        self.seed_chain(self.chains[id][0]);
+        self.seed_chain(board, self.chains[id][0]);
     }
 
     // Capture all surrounded chains of a given color.
 
-    fn capture(&mut self, color: Color) {
+    fn capture(&mut self, board: &Board, color: Color) {
         for id in 0..self.chains.len() {
             if self.chains[id].is_empty() {continue;}
             if self.board_state[self.chains[id][0]] != color {continue;}
 
             if self.chains[id].iter()
-                   .any(|&n| self.board.neighbor_lists[n].iter()
+                   .any(|&n| board.neighbor_lists[n].iter()
                                  .any(|&n| self.board_state[n] == Empty)) {continue;}
 
-            self.remove_chain(id);
+            self.remove_chain(board, id);
         }
     }
 
@@ -293,23 +279,23 @@ impl Position<'_> {
     // every point is a liberty of the chain). This only means anything after
     // clearing all chains of the *opposite* color off the board.
 
-    fn check_if_foot(&self, chain_id: usize, bubble_id: usize) -> bool {
+    fn check_if_foot(&self, board: &Board, chain_id: usize, bubble_id: usize) -> bool {
         if self.chains[bubble_id].is_empty() {return false;}
         if self[self.chains[bubble_id][0]] != Empty {return false;}
 
         self.chains[bubble_id].iter()
-            .all(|&point| self.board.neighbor_lists[point].iter()
+            .all(|&point| board.neighbor_lists[point].iter()
                           .any(|&neighbor| self.chain_id_backref[neighbor] == chain_id))
     }
 
     // Check whether a given chain has two feet. This only means anything after
     // clearing all chains of the *opposite* color off the board.
 
-    fn check_if_protected(&self, chain_id: usize) -> bool {
+    fn check_if_protected(&self, board: &Board, chain_id: usize) -> bool {
         let mut adjacent_bubbles = Vec::<usize>::new();
 
         for &point in self.chains[chain_id].iter() {
-            for &neighbor in self.board.neighbor_lists[point].iter() {
+            for &neighbor in board.neighbor_lists[point].iter() {
                 if self.board_state[neighbor] == Empty {
                     adjacent_bubbles.push(self.chain_id_backref[neighbor]);
                 }
@@ -322,7 +308,7 @@ impl Position<'_> {
         let mut foot_count = 0;
 
         for ab in adjacent_bubbles {
-            if self.check_if_foot(chain_id, ab) {
+            if self.check_if_foot(board, chain_id, ab) {
                 foot_count += 1;
                 if foot_count == 2 {
                     return true;
@@ -335,7 +321,7 @@ impl Position<'_> {
 
     // Clear all chains of a given color off the board.
 
-    fn clear_color(&mut self, color: Color) {
+    fn clear_color(&mut self, board: &Board, color: Color) {
         let chains_to_clear: Vec<usize> = 
             (0..self.chains.len())
                 .filter(|&n| !self.chains[n].is_empty() && 
@@ -343,21 +329,21 @@ impl Position<'_> {
                 .collect();
 
         for chain in chains_to_clear {
-            self.remove_chain(chain);
+            self.remove_chain(board, chain);
         }
     }
 
     // Keep only immortal chains of a given color.
 
-    fn keep_only_immortal_one_color(&mut self, color: Color) {
-        self.clear_color(match color {Black => White, White => Black, Empty => panic!()});
+    fn keep_only_immortal_one_color(&mut self, board: &Board, color: Color) {
+        self.clear_color(board, color.reverse());
         
         loop {
             let to_clear: Vec<usize> =
                 (0..self.chains.len())
                 .filter(|&n| !self.chains[n].is_empty() &&
                         self.board_state[self.chains[n][0]] == color &&
-                        !self.check_if_protected(n))
+                        !self.check_if_protected(board, n))
                 .collect();
 
             if to_clear.is_empty() {
@@ -365,9 +351,20 @@ impl Position<'_> {
             }
 
             for chain in to_clear {
-                self.remove_chain(chain);
+                self.remove_chain(board, chain);
             }
         }
     }
 }
 
+
+impl Index<usize> for Position {
+    type Output = Color;
+    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
+}
+
+impl PartialEq for Position {
+   fn eq(&self, other: &Self) -> bool {self.board_state == other.board_state}
+}
+
+impl Eq for Position {}

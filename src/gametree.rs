@@ -52,7 +52,7 @@ pub enum Symbol {
 }
 
 #[derive(Clone)]
-struct GameTreeNode<'a> {
+struct GameTreeNode {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
     symbols:        Vec<Symbol>,
 
@@ -60,13 +60,13 @@ struct GameTreeNode<'a> {
     last_turn:      Option<Turn>,           // None for root node, Some for all others.
     to_play:        Color,
 
-    position:       Position<'a>,
-    only_immortal:  Position<'a>,
+    position:       Position,
+    only_immortal:  Position,
 }
 
 pub struct GameTree<'a> {
     board:      &'a Board,
-    tree:       Vec<GameTreeNode<'a>>,
+    tree:       Vec<GameTreeNode>,
     cursor:     usize,
 }
 
@@ -105,7 +105,7 @@ impl<'a> GameTree<'a> {
                 if self.tree[self.cursor].position[point] != Empty {
                     return FailStoneAlreadyThere;
                 }
-                new_pos.play(color, point);
+                new_pos.play(self.board, color, point);
                 if self.seen_in_this_branch(&new_pos) {return FailKoRule;}
             }
 
@@ -163,7 +163,7 @@ impl<'a> GameTree<'a> {
 
     // Private methods.
 
-    fn add_child(&mut self, turn: Turn, position: Position<'a>) {
+    fn add_child(&mut self, turn: Turn, position: Position) {
         let mut new_node =
             GameTreeNode {
                 children:       vec![],
@@ -177,7 +177,7 @@ impl<'a> GameTree<'a> {
                 only_immortal:  position,
             };
 
-        new_node.only_immortal.keep_only_immortal();
+        new_node.only_immortal.keep_only_immortal(self.board);
         self.tree.push(new_node);
 
         let new_cursor = self.tree.len() - 1;
