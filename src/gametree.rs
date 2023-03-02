@@ -105,7 +105,7 @@ impl<'a> GameTree<'a> {
                 if self.tree[self.cursor].position[point] != Empty {
                     return FailStoneAlreadyThere;
                 }
-                new_pos.play(self.board, color, point);
+                self.board.play(&mut new_pos, color, point);
                 if self.seen_in_this_branch(&new_pos) {return FailKoRule;}
             }
 
@@ -177,7 +177,7 @@ impl<'a> GameTree<'a> {
                 only_immortal:  position,
             };
 
-        new_node.only_immortal.keep_only_immortal(self.board);
+        self.board.keep_only_immortal(&mut new_node.only_immortal);
         self.tree.push(new_node);
 
         let new_cursor = self.tree.len() - 1;

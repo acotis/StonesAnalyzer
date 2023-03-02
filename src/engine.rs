@@ -136,6 +136,14 @@ impl Board {
                      vec![vec![]; self.point_count]].concat(),
         }
     }
+
+    pub fn play(&self, pos: &mut Position, color: Color, point: usize) {
+        pos.play(self, color, point);
+    }
+
+    pub fn keep_only_immortal(&self, pos: &mut Position) {
+        pos.keep_only_immortal(self);
+    }
 }
 
 
@@ -144,7 +152,7 @@ impl Position {
 
     // Play a stone of a given color at a given point.
 
-    pub fn play(&mut self, board: &Board, color: Color, point: usize) {
+    fn play(&mut self, board: &Board, color: Color, point: usize) {
         assert!(color != Empty);
         assert!(self.board_state[point] == Empty);
         
@@ -178,7 +186,7 @@ impl Position {
 
     // Keep only immortal stones.
 
-    pub fn keep_only_immortal(&mut self, board: &Board) {
+    fn keep_only_immortal(&mut self, board: &Board) {
         let mut immortal_white = self.clone();
         immortal_white.keep_only_immortal_one_color(board, White);
         self.keep_only_immortal_one_color(board, Black);
