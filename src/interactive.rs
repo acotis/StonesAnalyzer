@@ -161,6 +161,8 @@ pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
 
         std::thread::sleep(Duration::from_millis(10));
     }
+
+    println!("Final state: {}", serde_json::to_string(&gametree).unwrap());
 }
 
 
