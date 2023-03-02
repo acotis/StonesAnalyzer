@@ -7,6 +7,7 @@ mod gametree;
 
 use interactive::*;
 use engine::Board;
+use gametree::GameTree;
 use std::env;
 
 //mod boards;
@@ -29,6 +30,6 @@ fn main() {
 
     let board = Board::new(edges);
 
-    interactive_app(board, layout);
+    interactive_app(GameTree::new(board), layout);
 }
 

@@ -5,7 +5,6 @@ use sfml::graphics::*;
 use sfml::system::*;
 use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
-use crate::engine::Board;
 use crate::engine::Color::*;
 use crate::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
 use crate::interactive::Mode::*;
@@ -35,11 +34,11 @@ enum Mode {
     SymbolSelect(usize),
 }
 
-pub fn interactive_app(board: Board, au_layout: Layout) {
+pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
     assert!(
-        board.point_count() == au_layout.len(),
+        gametree.board.point_count() == au_layout.len(),
         "Interative app: board has {} points but layout has {} points.",
-        board.point_count(), au_layout.len()
+        gametree.board.point_count(), au_layout.len()
     );
 
     // Create the RenderWindow.
@@ -56,7 +55,6 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
     let mut mode = Normal(None);
-    let mut gametree = GameTree::new(board);
 
     println!("Serialized: {}", serde_json::to_string(&gametree).unwrap());
 
