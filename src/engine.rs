@@ -69,6 +69,17 @@ impl Color {
     }
 }
 
+impl Index<usize> for Position {
+    type Output = Color;
+    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
+}
+
+impl PartialEq for Position {
+   fn eq(&self, other: &Self) -> bool {self.board_state == other.board_state}
+}
+
+impl Eq for Position {}
+
 impl Board {
     pub fn new(connections: Vec<(usize, usize)>) -> Board {
 
@@ -147,8 +158,6 @@ impl Board {
         pos.keep_only_immortal(self);
     }
 }
-
-
 
 impl Position {
 
@@ -368,13 +377,3 @@ impl Position {
 }
 
 
-impl Index<usize> for Position {
-    type Output = Color;
-    fn index(&self, index: usize) -> &Color {&self.board_state[index]}
-}
-
-impl PartialEq for Position {
-   fn eq(&self, other: &Self) -> bool {self.board_state == other.board_state}
-}
-
-impl Eq for Position {}
