@@ -19,6 +19,7 @@
  *     pub fun whose_turn() -> Color;
  */
 
+use serde::{Serialize, Deserialize, Serializer};
 use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::Turn::*;
@@ -192,6 +193,13 @@ impl<'a> GameTree<'a> {
             if walk == 0 {return false;}
             walk = self.tree[walk].parent.expect("getting parent from non-root node");
         }
+    }
+}
+
+impl Serialize for GameTree<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer, {
+        serializer.serialize_i32(3)
     }
 }
 

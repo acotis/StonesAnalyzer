@@ -58,6 +58,8 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
     let mut mode = Normal(None);
     let mut gametree = GameTree::new(&board);
 
+    println!("Serialized: {}", serde_json::to_string(&gametree).unwrap());
+
     // Event loop.
 
     while window.is_open() {
