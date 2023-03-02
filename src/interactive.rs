@@ -277,9 +277,6 @@ fn draw_symbol(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, symb
 // Draw the symbol-select overlay.
 
 fn draw_symbol_select_overlay(win: &mut RenderWindow, center: (f32, f32), stone_size: f32, hover_quad: Option<usize>) {
-    let rad = std::cmp::max(win.size().x, win.size().y) as f32 * 2.0;
-    //draw_square_plain(win, (0.0, 0.0), rad, Color {r: 0, g: 0, b: 0, a: 100});
-
     let offset  = stone_size * (1.0 + SYMBOL_BUTTON_INNER_MARGIN) / 2.0;
     let sidelen = stone_size * (1.0 - SYMBOL_BUTTON_INNER_MARGIN);
     let radius  = sidelen / f32::sqrt(2.0);
