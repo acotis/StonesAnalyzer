@@ -145,15 +145,15 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
             }
         }
 
-        draw_bg(&mut window);
-        draw_board(&mut window, &gametree.board, &layout);
-        draw_stones(&mut window, &gametree.board, &layout, stone_size, &gametree);
-        draw_move_marker(&mut window, &layout, stone_size, &gametree);
-        draw_immortal_markers(&mut window, &layout, &gametree.board, stone_size, &gametree);
-        draw_symbols(&mut window, &gametree.board, &layout, stone_size, &gametree);
+        draw_bg              (&mut window);
+        draw_board           (&mut window, &gametree, &layout);
+        draw_stones          (&mut window, &gametree, &layout, stone_size);
+        draw_move_marker     (&mut window, &gametree, &layout, stone_size);
+        draw_immortal_markers(&mut window, &gametree, &layout, stone_size);
+        draw_symbols         (&mut window, &gametree, &layout, stone_size);
 
         match mode {
-            Normal(None) => {draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);}
+            Normal(None) => {draw_hover_stone(&mut window, &gametree, &layout, stone_size, hover_point);}
             SymbolSelect(pt) => {draw_symbol_select_overlay(&mut window, layout[pt], stone_size, hover_quad);}
             _ => {}
         }
@@ -174,10 +174,10 @@ fn draw_bg(win: &mut RenderWindow) {
 
 // Draw the edges of the board.
 
-fn draw_board(win: &mut RenderWindow, board: &Board, layout: &Layout) {
-    for i in 0..board.point_count() {
-        for j in 0..board.point_count() {
-            if board.is_connected(i, j) {
+fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout) {
+    for i in 0..gametree.board.point_count() {
+        for j in 0..gametree.board.point_count() {
+            if gametree.board.is_connected(i, j) {
                 draw_line(win, layout[i], layout[j], EDGE_COLOR);
             }
         }
@@ -186,9 +186,8 @@ fn draw_board(win: &mut RenderWindow, board: &Board, layout: &Layout) {
 
 // Draw the stones on the board.
 
-fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout, 
-               stone_size: f32, gametree: &GameTree) {
-    for i in 0..board.point_count() {
+fn draw_stones(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
+    for i in 0..gametree.board.point_count() {
         if gametree.color_at(i) != Empty {
             let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
             draw_circle_plain(win, layout[i], stone_size, color);
@@ -198,8 +197,7 @@ fn draw_stones(win: &mut RenderWindow, board: &Board, layout: &Layout,
 
 // Draw the last-move marker.
 
-fn draw_move_marker(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
-                    gametree: &GameTree) {
+fn draw_move_marker(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
     if let Some(Play(point)) = gametree.last_turn() {
         draw_square_plain(win, layout[point], stone_size * 0.3, MARKER_COLOR);
     }
@@ -207,9 +205,8 @@ fn draw_move_marker(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 
 // Draw the immortal-stone markers.
 
-fn draw_immortal_markers(win: &mut RenderWindow, layout: &Layout, board: &Board,
-                         stone_size: f32, gametree: &GameTree) {
-    for i in 0..board.point_count() {
+fn draw_immortal_markers(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
+    for i in 0..gametree.board.point_count() {
         if gametree.is_immortal(i) {
             draw_circle_plain(
                 win,
@@ -227,8 +224,8 @@ fn draw_immortal_markers(win: &mut RenderWindow, layout: &Layout, board: &Board,
 
 // Draw the hover stone.
 
-fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
-                    gametree: &GameTree, hover_point: Option<usize>) {
+fn draw_hover_stone(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout,
+                    stone_size: f32, hover_point: Option<usize>) {
     if !gametree.game_over() {
         if let Some(hp) = hover_point {
             if gametree.color_at(hp) == Empty {
@@ -250,9 +247,8 @@ fn draw_hover_stone(win: &mut RenderWindow, layout: &Layout, stone_size: f32,
 
 // Draw the symbols that have been dropped on the board.
 
-fn draw_symbols(win: &mut RenderWindow, board: &Board, layout: &Layout, 
-                stone_size: f32, gametree: &GameTree) {
-    for pt in 0..board.point_count() {
+fn draw_symbols(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
+    for pt in 0..gametree.board.point_count() {
         draw_symbol(win, layout[pt], stone_size, gametree.symbol_at(pt));
     }
 }
