@@ -56,7 +56,7 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
 
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
     let mut mode = Normal(None);
-    let mut gametree = GameTree::new(&board);
+    let mut gametree = GameTree::new(board);
 
     println!("Serialized: {}", serde_json::to_string(&gametree).unwrap());
 
@@ -146,11 +146,11 @@ pub fn interactive_app(board: Board, au_layout: Layout) {
         }
 
         draw_bg(&mut window);
-        draw_board(&mut window, &board, &layout);
-        draw_stones(&mut window, &board, &layout, stone_size, &gametree);
+        draw_board(&mut window, &gametree.board, &layout);
+        draw_stones(&mut window, &gametree.board, &layout, stone_size, &gametree);
         draw_move_marker(&mut window, &layout, stone_size, &gametree);
-        draw_immortal_markers(&mut window, &layout, &board, stone_size, &gametree);
-        draw_symbols(&mut window, &board, &layout, stone_size, &gametree);
+        draw_immortal_markers(&mut window, &layout, &gametree.board, stone_size, &gametree);
+        draw_symbols(&mut window, &gametree.board, &layout, stone_size, &gametree);
 
         match mode {
             Normal(None) => {draw_hover_stone(&mut window, &layout, stone_size, &gametree, hover_point);}

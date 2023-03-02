@@ -64,16 +64,15 @@ struct GameTreeNode {
     only_immortal:  Position,
 }
 
-pub struct GameTree<'a> {
-    board:      &'a Board,
+pub struct GameTree {
+    pub board:  Board,
     tree:       Vec<GameTreeNode>,
     cursor:     usize,
 }
 
-impl<'a> GameTree<'a> {
-    pub fn new(board: &'a Board) -> Self {
+impl GameTree {
+    pub fn new(board: Board) -> Self {
         GameTree {
-            board: &board,
             tree: vec![
                 GameTreeNode {
                     children:       vec![],
@@ -87,6 +86,7 @@ impl<'a> GameTree<'a> {
                     only_immortal:  board.empty_position(),
                 }
             ],
+            board: board,
             cursor: 0,
         }
     }
@@ -196,7 +196,7 @@ impl<'a> GameTree<'a> {
     }
 }
 
-impl Serialize for GameTree<'_> {
+impl Serialize for GameTree {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer, {
         serializer.serialize_i32(3)
