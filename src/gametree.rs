@@ -26,7 +26,7 @@ use crate::gametree::Turn::*;
 use crate::gametree::TurnResult::*;
 use crate::gametree::Symbol::*;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Turn {
     Pass,
     Play(usize),
@@ -42,7 +42,7 @@ pub enum TurnResult {
     SuccessGameOver,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Symbol {
     Triangle,
     Square,
@@ -51,7 +51,7 @@ pub enum Symbol {
     Blank,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 struct GameTreeNode {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
     symbols:        Vec<Symbol>,
@@ -64,6 +64,7 @@ struct GameTreeNode {
     only_immortal:  Position,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct GameTree {
     pub board:  Board,
     tree:       Vec<GameTreeNode>,
@@ -193,13 +194,6 @@ impl GameTree {
             if walk == 0 {return false;}
             walk = self.tree[walk].parent.expect("getting parent from non-root node");
         }
-    }
-}
-
-impl Serialize for GameTree {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer, {
-        serializer.serialize_i32(3)
     }
 }
 

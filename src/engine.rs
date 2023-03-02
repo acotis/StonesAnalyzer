@@ -31,26 +31,28 @@
  * and its current state can be accessed with the [] operator.
  */
 
+use serde::{Serialize, Deserialize, Serializer};
 use std::ops::Index;
 use std::cmp::max;
 use crate::engine::Color::*;
 
 // Structs.
 
-#[derive(Clone, PartialEq, Copy, Debug)]
+#[derive(Clone, PartialEq, Copy, Debug, Serialize, Deserialize)]
 pub enum Color {
     Empty = 0,
     Black,
     White,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
     connectivity_matrix: Vec<Vec<bool>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Position {
     board_state: Vec<Color>,
     chains: Vec<Vec<usize>>,
