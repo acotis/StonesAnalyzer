@@ -34,7 +34,7 @@ enum Mode {
     SymbolSelect(usize),
 }
 
-pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
+pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
     assert!(
         gametree.board.point_count() == au_layout.len(),
         "Interative app: board has {} points but layout has {} points.",
@@ -159,9 +159,6 @@ pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
 
         std::thread::sleep(Duration::from_millis(10));
     }
-
-    println!("Board: {}", gametree.board.to_string());
-    println!("Final state: {}", gametree.to_string());
 }
 
 
