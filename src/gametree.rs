@@ -152,7 +152,11 @@ impl GameTree {
     }
 
     pub fn last_turn(&self) -> Option<Turn> {
-        self.tree[self.cursor].last_turn
+        if self.cursor == self.root {
+            None
+        } else {
+            self.tree[self.cursor].last_turn
+        }
     }
 
     pub fn color_at(&self, point: usize) -> Color {
