@@ -160,6 +160,7 @@ pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
         std::thread::sleep(Duration::from_millis(10));
     }
 
+    println!("Board: {}", gametree.board.to_string());
     println!("Final state: {}", gametree.to_string());
 }
 

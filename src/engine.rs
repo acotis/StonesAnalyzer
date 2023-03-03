@@ -45,14 +45,13 @@ pub enum Color {
     White,
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
     connectivity_matrix: Vec<Vec<bool>>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct Position {
     board_state: Vec<Color>,
     chains: Vec<Vec<usize>>,
@@ -376,4 +375,25 @@ impl Position {
     }
 }
 
+// Serialization stuff.
+
+impl Board {
+    pub fn to_string(&self) -> String {
+        let mut edges = vec![];
+
+        for i in 0..self.point_count {
+            for j in 0..self.point_count {
+                if self.connectivity_matrix[i][j] {
+                    edges.push((i, j));
+                }
+            }
+        }
+
+        return serde_json::to_string(&edges).unwrap();
+    }
+
+    pub fn from_string(s: String) -> Board {
+        return Board::new(serde_json::from_str(&s).unwrap());
+    }
+}
 
