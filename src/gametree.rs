@@ -104,7 +104,6 @@ impl GameTree {
         if self.tree[self.cursor].to_play != color {return FailNotYourTurn;}
 
         if let Some(child) = self.tree[self.cursor].children.iter().filter(|c| c.0 == turn).next() {
-            println!("Reusing existing child");
             self.cursor = child.1;
         } else {
             let mut new_pos = self.tree[self.cursor].position.clone();

@@ -22,10 +22,12 @@ use boards::*;
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
 
-    let filename = "analyses/stupid_8.san";
+    let filename = "analyses/loop-5.san";
+    //let filename = "analyses/stupid_8.san";
+    //let filename = "analyses/simple.san";
 
     let (mut gametree, layout) = read_san_file(filename)?;
-    //let (board, layout) = make_rectangular_board(5, 3);
+    //let (board, layout) = make_loop_board(5);
     //let mut gametree = GameTree::new(board);
 
     interactive_app(&mut gametree, &layout);

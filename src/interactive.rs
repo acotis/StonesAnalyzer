@@ -107,7 +107,6 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
                 // SymbolSelect-mode event handling.
 
                 (SymbolSelect(pt), _, MouseButtonPressed {button: Left, ..}) => {
-                    println!("Leaving SymbolSelect mode");
                     mode = Normal(None);
                     
                     if let Some(hq) = hover_quad {
