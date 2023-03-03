@@ -51,7 +51,7 @@ pub enum Symbol {
     Blank,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 struct GameTreeNode {
     children:       Vec<(Turn, usize)>,     // (turn, index of child)
     symbols:        Vec<Symbol>,
@@ -65,6 +65,11 @@ struct GameTreeNode {
 }
 
 #[derive(Serialize, Deserialize)]
+struct CompactGTN {
+    children:       Vec<(Turn, usize)>,
+    symbols:        Vec<(usize, Symbol)>,
+}
+
 pub struct GameTree {
     pub board:  Board,
     tree:       Vec<GameTreeNode>,
@@ -193,6 +198,85 @@ impl GameTree {
             if &(self.tree[walk].position) == position {return true;}
             if walk == 0 {return false;}
             walk = self.tree[walk].parent.expect("getting parent from non-root node");
+        }
+    }
+}
+
+// Serialization stuff.
+
+impl GameTree {
+    pub fn to_string(&self) -> String {
+        let mut compact_nodes: Vec<CompactGTN> = vec![];
+
+        for node in self.tree.iter() {
+            let mut compact_node = 
+                CompactGTN {
+                    children: node.children.clone(),
+                    symbols:  vec![],
+                };
+
+            for (i, &symbol) in node.symbols.iter().enumerate() {
+                if symbol != Blank {
+                    compact_node.symbols.push((i, symbol));
+                }
+            }
+
+            compact_nodes.push(compact_node);
+        }
+
+        return serde_json::to_string(&compact_nodes).unwrap();
+    }
+
+    pub fn from_string(board: Board, s: String) -> GameTree {
+        let compact_nodes: Vec<CompactGTN> = serde_json::from_str(&s).unwrap();
+
+        let mut gametree = GameTree {
+            board: board,
+            cursor: 0,
+            tree: vec![],
+        };
+
+        for compact_node in compact_nodes {
+            let mut node = 
+                GameTreeNode {
+                    children:       compact_node.children.clone(), 
+                    symbols:        vec![Blank; gametree.board.point_count()],
+
+                    parent:         None,
+                    last_turn:      None,
+                    to_play:        Black,
+
+                    position:       gametree.board.empty_position(),
+                    only_immortal:  gametree.board.empty_position(),
+                };
+
+            for (i, symbol) in compact_node.symbols {
+                node.symbols[i] = symbol;
+            }
+
+            gametree.tree.push(node);
+        }
+
+        gametree.fill_cache(0);
+        return gametree;
+    }
+
+    fn fill_cache(&mut self, node: usize) {
+        for &(turn, child) in self.tree[node].children.clone().iter() {
+            self.tree[child].parent = Some(node);
+            self.tree[child].last_turn = Some(turn);
+            self.tree[child].to_play = self.tree[node].to_play.reverse();
+            self.tree[child].position = self.tree[node].position.clone();
+
+            if let Play(pt) = turn {
+                let color = self.tree[node].to_play;
+                self.board.play(&mut self.tree[child].position, color, pt);
+            }
+
+            self.tree[child].only_immortal = self.tree[child].position.clone();
+            self.board.keep_only_immortal(&mut self.tree[child].only_immortal);
+
+            self.fill_cache(child);
         }
     }
 }

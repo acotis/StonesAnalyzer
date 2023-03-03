@@ -1,5 +1,7 @@
 
 Todo:
+    + Make Serde skip over redundant fields in GameTreeNode and Board.
+        + Add methods to fill in their contents from the serialized fields.
     + Make it mark illegal moves (i.e. ko violations) somehow.
 
 

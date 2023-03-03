@@ -56,8 +56,6 @@ pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
     let (mut layout, mut stone_size) = sizing_in_px(&au_layout, &window);
     let mut mode = Normal(None);
 
-    println!("Serialized: {}", serde_json::to_string(&gametree).unwrap());
-
     // Event loop.
 
     while window.is_open() {
@@ -162,7 +160,7 @@ pub fn interactive_app(mut gametree: GameTree, au_layout: Layout) {
         std::thread::sleep(Duration::from_millis(10));
     }
 
-    println!("Final state: {}", serde_json::to_string(&gametree).unwrap());
+    println!("Final state: {}", gametree.to_string());
 }
 
 
