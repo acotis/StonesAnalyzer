@@ -31,7 +31,7 @@
  * and its current state can be accessed with the [] operator.
  */
 
-use serde::{Serialize, Deserialize, Serializer};
+use serde::{Serialize, Deserialize};
 use std::ops::Index;
 use std::cmp::max;
 use crate::engine::Color::*;

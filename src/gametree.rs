@@ -19,7 +19,7 @@
  *     pub fun whose_turn() -> Color;
  */
 
-use serde::{Serialize, Deserialize, Serializer};
+use serde::{Serialize, Deserialize};
 use crate::engine::{Board, Position, Color};
 use crate::engine::Color::*;
 use crate::gametree::Turn::*;
