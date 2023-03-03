@@ -74,6 +74,7 @@ pub struct GameTree {
     pub board:  Board,
     tree:       Vec<GameTreeNode>,
     cursor:     usize,
+    root:       usize,
 }
 
 impl GameTree {
@@ -94,6 +95,7 @@ impl GameTree {
             ],
             board: board,
             cursor: 0,
+            root: 0,
         }
     }
 
@@ -123,13 +125,15 @@ impl GameTree {
     }
 
     pub fn undo(&mut self) {
-        if let Some(parent) = self.tree[self.cursor].parent {
-            self.cursor = parent;
+        if self.cursor != self.root {
+            if let Some(parent) = self.tree[self.cursor].parent {
+                self.cursor = parent;
+            }
         }
     }
 
     pub fn reset(&mut self) {
-        self.cursor = 0;
+        self.cursor = self.root;
     }
 
     pub fn mark(&mut self, point: usize, symbol: Symbol) {
@@ -224,16 +228,18 @@ impl GameTree {
             compact_nodes.push(compact_node);
         }
 
-        return serde_json::to_string(&compact_nodes).unwrap();
+        return serde_json::to_string(&(self.root, compact_nodes)).unwrap();
     }
 
     pub fn from_string(board: Board, s: String) -> GameTree {
-        let compact_nodes: Vec<CompactGTN> = serde_json::from_str(&s).unwrap();
+        let (root, compact_nodes): (usize, Vec<CompactGTN>) =
+            serde_json::from_str(&s).unwrap();
 
         let mut gametree = GameTree {
             board: board,
             cursor: 0,
             tree: vec![],
+            root: root,
         };
 
         for compact_node in compact_nodes {
@@ -258,6 +264,7 @@ impl GameTree {
         }
 
         gametree.fill_cache(0);
+        gametree.reset();
         return gametree;
     }
 
