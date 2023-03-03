@@ -16,14 +16,18 @@ use gametree::GameTree;
 
 type Layout = Vec::<(f32, f32)>;
 
-//mod boards;
-//use boards::*;
+mod boards;
+use boards::*;
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
 
-    let filename = "analyses/simple.san";
+    let filename = "analyses/4x2.san";
+
     let (mut gametree, layout) = read_san_file(filename)?;
+    //let (board, layout) = make_rectangular_board(4, 2);
+    //let mut gametree = GameTree::new(board);
+
     interactive_app(&mut gametree, &layout);
     write_san_file(filename, gametree, layout)?;
 
