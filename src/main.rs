@@ -22,6 +22,15 @@ use boards::*;
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
 
+    let args: Vec<_> = env::args().collect();
+
+    match args.len() {
+        0 => {panic!();}
+        2 => {analyze_existing_san_file(&args[1])?; return Ok(());}
+        3.. => {println!("Error: too many arguments (expected 0 or 1)."); return Ok(());}
+        _ => {}
+    }
+
     //let layout = vec![
         //(0.0,0.0),(1.0,0.0),(2.0,0.0),(3.0,0.0),(4.0,0.0),
         //(0.0,1.0),(1.0,1.0),(2.0,1.0),(3.0,1.0),(4.0,1.0),
@@ -40,8 +49,6 @@ fn main() -> io::Result<()> {
         //(4,9),(9,14),
     //]);
     //analyze_and_create_san_file("no-name", (board, layout));
-
-    analyze_existing_san_file("analyses/2023-03-03.san")?;
 
     Ok(())
 }
