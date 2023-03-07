@@ -1,5 +1,9 @@
 
 Todo:
+    + Make it refuse to overwrite files with blank files.
+    + Add command-line options for creating analysis files:
+        + --edit-root
+        + --create (?)
     + Make it mark illegal moves (i.e. ko violations) somehow.
 
 
