@@ -1,9 +1,25 @@
 
 Todo:
-    + Make it refuse to overwrite files with blank files.
+    + Make it refuse to overwrite existing files.
     + Add command-line options for creating analysis files:
-        + --edit-root
-        + --create (?)
+
+        Create  Set     Analyze
+                                | -
+                        X       | filename
+        X               X       | filename --create [params] 
+        X       X       X       | filename --create [params] --custom
+        X                       | filename --create [params] --no-open
+
+    + Add a way to set the root position in the analyzer.
+        - Remember the user may want to scroll backwards from the current root.
+        - Then again, maybe the root shouldn't be editable once you set it.
+
+    - Dumb combinations (I think):
+
+        Create  Set     Analyze
+                        X       | filename --analyze
+        X               X       | filename --create [params] --analyze
+    
     + Make it mark illegal moves (i.e. ko violations) somehow.
 
 

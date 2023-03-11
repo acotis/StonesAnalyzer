@@ -7,9 +7,9 @@
 
 use crate::engine::Board;
 
-type Layout = Vec::<(f32, f32)>;
-type Edges = Vec::<(usize, usize)>;
-type Bal = (Board, Vec<(f32, f32)>); // "Board and Layout"
+pub type Layout = Vec::<(f32, f32)>;
+pub type Edges = Vec::<(usize, usize)>;
+pub type Bal = (Board, Vec<(f32, f32)>); // "Board and Layout"
 
 // RECTANGULAR BOARDS
 

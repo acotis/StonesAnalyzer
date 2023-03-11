@@ -9,27 +9,79 @@ use std::env;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
+use clap::Parser;
+use clap::Subcommand;
 
 use interactive::*;
 use engine::Board;
 use gametree::GameTree;
 
-type Layout = Vec::<(f32, f32)>;
-
 mod boards;
 use boards::*;
+
+#[derive(Parser)]
+struct CLI {
+    #[arg()]
+    filename: String,
+
+    /// Create a new file with the specified board geometry.
+    #[arg(short, long, value_name = "board spec")]
+    create:   Option<String>,
+
+    /// ...and set a custom start position.
+    #[arg(short, long, default_value_t = false)]
+    set_root:  bool,
+
+    /// ...and don't open the analyzer at all.
+    #[arg(short, long, default_value_t = false)]
+    no_open: bool,
+}
+
+#[derive(Subcommand)]
+enum BoardSpec {
+    Square {size: usize},
+    Rect {width: usize, height: usize},
+    Loop {points: usize},
+    Custom {},
+}
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
 
-    let args: Vec<_> = env::args().collect();
+    let args = CLI::parse();
 
-    match args.len() {
-        0 => {panic!();}
-        2 => {analyze_existing_san_file(&args[1])?; return Ok(());}
-        3.. => {println!("Error: too many arguments (expected 0 or 1)."); return Ok(());}
-        _ => {}
+    // Error conditions.
+
+    if args.create.is_none() && (args.set_root || args.no_open) {
+        eprintln!("Error: Cannot use --set-root or --no-open without --create.");
+        return Ok(());
     }
+
+    if args.set_root && args.no_open {
+        eprintln!("Error: Cannot specify both --set-root and --no-open.");
+        return Ok(());
+    }
+
+    // Regular conditions.
+
+    if let Some(_spec) = args.create {
+        // TODO: validate spec and create file.
+        eprintln!("Board creation is not implemented yet.");
+        return Ok(());
+    }
+
+    if args.no_open {
+        return Ok(());
+    }
+
+    if args.set_root {
+        eprintln!("Custom roots are not implemented yet.");
+        return Ok(());
+    }
+
+    // TODO: add setup flag to this function and pass args.set_root to it.
+
+    analyze_existing_san_file(&args.filename)?;
 
     //let mut layout = layout_rect(5, 4);
     //let mut edges  = edges_rect (5, 4);
@@ -44,13 +96,6 @@ fn main() -> io::Result<()> {
     //let mut gametree = GameTree::new(board);
     //interactive_app(&mut gametree, &layout);
 
-    Ok(())
-}
-
-fn analyze_and_create_san_file(filename: &str, (board, layout): (Board, Layout)) -> io::Result<()> {
-    let mut gametree = GameTree::new(board);
-    interactive_app(&mut gametree, &layout);
-    write_san_file(filename, gametree, layout)?;
     Ok(())
 }
 

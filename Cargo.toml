@@ -9,3 +9,4 @@ edition = "2021"
 sfml = "0.19.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
+clap = { version = "4.1.8", features = ["derive"] }
