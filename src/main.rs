@@ -53,19 +53,25 @@ fn main() -> io::Result<()> {
     // Error conditions.
 
     if args.create.is_none() && (args.set_root || args.no_open) {
-        eprintln!("Error: Cannot use --set-root or --no-open without --create.");
+        eprintln!("Error: cannot use --set-root or --no-open without --create.");
         return Ok(());
     }
 
     if args.set_root && args.no_open {
-        eprintln!("Error: Cannot specify both --set-root and --no-open.");
+        eprintln!("Error: cannot specify both --set-root and --no-open.");
         return Ok(());
     }
 
     // Regular conditions.
 
     if let Some(_spec) = args.create {
-        // TODO: validate spec and create file.
+        // TODO: validate spec, make sure file does not already exist, and create file.
+    
+        if std::path::Path::new(&args.filename).exists() {
+            eprintln!("Error: file already exists.");
+            return Ok(());
+        }
+
         eprintln!("Board creation is not implemented yet.");
         return Ok(());
     }
@@ -97,6 +103,30 @@ fn main() -> io::Result<()> {
     //interactive_app(&mut gametree, &layout);
 
     Ok(())
+}
+
+fn bal_from_spec(spec: &str) -> Option<Bal> {
+    let mut parts = spec.split(":");
+    let name = parts.next().unwrap();
+
+    let mut any_bad_params = false;
+    let params: Vec<usize> = parts.map(|s| {
+        match s.parse() {
+            Ok(i) => i,
+            _ => {any_bad_params = true; 0}
+        }
+    }).collect();
+
+    if any_bad_params {
+        return None;
+    }
+
+    match (name, params.len()) {
+        ("square", 1) => Some(bal_rect(params[0], params[0])),
+        ("rect", 2)   => Some(bal_rect(params[0], params[1])),
+        ("loop", 1)   => Some(bal_loop(params[0])),
+        _ => {None}
+    }
 }
 
 fn analyze_existing_san_file(filename: &str) -> io::Result<()> {
