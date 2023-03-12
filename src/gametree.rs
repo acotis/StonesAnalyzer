@@ -174,6 +174,10 @@ impl GameTree {
         self.tree[self.cursor].to_play
     }
 
+    pub fn set_root_here(&mut self) {
+        self.root = self.cursor;
+    }
+
     // Private methods.
 
     fn add_child(&mut self, turn: Turn, position: Position) {

@@ -16,6 +16,7 @@ const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
+const BOARD_COLOR_SR : Color = Color {r: 106, g:  70, b:  15, a: 255};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const MARKER_COLOR   : Color = Color {r:   0, g:   0, b: 255, a: 255};
 const SYMBOL_COLOR   : Color = Color {r: 200, g:   0, b:   0, a: 255};
@@ -34,7 +35,7 @@ enum Mode {
     SymbolSelect(usize),
 }
 
-pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
+pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root: bool) {
     assert!(
         gametree.board.point_count() == au_layout.len(),
         "Interative app: board has {} points but layout has {} points.",
@@ -104,6 +105,13 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
                     gametree.reset();
                 }
 
+                (Normal(_), _, KeyPressed {code: Key::Enter, ..}) => {
+                    if set_root {
+                        gametree.set_root_here();
+                        set_root = false;
+                    }
+                }
+
                 // SymbolSelect-mode event handling.
 
                 (SymbolSelect(pt), _, MouseButtonPressed {button: Left, ..}) => {
@@ -140,7 +148,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
             }
         }
 
-        draw_bg              (&mut window);
+        draw_bg              (&mut window, set_root);
         draw_board           (&mut window, &gametree, &layout);
         draw_stones          (&mut window, &gametree, &layout, stone_size);
         draw_move_marker     (&mut window, &gametree, &layout, stone_size);
@@ -163,8 +171,8 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout) {
 
 // Draw the background of the board.
 
-fn draw_bg(win: &mut RenderWindow) {
-    win.clear(BOARD_COLOR);
+fn draw_bg(win: &mut RenderWindow, set_root: bool) {
+    win.clear(if set_root {BOARD_COLOR_SR} else {BOARD_COLOR});
 }
 
 // Draw the edges of the board.

@@ -64,44 +64,28 @@ fn main() -> io::Result<()> {
 
     // Regular conditions.
 
-    if let Some(_spec) = args.create {
-        // TODO: validate spec, make sure file does not already exist, and create file.
-    
+    if let Some(spec) = args.create {
         if std::path::Path::new(&args.filename).exists() {
             eprintln!("Error: file already exists.");
             return Ok(());
         }
 
-        eprintln!("Board creation is not implemented yet.");
-        return Ok(());
+        if let Some((board, layout)) = bal_from_spec(&spec) {
+            let gametree = GameTree::new(board);
+            write_san_file(&args.filename, gametree, layout)?;
+        } else {
+            eprintln!("Invalid board spec. Valid formats are:");
+            eprintln!("  - square:N");
+            eprintln!("  - rect:N:M");
+            eprintln!("  - loop:N");
+        }
     }
 
     if args.no_open {
         return Ok(());
     }
 
-    if args.set_root {
-        eprintln!("Custom roots are not implemented yet.");
-        return Ok(());
-    }
-
-    // TODO: add setup flag to this function and pass args.set_root to it.
-
-    analyze_existing_san_file(&args.filename)?;
-
-    //let mut layout = layout_rect(5, 4);
-    //let mut edges  = edges_rect (5, 4);
-
-    //layout.push((0.0, 4.0));
-    //layout.push((1.0, 4.0));
-
-    //edges.push((15, 20));
-    //edges.push((16, 21));
-
-    //let board = Board::new(edges);
-    //let mut gametree = GameTree::new(board);
-    //interactive_app(&mut gametree, &layout);
-
+    analyze_existing_san_file(&args.filename, args.set_root)?;
     Ok(())
 }
 
@@ -123,15 +107,15 @@ fn bal_from_spec(spec: &str) -> Option<Bal> {
 
     match (name, params.len()) {
         ("square", 1) => Some(bal_rect(params[0], params[0])),
-        ("rect", 2)   => Some(bal_rect(params[0], params[1])),
-        ("loop", 1)   => Some(bal_loop(params[0])),
+        ("rect",   2) => Some(bal_rect(params[0], params[1])),
+        ("loop",   1) => Some(bal_loop(params[0])),
         _ => {None}
     }
 }
 
-fn analyze_existing_san_file(filename: &str) -> io::Result<()> {
+fn analyze_existing_san_file(filename: &str, set_root: bool) -> io::Result<()> {
     let (mut gametree, layout) = read_san_file(filename)?;
-    interactive_app(&mut gametree, &layout);
+    interactive_app(&mut gametree, &layout, set_root);
     write_san_file(filename, gametree, layout)?;
     Ok(())
 }
