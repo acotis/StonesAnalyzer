@@ -132,3 +132,76 @@ pub fn bal_trihex(layers: usize) -> Bal {
     (board_trihex(layers), layout_trihex(layers))
 }
 
+// HONEYCOMB BOARD
+
+pub fn layout_honeycomb(layers: usize) -> Layout {
+    let mut temp_layout = Layout::new();
+    let initial_width = layers + 1;
+    let row_count = layers * 2 + 1;
+    let mut width = initial_width;
+    let radius = 0.575;
+
+    for row in 0..row_count {
+        let mut x = (width as f32) * -0.5;
+        let y = (row as f32) * f32::sqrt(3.0) / 2.0;
+
+        for _ in 0..width {
+            for index in 0..6 {
+                let real_x = x + radius * f32::cos(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
+                let real_y = y + radius * f32::sin(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
+                temp_layout.push((real_x, real_y));
+            }
+            x += 1.0;
+        }
+
+        if row < layers {
+            width += 1;
+        } else {
+            width -= 1;
+        }
+    }
+
+    let mut layout = Layout::new();
+
+    for point in temp_layout {
+        let mut too_close = false;
+        for old_point in layout.iter() {
+            if f32::hypot(point.0 - old_point.0, point.1 - old_point.1) < 0.1 {
+                too_close = true;
+                break;
+            }
+        }
+
+        if !too_close {
+            layout.push(point);
+        }
+    }
+
+    layout
+}
+
+pub fn edges_honeycomb(layers: usize) -> Edges {
+    let layout = layout_honeycomb(layers);
+    let mut edges = Edges::new();
+    let radius = 0.575;
+
+    for point_a in 0..layout.len() {
+        for point_b in (point_a+1)..layout.len() {
+            if f32::abs(radius - f32::hypot(layout[point_a].0 - layout[point_b].0,
+                                            layout[point_a].1 - layout[point_b].1)) < 0.01 {
+                edges.push((point_a, point_b));
+            }
+        }
+    }
+
+    edges
+}
+
+pub fn board_honeycomb(layers: usize) -> Board {
+    Board::new(edges_honeycomb(layers))
+}
+
+pub fn bal_honeycomb(layers: usize) -> Bal {
+    (board_honeycomb(layers), layout_honeycomb(layers))
+}
+
