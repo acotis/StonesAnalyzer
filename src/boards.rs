@@ -81,3 +81,54 @@ pub fn bal_loop(n: usize) -> Bal {
     (board_loop(n), layout_loop(n))
 }
 
+// TRI-HEX BOARD
+
+pub fn layout_trihex(layers: usize) -> Layout {
+    let mut layout = Layout::new();
+    let initial_width = layers + 1;
+    let row_count = layers * 2 + 1;
+    let mut width = initial_width;
+
+    for row in 0..row_count {
+        let mut x = (width as f32) * -0.5;
+        let y = (row as f32) * f32::sqrt(3.0)/2.0;
+
+        for _ in 0..width {
+            layout.push((x, y));
+            x += 1.0;
+        }
+
+        if row < layers {
+            width += 1;
+        } else {
+            width -= 1;
+        }
+    }
+
+    layout
+}
+
+pub fn edges_trihex(layers: usize) -> Edges {
+    let layout = layout_trihex(layers);
+    let mut edges = Edges::new();
+
+    for point_a in 0..layout.len() {
+        for point_b in (point_a+1)..layout.len() {
+            if f32::abs(1.0 - f32::hypot(layout[point_a].0 - layout[point_b].0,
+                                         layout[point_a].1 - layout[point_b].1)) < 0.01 {
+                edges.push((point_a, point_b));
+            }
+        }
+    }
+
+    edges
+}
+
+pub fn board_trihex(layers: usize) -> Board {
+    Board::new(edges_trihex(layers))
+}
+
+pub fn bal_trihex(layers: usize) -> Bal {
+    (board_trihex(layers), layout_trihex(layers))
+}
+

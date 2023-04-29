@@ -109,6 +109,7 @@ fn bal_from_spec(spec: &str) -> Option<Bal> {
         ("square", 1) => Some(bal_rect(params[0], params[0])),
         ("rect",   2) => Some(bal_rect(params[0], params[1])),
         ("loop",   1) => Some(bal_loop(params[0])),
+        ("trihex", 1) => Some(bal_trihex(params[0])),
         _ => {None}
     }
 }
