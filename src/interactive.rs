@@ -18,7 +18,7 @@ const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
 const BOARD_COLOR_SR : Color = Color {r: 106, g:  70, b:  15, a: 255};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
-const MARKER_COLOR   : Color = Color {r:   0, g:   0, b: 255, a: 255};
+const MARKER_COLOR   : Color = Color {r:   0, g: 150, b: 255, a: 255};
 const SYMBOL_COLOR   : Color = Color {r:   0, g: 130, b:   0, a: 255};
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
@@ -202,7 +202,7 @@ fn draw_stones(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, sto
 
 fn draw_move_marker(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
     if let Some(Play(point)) = gametree.last_turn() {
-        draw_square_plain(win, layout[point], stone_size * 0.3, MARKER_COLOR);
+        draw_square_plain(win, layout[point], stone_size * 0.4, MARKER_COLOR);
     }
 }
 
