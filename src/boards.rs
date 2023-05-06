@@ -6,6 +6,7 @@
  */
 
 use crate::engine::Board;
+use std::f32::consts::TAU;
 
 pub type Layout = Vec::<(f32, f32)>;
 pub type Edges = Vec::<(usize, usize)>;
@@ -26,7 +27,7 @@ pub fn layout_rect(width: usize, height: usize) -> Layout {
 }
 
 pub fn edges_rect(width: usize, height: usize) -> Edges {
-    induced_edges(layout_rect(width, height), 1.0, 0.01)
+    layout_rect(width, height).induced_edges(1.0, 0.01)
 }
 
 pub fn board_rect(width: usize, height: usize) -> Board {
@@ -43,7 +44,7 @@ pub fn layout_loop(n: usize) -> Layout {
     let mut layout = Layout::new();
 
     for point in 0 .. n {
-        let theta = ((point as f32) / (n as f32) - 0.25) * std::f32::consts::PI * 2.0;
+        let theta = ((point as f32) / (n as f32) - 0.25) * TAU;
         layout.push((theta.cos(), theta.sin()));
     }
 
@@ -96,7 +97,7 @@ pub fn layout_trihex(layers: usize) -> Layout {
 }
 
 pub fn edges_trihex(layers: usize) -> Edges {
-    induced_edges(layout_trihex(layers), 1.0, 0.01)
+    layout_trihex(layers).induced_edges(1.0, 0.01)
 }
 
 pub fn board_trihex(layers: usize) -> Board {
@@ -110,20 +111,14 @@ pub fn bal_trihex(layers: usize) -> Bal {
 // HONEYCOMB BOARD
 
 pub fn layout_honeycomb(layers: usize) -> Layout {
-    let mut tile = Layout::new();
-
-    for i in 0..6 {
-        let theta = ((i as f32) / 3.0 + 0.5) * std::f32::consts::PI;
-        let x = theta.cos();
-        let y = theta.sin();
-        tile.push((x, y));
-    }
-
-    dedup_layout(stamp_combine(layout_trihex(layers), scale_layout(tile, 0.575)), 0.01)
+    layout_trihex(layers)
+        .scale(1.73205080757)
+        .stamp_with(layout_loop(6))
+        .dedup(0.01)
 }
 
 pub fn edges_honeycomb(layers: usize) -> Edges {
-    induced_edges(layout_honeycomb(layers), 0.575, 0.01)
+    layout_honeycomb(layers).induced_edges(1.0, 0.01)
 }
 
 pub fn board_honeycomb(layers: usize) -> Board {
@@ -136,66 +131,75 @@ pub fn bal_honeycomb(layers: usize) -> Bal {
 
 // HELPER FUNCTIONS
 
-// Return a list of edges inferred from a given layout of points, where the
-// edges join any two points that are a given distance apart (within a given
-// tolerance).
-
-pub fn induced_edges(layout: Layout, edge_len: f32, tolerance: f32) -> Edges {
-    let mut edges = Edges::new();
-
-    for (index_a, point_a) in layout.iter().enumerate() {
-        for (index_b, point_b) in layout.iter().enumerate() {
-            if f32::abs(edge_len - f32::hypot(point_a.0 - point_b.0,
-                                              point_a.1 - point_b.1)) < tolerance {
-                edges.push((index_a, index_b));
-            }
-        }
-    }
-
-    edges
+trait LayoutStuff {
+    fn induced_edges(self, edge_len: f32, tolerance: f32) -> Edges;
+    fn dedup(self, tolerance: f32) -> Layout;
+    fn scale(self, factor: f32) -> Layout;
+    fn stamp_with(self, stamp: Layout) -> Layout;
 }
 
-// Remove the duplicate points from a given layoout of points, where duplicates
-// are any two points at the same location within a given tolerance.
+impl LayoutStuff for Layout {
 
-pub fn dedup_layout(layout: Layout, tolerance: f32) -> Layout {
-    let mut ret = Layout::new();
+    // Return a list of edges inferred from a given layout of points, where the
+    // edges join any two points that are a given distance apart (within a given
+    // tolerance).
 
-    for point in layout {
-        let mut too_close = false;
-        for old_point in ret.iter() {
-            if f32::hypot(point.0 - old_point.0, point.1 - old_point.1) < tolerance {
-                too_close = true;
-                break;
+    fn induced_edges(self, edge_len: f32, tolerance: f32) -> Edges {
+        let mut edges = Edges::new();
+
+        for (index_a, point_a) in self.iter().enumerate() {
+            for (index_b, point_b) in self.iter().enumerate() {
+                if f32::abs(edge_len - f32::hypot(point_a.0 - point_b.0,
+                                                  point_a.1 - point_b.1)) < tolerance {
+                    edges.push((index_a, index_b));
+                }
             }
         }
 
-        if !too_close {
-            ret.push(point);
-        }
+        edges
     }
 
-    ret
-}
+    // Remove the duplicate points from a given layoout of points, where duplicates
+    // are any two points at the same location within a given tolerance.
 
-// Scale a layout by a given multiplicative factor.
+    fn dedup(self, tolerance: f32) -> Layout {
+        let mut ret = Layout::new();
 
-pub fn scale_layout(layout: Layout, factor: f32) -> Layout {
-    layout.into_iter().map(|point| (point.0 * factor, point.1 * factor)).collect()
-}
+        for point in self {
+            let mut too_close = false;
+            for old_point in ret.iter() {
+                if f32::hypot(point.0 - old_point.0, point.1 - old_point.1) < tolerance {
+                    too_close = true;
+                    break;
+                }
+            }
 
-// Cross two layouts by using one as a rubber stamp and stamping it onto each
-// point of the other.
-
-pub fn stamp_combine(targets: Layout, stamp: Layout) -> Layout {
-    let mut layout = Layout::new();
-
-    for point_a in targets {
-        for &point_b in &stamp {
-            layout.push((point_a.0 + point_b.0, point_a.1 + point_b.1));
+            if !too_close {
+                ret.push(point);
+            }
         }
+
+        ret
     }
 
-    layout
-}
+    // Scale a layout by a given multiplicative factor.
 
+    fn scale(self, factor: f32) -> Layout {
+        self.into_iter().map(|point| (point.0 * factor, point.1 * factor)).collect()
+    }
+
+    // Cross two layouts by using one as a rubber stamp and stamping it onto each
+    // point of the other.
+
+    fn stamp_with(self, stamp: Layout) -> Layout {
+        let mut layout = Layout::new();
+
+        for point_a in self {
+            for &point_b in &stamp {
+                layout.push((point_a.0 + point_b.0, point_a.1 + point_b.1));
+            }
+        }
+
+        layout
+    }
+}
