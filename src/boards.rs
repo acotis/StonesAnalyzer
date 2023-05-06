@@ -110,33 +110,16 @@ pub fn bal_trihex(layers: usize) -> Bal {
 // HONEYCOMB BOARD
 
 pub fn layout_honeycomb(layers: usize) -> Layout {
-    let mut layout = Layout::new();
-    let initial_width = layers + 1;
-    let row_count = layers * 2 + 1;
-    let mut width = initial_width;
-    let radius = 0.575;
+    let mut tile = Layout::new();
 
-    for row in 0..row_count {
-        let mut x = (width as f32) * -0.5;
-        let y = (row as f32) * f32::sqrt(3.0) / 2.0;
-
-        for _ in 0..width {
-            for index in 0..6 {
-                let real_x = x + radius * f32::cos(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
-                let real_y = y + radius * f32::sin(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
-                layout.push((real_x, real_y));
-            }
-            x += 1.0;
-        }
-
-        if row < layers {
-            width += 1;
-        } else {
-            width -= 1;
-        }
+    for i in 0..6 {
+        let theta = ((i as f32) / 3.0 + 0.5) * std::f32::consts::PI;
+        let x = theta.cos();
+        let y = theta.sin();
+        tile.push((x, y));
     }
 
-    dedup_layout(layout, 0.1)
+    dedup_layout(stamp_combine(layout_trihex(layers), scale_layout(tile, 0.575)), 0.01)
 }
 
 pub fn edges_honeycomb(layers: usize) -> Edges {
@@ -193,5 +176,26 @@ pub fn dedup_layout(layout: Layout, tolerance: f32) -> Layout {
     }
 
     ret
+}
+
+// Scale a layout by a given multiplicative factor.
+
+pub fn scale_layout(layout: Layout, factor: f32) -> Layout {
+    layout.into_iter().map(|point| (point.0 * factor, point.1 * factor)).collect()
+}
+
+// Cross two layouts by using one as a rubber stamp and stamping it onto each
+// point of the other.
+
+pub fn stamp_combine(targets: Layout, stamp: Layout) -> Layout {
+    let mut layout = Layout::new();
+
+    for point_a in targets {
+        for &point_b in &stamp {
+            layout.push((point_a.0 + point_b.0, point_a.1 + point_b.1));
+        }
+    }
+
+    layout
 }
 
