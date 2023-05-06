@@ -144,7 +144,7 @@ pub fn layout_sixfourthree(layers: usize) -> Layout {
     layout_trihex(layers)
         .scale(2.73205080757)
         .stamp_with(tile)
-        .dedup(0.01)
+        .dedup(0.1)
 }
 
 pub fn edges_sixfourthree(layers: usize) -> Edges {
