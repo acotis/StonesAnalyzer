@@ -14,32 +14,19 @@ pub type Bal = (Board, Vec<(f32, f32)>); // "Board and Layout"
 // RECTANGULAR BOARDS
 
 pub fn layout_rect(width: usize, height: usize) -> Layout {
-    let size = width*height;
     let mut layout = Layout::new();
 
-    for point in 0..size {
-        let x = point % width;
-        let y = point / width;
-
-        layout.push((x as f32, y as f32));
+    for y in 0..height {
+        for x in 0..width {
+            layout.push((x as f32, y as f32));
+        }
     }
 
     layout
 }
 
 pub fn edges_rect(width: usize, height: usize) -> Edges {
-    let size = width*height;
-    let mut edges = Edges::new();
-
-    for point in 0..size {
-        let x = point % width;
-        let y = point / width;
-
-        if x > 0 {edges.push((point, point - 1));}
-        if y > 0 {edges.push((point, point - width));}
-    }
-
-    edges
+    induced_edges(layout_rect(width, height), 1.0, 0.01)
 }
 
 pub fn board_rect(width: usize, height: usize) -> Board {
@@ -109,19 +96,7 @@ pub fn layout_trihex(layers: usize) -> Layout {
 }
 
 pub fn edges_trihex(layers: usize) -> Edges {
-    let layout = layout_trihex(layers);
-    let mut edges = Edges::new();
-
-    for point_a in 0..layout.len() {
-        for point_b in (point_a+1)..layout.len() {
-            if f32::abs(1.0 - f32::hypot(layout[point_a].0 - layout[point_b].0,
-                                         layout[point_a].1 - layout[point_b].1)) < 0.01 {
-                edges.push((point_a, point_b));
-            }
-        }
-    }
-
-    edges
+    induced_edges(layout_trihex(layers), 1.0, 0.01)
 }
 
 pub fn board_trihex(layers: usize) -> Board {
@@ -135,7 +110,7 @@ pub fn bal_trihex(layers: usize) -> Bal {
 // HONEYCOMB BOARD
 
 pub fn layout_honeycomb(layers: usize) -> Layout {
-    let mut temp_layout = Layout::new();
+    let mut layout = Layout::new();
     let initial_width = layers + 1;
     let row_count = layers * 2 + 1;
     let mut width = initial_width;
@@ -149,7 +124,7 @@ pub fn layout_honeycomb(layers: usize) -> Layout {
             for index in 0..6 {
                 let real_x = x + radius * f32::cos(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
                 let real_y = y + radius * f32::sin(((index as f32) / 3.0 + 0.5) * std::f32::consts::PI);
-                temp_layout.push((real_x, real_y));
+                layout.push((real_x, real_y));
             }
             x += 1.0;
         }
@@ -161,40 +136,11 @@ pub fn layout_honeycomb(layers: usize) -> Layout {
         }
     }
 
-    let mut layout = Layout::new();
-
-    for point in temp_layout {
-        let mut too_close = false;
-        for old_point in layout.iter() {
-            if f32::hypot(point.0 - old_point.0, point.1 - old_point.1) < 0.1 {
-                too_close = true;
-                break;
-            }
-        }
-
-        if !too_close {
-            layout.push(point);
-        }
-    }
-
-    layout
+    dedup_layout(layout, 0.1)
 }
 
 pub fn edges_honeycomb(layers: usize) -> Edges {
-    let layout = layout_honeycomb(layers);
-    let mut edges = Edges::new();
-    let radius = 0.575;
-
-    for point_a in 0..layout.len() {
-        for point_b in (point_a+1)..layout.len() {
-            if f32::abs(radius - f32::hypot(layout[point_a].0 - layout[point_b].0,
-                                            layout[point_a].1 - layout[point_b].1)) < 0.01 {
-                edges.push((point_a, point_b));
-            }
-        }
-    }
-
-    edges
+    induced_edges(layout_honeycomb(layers), 0.575, 0.01)
 }
 
 pub fn board_honeycomb(layers: usize) -> Board {
@@ -203,5 +149,49 @@ pub fn board_honeycomb(layers: usize) -> Board {
 
 pub fn bal_honeycomb(layers: usize) -> Bal {
     (board_honeycomb(layers), layout_honeycomb(layers))
+}
+
+// HELPER FUNCTIONS
+
+// Return a list of edges inferred from a given layout of points, where the
+// edges join any two points that are a given distance apart (within a given
+// tolerance).
+
+pub fn induced_edges(layout: Layout, edge_len: f32, tolerance: f32) -> Edges {
+    let mut edges = Edges::new();
+
+    for (index_a, point_a) in layout.iter().enumerate() {
+        for (index_b, point_b) in layout.iter().enumerate() {
+            if f32::abs(edge_len - f32::hypot(point_a.0 - point_b.0,
+                                              point_a.1 - point_b.1)) < tolerance {
+                edges.push((index_a, index_b));
+            }
+        }
+    }
+
+    edges
+}
+
+// Remove the duplicate points from a given layoout of points, where duplicates
+// are any two points at the same location within a given tolerance.
+
+pub fn dedup_layout(layout: Layout, tolerance: f32) -> Layout {
+    let mut ret = Layout::new();
+
+    for point in layout {
+        let mut too_close = false;
+        for old_point in ret.iter() {
+            if f32::hypot(point.0 - old_point.0, point.1 - old_point.1) < tolerance {
+                too_close = true;
+                break;
+            }
+        }
+
+        if !too_close {
+            ret.push(point);
+        }
+    }
+
+    ret
 }
 

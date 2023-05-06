@@ -78,6 +78,8 @@ fn main() -> io::Result<()> {
             eprintln!("  - square:N");
             eprintln!("  - rect:N:M");
             eprintln!("  - loop:N");
+            eprintln!("  - trihex:N");
+            eprintln!("  - honeycomb:N");
         }
     }
 
