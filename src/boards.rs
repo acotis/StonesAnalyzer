@@ -129,6 +129,36 @@ pub fn bal_honeycomb(layers: usize) -> Bal {
     (board_honeycomb(layers), layout_honeycomb(layers))
 }
 
+// SIXFOURTHREE BOARD
+
+pub fn layout_sixfourthree(layers: usize) -> Layout {
+    let mut tile = layout_loop(6);
+
+    for index in 0..12 {
+        let theta = ((index as f32) / 12.0 - (1.0 / 24.0)) * TAU;
+        let x = theta.cos() * 1.93185165258;
+        let y = theta.sin() * 1.93185165258;
+        tile.push((x, y));
+    }
+
+    layout_trihex(layers)
+        .scale(2.73205080757)
+        .stamp_with(tile)
+        .dedup(0.01)
+}
+
+pub fn edges_sixfourthree(layers: usize) -> Edges {
+    layout_sixfourthree(layers).induced_edges(1.0, 0.1)
+}
+
+pub fn board_sixfourthree(layers: usize) -> Board {
+    Board::new(edges_sixfourthree(layers))
+}
+
+pub fn bal_sixfourthree(layers: usize) -> Bal {
+    (board_sixfourthree(layers), layout_sixfourthree(layers))
+}
+
 // HELPER FUNCTIONS
 
 trait LayoutStuff {

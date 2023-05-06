@@ -80,6 +80,7 @@ fn main() -> io::Result<()> {
             eprintln!("  - loop:N");
             eprintln!("  - trihex:N");
             eprintln!("  - honeycomb:N");
+            eprintln!("  - sixfourthree:N");
         }
     }
 
@@ -108,11 +109,12 @@ fn bal_from_spec(spec: &str) -> Option<Bal> {
     }
 
     match (name, params.len()) {
-        ("square", 1)    => Some(bal_rect(params[0], params[0])),
-        ("rect",   2)    => Some(bal_rect(params[0], params[1])),
-        ("loop",   1)    => Some(bal_loop(params[0])),
-        ("trihex", 1)    => Some(bal_trihex(params[0])),
-        ("honeycomb", 1) => Some(bal_honeycomb(params[0])),
+        ("square", 1)       => Some(bal_rect(params[0], params[0])),
+        ("rect",   2)       => Some(bal_rect(params[0], params[1])),
+        ("loop",   1)       => Some(bal_loop(params[0])),
+        ("trihex", 1)       => Some(bal_trihex(params[0])),
+        ("honeycomb", 1)    => Some(bal_honeycomb(params[0])),
+        ("sixfourthree", 1) => Some(bal_sixfourthree(params[0])),
         _ => {None}
     }
 }
