@@ -10,7 +10,7 @@ use std::f32::consts::TAU;
 
 pub type Layout = Vec::<(f32, f32)>;
 pub type Edges = Vec::<(usize, usize)>;
-pub type Bal = (Board, Vec<(f32, f32)>); // "Board and Layout"
+pub type Bal = (Board, Layout); // "Board and Layout"
 
 // RECTANGULAR BOARDS
 
@@ -27,46 +27,25 @@ pub fn layout_rect(width: usize, height: usize) -> Layout {
 }
 
 pub fn edges_rect(width: usize, height: usize) -> Edges {
-    layout_rect(width, height).induced_edges(1.0, 0.01)
-}
-
-pub fn board_rect(width: usize, height: usize) -> Board {
-    Board::new(edges_rect(width, height))
-}
-
-pub fn bal_rect(width: usize, height: usize) -> Bal {
-    (board_rect(width, height), layout_rect(width, height))
+    layout_rect(width, height).induced_edges(1.0, 0.1)
 }
 
 // LOOP BOARDS
 
 pub fn layout_loop(n: usize) -> Layout {
     let mut layout = Layout::new();
+    let radius = 1.0 / (2.0 * (TAU / (2.0 * (n as f32))).sin());
 
     for point in 0 .. n {
         let theta = ((point as f32) / (n as f32) - 0.25) * TAU;
-        layout.push((theta.cos(), theta.sin()));
+        layout.push((radius * theta.cos(), radius * theta.sin()));
     }
 
     layout
 }
 
 pub fn edges_loop(n: usize) -> Edges {
-    let mut edges = Edges::new();
-
-    for point in 0 .. n {
-        edges.push((point, (point + 1) % n));
-    }
-
-    edges
-}
-
-pub fn board_loop(n: usize) -> Board {
-    Board::new(edges_loop(n))
-}
-
-pub fn bal_loop(n: usize) -> Bal {
-    (board_loop(n), layout_loop(n))
+    layout_loop(n).induced_edges(1.0, 0.1)
 }
 
 // TRI-HEX BOARD
@@ -97,15 +76,7 @@ pub fn layout_trihex(layers: usize) -> Layout {
 }
 
 pub fn edges_trihex(layers: usize) -> Edges {
-    layout_trihex(layers).induced_edges(1.0, 0.01)
-}
-
-pub fn board_trihex(layers: usize) -> Board {
-    Board::new(edges_trihex(layers))
-}
-
-pub fn bal_trihex(layers: usize) -> Bal {
-    (board_trihex(layers), layout_trihex(layers))
+    layout_trihex(layers).induced_edges(1.0, 0.1)
 }
 
 // HONEYCOMB BOARD
@@ -118,15 +89,7 @@ pub fn layout_honeycomb(layers: usize) -> Layout {
 }
 
 pub fn edges_honeycomb(layers: usize) -> Edges {
-    layout_honeycomb(layers).induced_edges(1.0, 0.01)
-}
-
-pub fn board_honeycomb(layers: usize) -> Board {
-    Board::new(edges_honeycomb(layers))
-}
-
-pub fn bal_honeycomb(layers: usize) -> Bal {
-    (board_honeycomb(layers), layout_honeycomb(layers))
+    layout_honeycomb(layers).induced_edges(1.0, 0.1)
 }
 
 // SIXFOURTHREE BOARD
@@ -151,12 +114,36 @@ pub fn edges_sixfourthree(layers: usize) -> Edges {
     layout_sixfourthree(layers).induced_edges(1.0, 0.1)
 }
 
-pub fn board_sixfourthree(layers: usize) -> Board {
-    Board::new(edges_sixfourthree(layers))
+// TURTLE BOARD
+
+pub fn layout_turtle(width: usize, height: usize) -> Layout {
+    let mut tile = Layout::new();
+    let mut point = (0.0, 0.0);
+
+    tile.push(point); point = step(point, 23.0/24.0);
+    tile.push(point); point = step(point,  1.0/24.0);
+    tile.push(point); point = step(point, 17.0/24.0);
+    tile.push(point); point = step(point, 13.0/24.0);
+    tile.push(point); point = step(point, 11.0/24.0);
+    tile.push(point); point = step(point,  9.0/24.0);
+    tile.push(point); point = step(point,  7.0/24.0);
+    tile.push(point); point = step(point,  5.0/24.0);
+    tile.push(point); point = step(point,  1.0/24.0);
+    tile.push(point); point = step(point, 23.0/24.0);
+    tile.push(point); point = step(point, 21.0/24.0);
+    tile.push(point); point = step(point, 13.0/24.0);
+    tile.push(point); point = step(point, 11.0/24.0);
+    tile.push(point); point = step(point, 19.0/24.0);
+    tile.push(point);
+
+    layout_rect(width, height)
+        .scale(2.0 * (TAU / 24.0).cos())
+        .stamp_with(tile)
+        .dedup(0.1)
 }
 
-pub fn bal_sixfourthree(layers: usize) -> Bal {
-    (board_sixfourthree(layers), layout_sixfourthree(layers))
+pub fn edges_turtle(width: usize, height: usize) -> Edges {
+    layout_turtle(width, height).induced_edges(1.0, 0.1)
 }
 
 // HELPER FUNCTIONS
@@ -233,3 +220,11 @@ impl LayoutStuff for Layout {
         layout
     }
 }
+
+// Helper functions.
+
+fn step(origin: (f32, f32), angle_fraction: f32) -> (f32, f32) {
+    (origin.0 + (angle_fraction * TAU).cos(),
+     origin.1 + (angle_fraction * TAU).sin())
+}
+
