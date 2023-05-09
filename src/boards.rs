@@ -94,7 +94,7 @@ pub fn edges_honeycomb(layers: usize) -> Edges {
 
 // SIXFOURTHREE BOARD
 
-pub fn layout_sixfourthree(layers: usize) -> Layout {
+fn hex_tile() -> Layout {
     let mut tile = layout_loop(6);
 
     for index in 0..12 {
@@ -104,9 +104,13 @@ pub fn layout_sixfourthree(layers: usize) -> Layout {
         tile.push((x, y));
     }
 
+    tile
+}
+
+pub fn layout_sixfourthree(layers: usize) -> Layout {
     layout_trihex(layers)
         .scale(2.73205080757)
-        .stamp_with(tile)
+        .stamp_with(hex_tile())
         .dedup(0.1)
 }
 
@@ -144,6 +148,19 @@ pub fn layout_turtle(width: usize, height: usize) -> Layout {
 
 pub fn edges_turtle(width: usize, height: usize) -> Edges {
     layout_turtle(width, height).induced_edges(1.0, 0.1)
+}
+
+// WHEELS BOARD
+
+pub fn layout_wheels(width: usize, height: usize) -> Layout {
+    layout_rect(width, height)
+        .scale((TAU / 12.0).cos() * 2.0 + 2.0)
+        .stamp_with(hex_tile())
+        .dedup(0.1)
+}
+
+pub fn edges_wheels(width: usize, height: usize) -> Edges {
+    layout_wheels(width, height).induced_edges(1.0, 0.1)
 }
 
 // HELPER FUNCTIONS
