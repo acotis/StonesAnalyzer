@@ -52,8 +52,8 @@ fn hex_svg() {
 
     let scale = 100.0; // "pixels" per inch
     let len = 0.875 * scale;
-    let margin = 0.5 * scale;
-    let window = 5.0 * scale;
+    //let margin = 0.5 * scale;
+    let window = 5.5 * scale;
     let width = 0.03125 * scale;
 
     let x = layout[45].0;
@@ -65,7 +65,8 @@ fn hex_svg() {
     print!("<polygon fill=\"#DCB35C\" points=\"");
 
     for i in 0..6 {
-        let radius = len * 5.0 + margin;
+        //let radius = len * 5.0 + margin;
+        let radius = 5.0 * scale;
         let x = ((i as f32) * TAU / 6.0).cos() * radius;
         let y = ((i as f32) * TAU / 6.0).sin() * radius;
         print!("{},{} ", x, y)
