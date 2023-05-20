@@ -125,6 +125,7 @@ fn main() -> io::Result<()> {
             eprintln!("  - sixfourthree:N");
             eprintln!("  - turtle:N:M");
             eprintln!("  - wheels:N:M");
+            eprintln!("  - donut:N:M:X:Y");
         }
     }
 
@@ -177,6 +178,9 @@ fn bal_from_spec(spec: &str) -> Option<Bal> {
         ("wheels", 2) =>
             Some((Board::new(edges_wheels(params[0], params[1])),
                   layout_wheels(params[0], params[1]))),
+        ("donut", 4) =>
+            Some((Board::new(edges_donut(params[0], params[1], params[2], params[3])),
+                  layout_donut(params[0], params[1], params[2], params[3]))),
 
         _ => None
     }

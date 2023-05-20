@@ -30,6 +30,30 @@ pub fn edges_rect(width: usize, height: usize) -> Edges {
     layout_rect(width, height).induced_edges(1.0, 0.1)
 }
 
+// DONUT BOARDS
+
+pub fn layout_donut(width: usize, height: usize, hole_width: usize, hole_height: usize) -> Layout {
+    let mut layout = Layout::new();
+
+    let hole_left   = (width  - hole_width  + 1) / 2;
+    let hole_top    = (height - hole_height + 1) / 2;
+
+    for y in 0..height {
+        for x in 0..width {
+            if x < hole_left || x >= (hole_left + hole_width) ||
+                y < hole_top || y >= (hole_top + hole_height) {
+                layout.push((x as f32, y as f32));
+            }
+        }
+    }
+
+    layout
+}
+
+pub fn edges_donut(width: usize, height: usize, hole_width: usize, hole_height: usize) -> Edges {
+    layout_donut(width, height, hole_width, hole_height).induced_edges(1.0, 0.1)
+}
+
 // LOOP BOARDS
 
 pub fn layout_loop(n: usize) -> Layout {
