@@ -85,6 +85,8 @@ fn hex_svg() {
 }
 
 fn main() -> io::Result<()> {
+    println!("{}", stones::add(3, 3));
+
     //hex_svg();
     //return Ok(());
 

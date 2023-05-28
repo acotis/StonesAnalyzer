@@ -1108,6 +1108,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "stones"
+version = "0.1.0"
+
+[[package]]
 name = "stones_analyzer"
 version = "0.1.0"
 dependencies = [
@@ -1116,6 +1120,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sfml",
+ "stones",
 ]
 
 [[package]]
