@@ -1,70 +1,15 @@
 
 Todo:
+    + Split out separate stones library
+    + Add auto-scoring functionality
     + Make it auto-save every 10 seconds (or on every action or something).
         - Currently it doesn't save if you exit with ctrl-C, which is obviously bad.
+
     + Make it mark illegal moves (i.e. ko violations) somehow.
+    + Add "competitive mode" where it doesn't mark immortal stones
     + Make it be possible to see which moves have been made from a given position
       (maybe by holding down ctrl)
     + Make it possible to play on a board without saving it
-
-
-Normal mode:
-    - Draw bg, board, stones, immortality markers, and last move marker.
-    - 
-
-    - Normal mode:
-        - Draw hover stone.
-    - 
-
-
-
-Desired user experience:
-    1. I open an "analysis file" using the Stones analyzer.
-    2. On the screen, I see a board with an intial position on it. 
-    3. I can manipulate the position with the mouse and navigate through an existing
-       tree of positions, with branches being added automatically if I go off the
-       existing tree.
-    4. Associated with each position is an initially empty text field which I can
-       type notes into that are remembered the next time I open the file.
-    5. Each position additionally contains
-
-Analysis file format:
-    Board structure (list of edges)
-    Layout (list of locations)
-    Initial position (list of colors)
-    ...marked-up tree in JSON format...
-
-Example:
-    {
-        "board-structure": [[1, 2], [2, 3], [3, 4], [4, 1]],
-        "board-layout": [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0, -1.0]],
-        "initial-position": [".", ".", ".", "."],
-
-        "analysis-tree": {
-            "comment": "This is the initial position",
-            "markup": ["*", "", "", ""],
-            "children": {
-                "1": {
-                    "comment": "This is black's first move",
-                    "markup": ["", "", "*", ""]
-                },
-                "2": {
-                    "comment": "This is equivalent to the other move.",
-                    "markup": ["", "", "", ""]
-                }
-            }
-        }
-    }
-
-
-
-\   \   | '\'
-    "   | '"'
-    n   | '\n'
-    .   | ERROR
-"       | end text
-\n      | ERROR
-.       | whatever . is
 
 
 
