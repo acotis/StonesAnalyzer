@@ -190,7 +190,7 @@ pub fn edges_wheels(width: usize, height: usize) -> Edges {
 // HELPER FUNCTIONS
 
 trait LayoutStuff {
-    fn induced_edges(self, edge_len: f32, tolerance: f32) -> Edges;
+    fn induced_edges(&self, edge_len: f32, tolerance: f32) -> Edges;
     fn dedup(self, tolerance: f32) -> Layout;
     fn scale(self, factor: f32) -> Layout;
     fn stamp_with(self, stamp: Layout) -> Layout;
@@ -202,7 +202,7 @@ impl LayoutStuff for Layout {
     // edges join any two points that are a given distance apart (within a given
     // tolerance).
 
-    fn induced_edges(self, edge_len: f32, tolerance: f32) -> Edges {
+    fn induced_edges(&self, edge_len: f32, tolerance: f32) -> Edges {
         let mut edges = Edges::new();
 
         for (index_a, point_a) in self.iter().enumerate() {

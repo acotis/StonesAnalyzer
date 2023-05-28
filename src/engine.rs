@@ -48,6 +48,10 @@ pub enum Color {
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
+
+    // TODO: remove the connectivity matrix. It's only used to implement the
+    // is_connected() method, and that method is only used by a quadratic algorithm
+    // in the interactive app that should be ~linear instead.
     connectivity_matrix: Vec<Vec<bool>>,
 }
 
