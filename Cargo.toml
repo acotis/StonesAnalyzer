@@ -1,5 +1,5 @@
 [package]
-name = "stones_analyzer"
+name = "stones"
 version = "0.1.0"
 edition = "2021"
 
