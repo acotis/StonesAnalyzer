@@ -2,14 +2,14 @@
 //#![deny(warnings)]
 
 use std::env;
-use std::fs::File;
 use std::io;
-use std::io::prelude::*;
 use clap::Parser;
 use clap::Subcommand;
 
-use stones::engine::Board;
+use stones::engine::{Board, Color::*};
+use stones::gametree::{GameTree, Symbol, Symbol::*, Turn::*};
 use stones::boards::*;
+use stones::san::*;
 
 use std::time::{Instant, Duration};
 use sfml::window::*;
@@ -17,11 +17,7 @@ use sfml::graphics::*;
 use sfml::system::*;
 use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
-use stones::engine::Color::*;
-use stones::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
 use crate::Mode::*;
-
-type Layout = Vec<(f32, f32)>;
 
 const BORDER: f32 = 20.0;
 const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
@@ -92,20 +88,15 @@ fn main() -> io::Result<()> {
             return Ok(());
         }
 
-        if let Some((board, layout)) = bal_from_spec(&spec) {
-            let gametree = GameTree::new(board);
+        if let Some((layout, edges)) = lae_from_spec(&spec) {
+            let gametree = GameTree::new(Board::new(edges));
             write_san_file(&args.filename, gametree, layout)?;
         } else {
             eprintln!("Invalid board spec. Valid formats are:");
-            eprintln!("  - square:N");
-            eprintln!("  - rect:N:M");
-            eprintln!("  - loop:N");
-            eprintln!("  - trihex:N");
-            eprintln!("  - honeycomb:N");
-            eprintln!("  - sixfourthree:N");
-            eprintln!("  - turtle:N:M");
-            eprintln!("  - wheels:N:M");
-            eprintln!("  - donut:N:M:X:Y");
+            for format in board_specs() {
+                eprintln!("  - {}", format);
+            }
+            return Ok(());
         }
     }
 
@@ -119,83 +110,6 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn bal_from_spec(spec: &str) -> Option<Bal> {
-    let mut parts = spec.split(":");
-    let name = parts.next().unwrap();
-
-    let mut any_bad_params = false;
-    let params: Vec<usize> = parts.map(|s| {
-        match s.parse() {
-            Ok(i) => i,
-            _ => {any_bad_params = true; 0}
-        }
-    }).collect();
-
-    if any_bad_params {
-        return None;
-    }
-
-    match (name, params.len()) {
-        ("square", 1) => 
-            Some((Board::new(edges_rect(params[0], params[0])),
-                            layout_rect(params[0], params[0]))),
-        ("rect", 2) =>
-            Some((Board::new(edges_rect(params[0], params[1])),
-                            layout_rect(params[0], params[1]))),
-        ("loop", 1) =>
-            Some((Board::new(edges_loop(params[0])),
-                            layout_loop(params[0]))),
-        ("trihex", 1) =>
-            Some((Board::new(edges_trihex(params[0])),
-                            layout_trihex(params[0]))),
-        ("honeycomb", 1) =>
-            Some((Board::new(edges_honeycomb(params[0])),
-                            layout_honeycomb(params[0]))),
-        ("sixfourthree", 1) =>
-            Some((Board::new(edges_sixfourthree(params[0])),
-                            layout_sixfourthree(params[0]))),
-        ("turtle", 2) =>
-            Some((Board::new(edges_turtle(params[0], params[1])),
-                            layout_turtle(params[0], params[1]))),
-        ("wheels", 2) =>
-            Some((Board::new(edges_wheels(params[0], params[1])),
-                            layout_wheels(params[0], params[1]))),
-        ("donut", 4) =>
-            Some((Board::new(edges_donut(params[0], params[1], params[2], params[3])),
-                            layout_donut(params[0], params[1], params[2], params[3]))),
-
-        _ => None
-    }
-}
-
-fn read_san_file(filename: &str) -> io::Result<(GameTree, Layout)> {
-    let file = File::open(filename)?;
-    let mut lines = io::BufReader::new(file).lines();
-
-    let board_string  = lines.next().unwrap()?;
-    let layout_string = lines.next().unwrap()?;
-    let tree_string   = lines.next().unwrap()?;
-
-    let board = Board::from_string(board_string);
-    let layout = serde_json::from_str(&layout_string).unwrap();
-    let gametree = GameTree::from_string(board, tree_string);
-
-    Ok((gametree, layout))
-}
-
-fn write_san_file(filename: &str, gametree: GameTree, layout: Layout) -> io::Result<()> {
-    let board_string  = gametree.board.to_string();
-    let layout_string = serde_json::to_string(&layout).unwrap();
-    let tree_string   = gametree.to_string();
-    
-    let mut file = File::create(filename)?;
-
-    writeln!(file, "{}", board_string)?;
-    writeln!(file, "{}", layout_string)?;
-    writeln!(file, "{}", tree_string)?;
-
-    Ok(())
-}
 
 #[derive(PartialEq, Copy, Clone)]
 enum Mode {
