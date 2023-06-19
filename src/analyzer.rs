@@ -1,9 +1,7 @@
 
 //#![deny(warnings)]
 
-mod engine;
 mod interactive;
-mod gametree;
 
 use std::env;
 use std::fs::File;
@@ -13,11 +11,10 @@ use clap::Parser;
 use clap::Subcommand;
 
 use interactive::*;
-use engine::Board;
-use gametree::GameTree;
+use stones::engine::Board;
+use stones::gametree::GameTree;
 
-mod boards;
-use boards::*;
+use stones::boards::*;
 use std::f32::consts::TAU;
 
 #[derive(Parser)]
@@ -85,8 +82,6 @@ fn hex_svg() {
 }
 
 fn main() -> io::Result<()> {
-    println!("{}", stones::add(3, 3));
-
     //hex_svg();
     //return Ok(());
 

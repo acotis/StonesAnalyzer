@@ -3,6 +3,14 @@ name = "stones_analyzer"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "stones"
+path = "src/lib.rs"
+
+[[bin]]
+name = "stones_analyzer"
+path = "src/analyzer.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -11,4 +19,3 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 clap = { version = "4.1.8", features = ["derive"] }
 actix-web = "4"
-stones = { path = "../stones" }

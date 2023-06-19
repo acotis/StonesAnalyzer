@@ -5,8 +5,8 @@ use sfml::graphics::*;
 use sfml::system::*;
 use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
-use crate::engine::Color::*;
-use crate::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
+use stones::engine::Color::*;
+use stones::gametree::{GameTree, Turn::*, Symbol, Symbol::*};
 use crate::interactive::Mode::*;
 
 type Layout = Vec<(f32, f32)>;
