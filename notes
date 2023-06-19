@@ -1,7 +1,6 @@
 
 Todo:
-    + Split out separate stones library
-
+    + Put library files in a subdirectory
     + Unify interactive app into one file
     + Add auto-scoring functionality
     + Make it auto-save every 10 seconds (or on every action or something).
