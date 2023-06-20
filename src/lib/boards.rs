@@ -16,7 +16,7 @@ pub struct BoardSpec {
     funcall: fn(Vec<usize>) -> Lae,
 }
 
-fn full_board_specs() -> Vec<BoardSpec> {
+fn board_specs() -> Vec<BoardSpec> {
     vec![
         BoardSpec {signature: "square:N",       funcall: |args| lae_square(args[0])},
         BoardSpec {signature: "rect:W:H",       funcall: |args| lae_rect(args[0], args[1])},
@@ -30,37 +30,51 @@ fn full_board_specs() -> Vec<BoardSpec> {
     ]
 }
 
-// Spec-based public interface.
-
-pub fn board_specs() -> Vec<&'static str> {
-    full_board_specs().into_iter().map(|spec| spec.signature).collect()
+fn valid_board_list() -> String {
+    let signatures: Vec<_>
+        = board_specs().into_iter().map(|spec| spec.signature).collect();
+    format!("Valid board types are:\n{}", signatures.join("\n"))
 }
 
-pub fn lae_from_spec(spec: &str) -> Option<Lae> {
+// Spec-based public interface.
+
+pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
     let mut parts = spec.split(":");
     let name = parts.next().unwrap();
+    let params: Vec<&str> = parts.collect();
 
-    let mut any_bad_params = false;
-    let params: Vec<usize> = parts.map(|s| {
-        match s.parse() {
-            Ok(i) => i,
-            _ => {any_bad_params = true; 0}
+    for template in board_specs() {
+        let mut tparts = template.signature.split(":");
+        let tname = tparts.next().unwrap();
+        let tparams: Vec<&str> = tparts.collect();
+
+        if name == tname {
+            if params.len() != tparams.len() {
+                return Err(format!(
+                    "Board type '{}' exists but takes {} arguments ({} given).\n{}",
+                    name, tparams.len(), params.len(), valid_board_list()
+                ));
+            }
+
+            for (index, param) in params.iter().enumerate() {
+                if let Err(_) = param.parse::<usize>() {
+                    return Err(format!(
+                        "Could not parse board spec arg {} ('{}') as an integer.\n{}",
+                        index + 1, param, valid_board_list()
+                    ));
+                }
+            }
+
+            let usizes = 
+                params.into_iter()
+                       .map(|s| s.parse().unwrap())
+                       .collect();
+
+            return Ok((template.funcall)(usizes));
         }
-    }).collect();
-
-    if any_bad_params {
-        return None;
     }
 
-    for template in full_board_specs() {
-        let template_parts: Vec<&str> = template.signature.split(":").collect();
-
-        if name == template_parts[0] && params.len() == template_parts.len() - 1 {
-            return Some((template.funcall)(params));
-        }
-    }
-
-    return None;
+    return Err(format!("Board type '{}' does not exist.\n{}", name, valid_board_list()));
 }
 
 // RECTANGULAR BOARDS

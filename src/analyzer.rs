@@ -70,15 +70,15 @@ fn main() -> io::Result<()> {
             return Ok(());
         }
 
-        if let Some((layout, edges)) = lae_from_spec(&spec) {
-            let gametree = GameTree::new(Board::new(edges));
-            write_san_file(&args.filename, gametree, layout)?;
-        } else {
-            eprintln!("Invalid board spec. Valid formats are:");
-            for format in board_specs() {
-                eprintln!("  - {}", format);
+        match lae_from_spec(&spec) {
+            Ok((layout, edges)) => {
+                let gametree = GameTree::new(Board::new(edges));
+                write_san_file(&args.filename, gametree, layout)?;
             }
-            return Ok(());
+            Err(err_string) => {
+                eprintln!("{}", err_string);
+                return Ok(());
+            }
         }
     }
 
