@@ -4,7 +4,6 @@
 use std::env;
 use std::io;
 use clap::Parser;
-use clap::Subcommand;
 
 use stones::engine::{Board, Color::*};
 use stones::gametree::{GameTree, Symbol, Symbol::*, Turn::*};
@@ -37,35 +36,18 @@ const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
 const BUTTON_COLOR   : Color = Color {r: 200, g: 200, b: 200, a:  80};
 const BUTTON_HOVER   : Color = Color {r: 200, g: 200, b: 200, a: 160};
 
+// Command-line arguments.
+
 #[derive(Parser)]
 struct CLI {
-    #[arg()]
-    filename: String,
-
-    /// Create a new file with the specified board geometry.
-    #[arg(short, long, value_name = "board spec")]
-    create:   Option<String>,
-
-    /// ...and set a custom start position.
-    #[arg(short, long, default_value_t = false)]
-    set_root:  bool,
-
-    /// ...and don't open the analyzer at all.
-    #[arg(short, long, default_value_t = false)]
-    no_open: bool,
-}
-
-#[derive(Subcommand)]
-enum BoardSpec {
-    Square {size: usize},
-    Rect {width: usize, height: usize},
-    Loop {points: usize},
-    Custom {},
+    #[arg()]                                     filename: String,
+    #[arg(short, long)]                          create:   Option<String>,
+    #[arg(short, long, default_value_t = false)] set_root: bool,
+    #[arg(short, long, default_value_t = false)] no_open:  bool,
 }
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
-
     let args = CLI::parse();
 
     // Error conditions.

@@ -5,7 +5,6 @@
  * structures and layouts.
  */
 
-use crate::engine::Board;
 use std::f32::consts::TAU;
 
 pub type Layout = Vec::<(f32, f32)>;
@@ -30,6 +29,8 @@ fn full_board_specs() -> Vec<BoardSpec> {
         BoardSpec {signature: "donut:W:H:X:Y",  funcall: |args| lae_donut(args[0], args[1], args[2], args[3])},
     ]
 }
+
+// Spec-based public interface.
 
 pub fn board_specs() -> Vec<&'static str> {
     full_board_specs().into_iter().map(|spec| spec.signature).collect()
