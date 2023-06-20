@@ -48,11 +48,6 @@ pub enum Color {
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,
-
-    // TODO: remove the connectivity matrix. It's only used to implement the
-    // is_connected() method, and that method is only used by a quadratic algorithm
-    // in the interactive app that should be ~linear instead.
-    connectivity_matrix: Vec<Vec<bool>>,
 }
 
 #[derive(Clone)]
@@ -109,7 +104,6 @@ impl Board {
         let mut board = Board {
             point_count: point_count,
             neighbor_lists: vec![vec![]; point_count],
-            connectivity_matrix: vec![vec![false; point_count]; point_count],
         };
 
         for connection in connections.iter() {
@@ -120,9 +114,7 @@ impl Board {
             assert!(point_b < point_count);
             assert!(point_a != point_b);
 
-            if !board.is_connected(point_a, point_b) {
-                board.connectivity_matrix[point_a][point_b] = true;
-                board.connectivity_matrix[point_b][point_a] = true;
+            if !board.neighbor_lists[point_a].contains(&point_b) {
                 board.neighbor_lists[point_a].push(point_b);
                 board.neighbor_lists[point_b].push(point_a);
             }
@@ -135,8 +127,8 @@ impl Board {
         self.point_count
     }
 
-    pub fn is_connected(&self, point_a: usize, point_b: usize) -> bool {
-        self.connectivity_matrix[point_a][point_b]
+    pub fn get_neighbors(&self, point_a: usize) -> Vec<usize> {
+        self.neighbor_lists[point_a].clone()
     }
 
     pub fn empty_position(&self) -> Position {
@@ -386,10 +378,8 @@ impl Board {
         let mut edges = vec![];
 
         for i in 0..self.point_count {
-            for j in 0..self.point_count {
-                if self.connectivity_matrix[i][j] {
-                    edges.push((i, j));
-                }
+            for j in self.neighbor_lists[i].clone() {
+                edges.push((i, j));
             }
         }
 

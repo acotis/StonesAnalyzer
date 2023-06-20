@@ -247,11 +247,8 @@ fn draw_bg(win: &mut RenderWindow, set_root: bool) {
 
 fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout) {
     for i in 0..gametree.board.point_count() {
-        for j in 0..gametree.board.point_count() {
-            if gametree.board.is_connected(i, j) {
-                // TODO: this is making things pretty slow I think!
-                draw_line(win, layout[i], layout[j], EDGE_COLOR);
-            }
+        for j in gametree.board.get_neighbors(i) {
+            draw_line(win, layout[i], layout[j], EDGE_COLOR);
         }
     }
 }
