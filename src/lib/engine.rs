@@ -8,7 +8,6 @@
  *     pub struct Board {
  *         pub new(Vec<(usize, usize)) -> Board;
  *         pub point_count(&self);
- *         pub is_connected(&self, usize, usize) -> bool;
  *         pub empty_position(&self) -> Position;
  *     }
  *
