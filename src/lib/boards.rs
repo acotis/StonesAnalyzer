@@ -11,32 +11,27 @@ pub type Layout = Vec::<(f32, f32)>;
 pub type Edges = Vec::<(usize, usize)>;
 pub type Lae = (Layout, Edges); // "Layout and Edges"
 
-pub struct BoardSpec {
-    signature: &'static str,
-    funcall: fn(Vec<usize>) -> Lae,
-}
+// Spec-based interface.
 
-fn board_specs() -> Vec<BoardSpec> {
+fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
     vec![
-        BoardSpec {signature: "square:N",       funcall: |args| lae_square(args[0])},
-        BoardSpec {signature: "rect:W:H",       funcall: |args| lae_rect(args[0], args[1])},
-        BoardSpec {signature: "loop:N",         funcall: |args| lae_loop(args[0])},
-        BoardSpec {signature: "trihex:L",       funcall: |args| lae_trihex(args[0])},
-        BoardSpec {signature: "honeycomb:L",    funcall: |args| lae_honeycomb(args[0])},
-        BoardSpec {signature: "sixfourthree:L", funcall: |args| lae_sixfourthree(args[0])},
-        BoardSpec {signature: "turtle:W:H",     funcall: |args| lae_turtle(args[0], args[1])},
-        BoardSpec {signature: "wheels:W:H",     funcall: |args| lae_wheels(args[0], args[1])},
-        BoardSpec {signature: "donut:W:H:X:Y",  funcall: |args| lae_donut(args[0], args[1], args[2], args[3])},
+        ("square:N",       |args| lae_square(args[0])),
+        ("rect:W:H",       |args| lae_rect(args[0], args[1])),
+        ("loop:N",         |args| lae_loop(args[0])),
+        ("trihex:L",       |args| lae_trihex(args[0])),
+        ("honeycomb:L",    |args| lae_honeycomb(args[0])),
+        ("sixfourthree:L", |args| lae_sixfourthree(args[0])),
+        ("turtle:W:H",     |args| lae_turtle(args[0], args[1])),
+        ("wheels:W:H",     |args| lae_wheels(args[0], args[1])),
+        ("donut:W:H:X:Y",  |args| lae_donut(args[0], args[1], args[2], args[3])),
     ]
 }
 
-fn valid_board_list() -> String {
+fn valid_board_err_message() -> String {
     let mut lines = vec!["Valid board types are:"];
-    lines.extend(board_specs().into_iter().map(|spec| spec.signature));
+    lines.extend(board_specs().into_iter().map(|spec| spec.0));
     lines.join("\n  - ")
 }
-
-// Spec-based public interface.
 
 pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
     let mut parts = spec.split(":");
@@ -44,7 +39,7 @@ pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
     let params: Vec<&str> = parts.collect();
 
     for template in board_specs() {
-        let mut tparts = template.signature.split(":");
+        let mut tparts = template.0.split(":");
         let tname = tparts.next().unwrap();
         let tparams: Vec<&str> = tparts.collect();
 
@@ -52,7 +47,7 @@ pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
             if params.len() != tparams.len() {
                 return Err(format!(
                     "Board type '{}' exists but takes {} arguments ({} given).\n{}",
-                    name, tparams.len(), params.len(), valid_board_list()
+                    name, tparams.len(), params.len(), valid_board_err_message()
                 ));
             }
 
@@ -60,7 +55,7 @@ pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
                 if let Err(_) = param.parse::<usize>() {
                     return Err(format!(
                         "Could not parse board spec arg {} ('{}') as an integer.\n{}",
-                        index + 1, param, valid_board_list()
+                        index + 1, param, valid_board_err_message()
                     ));
                 }
             }
@@ -70,11 +65,11 @@ pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
                        .map(|s| s.parse().unwrap())
                        .collect();
 
-            return Ok((template.funcall)(usizes));
+            return Ok((template.1)(usizes));
         }
     }
 
-    return Err(format!("Board type '{}' does not exist.\n{}", name, valid_board_list()));
+    return Err(format!("Board type '{}' does not exist.\n{}", name, valid_board_err_message()));
 }
 
 // RECTANGULAR BOARDS
