@@ -10,7 +10,6 @@ use std::f32::consts::TAU;
 
 pub type Layout = Vec::<(f32, f32)>;
 pub type Edges = Vec::<(usize, usize)>;
-pub type Bal = (Board, Layout); // "Board and Layout"
 pub type Lae = (Layout, Edges); // "Layout and Edges"
 
 pub struct BoardSpec {
