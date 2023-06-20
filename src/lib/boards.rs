@@ -31,9 +31,9 @@ fn board_specs() -> Vec<BoardSpec> {
 }
 
 fn valid_board_list() -> String {
-    let signatures: Vec<_>
-        = board_specs().into_iter().map(|spec| spec.signature).collect();
-    format!("Valid board types are:\n{}", signatures.join("\n"))
+    let mut lines = vec!["Valid board types are:"];
+    lines.extend(board_specs().into_iter().map(|spec| spec.signature));
+    lines.join("\n  - ")
 }
 
 // Spec-based public interface.

@@ -50,7 +50,7 @@ fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
     let args = CLI::parse();
 
-    // Error conditions.
+    // If an invalid combination of flags is given, exit.
 
     if args.create.is_none() && (args.set_root || args.no_open) {
         eprintln!("Error: cannot use --set-root or --no-open without --create.");
@@ -62,7 +62,7 @@ fn main() -> io::Result<()> {
         return Ok(());
     }
 
-    // Regular conditions.
+    // If the --create flag is given, create the file in question or exit on error.
 
     if let Some(spec) = args.create {
         if std::path::Path::new(&args.filename).exists() {
@@ -82,9 +82,13 @@ fn main() -> io::Result<()> {
         }
     }
 
+    // If the --no-open flag is given, exit.
+
     if args.no_open {
         return Ok(());
     }
+
+    // Read the file and open the interactive app.
 
     let (mut gametree, layout) = read_san_file(&args.filename)?;
     interactive_app(&mut gametree, &layout, args.set_root);
