@@ -11,6 +11,10 @@ path = "src/lib/lib.rs"
 name = "stones_analyzer"
 path = "src/analyzer.rs"
 
+[[bin]]
+name = "stones_svg"
+path = "src/svg.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
