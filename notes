@@ -1,5 +1,12 @@
 
 Todo:
+    + SVG application:
+        + Add last-move marker.
+        + Add immortal stones marker?
+        + Add illegal move marker?
+        + Add ability to read a .san file and generate images for all positions
+          with a given comment (such as "gen").
+
     + Refactor the core engine methods to be part of the Board struct instead of Position.
     + Add auto-scoring functionality
     + Make it auto-save every 10 seconds (or on every action or something).

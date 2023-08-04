@@ -7,7 +7,7 @@ use stones::engine::{Board, Position, Color::*};
 fn svg_from_lae(lae: Lae, position: Position) -> String {
     let scale = 300.0;      // "pixels" per inch
     let diam = 0.875;       // stone diameter in inches
-    let width = 0.03125;    // width of each edge line in inches
+    let width = 0.02;       // width of each edge line in inches
     let margin = 0.15;       // shortest distance between a stone's edge and the board's edge
     let window = 0.0;       // shortest distance between the board's edge and the image's edge
 
@@ -58,13 +58,14 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     ret
 }
 
-fn svg_from_lae_blank(lae: Lae) -> String {
-    let board = Board::new(lae.1.clone());
-    svg_from_lae(lae, board.empty_position())
-}
+//fn svg_from_lae_blank(lae: Lae) -> String {
+    //let board = Board::new(lae.1.clone());
+    //svg_from_lae(lae, board.empty_position())
+//}
 
 fn main() {
-    let lae = lae_from_spec("turtle:4:4").unwrap();
+    //let lae = lae_from_spec("turtle:4:4").unwrap();
+    let lae = lae_from_spec("loop:12").unwrap();
     let board = Board::new(lae.1.clone());
     let mut position = board.empty_position();
 
