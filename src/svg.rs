@@ -7,9 +7,9 @@ use stones::engine::{Board, Position, Color::*};
 fn svg_from_lae(lae: Lae, position: Position) -> String {
     let scale = 300.0;      // "pixels" per inch
     let diam = 0.875;       // stone diameter in inches
-    let width = 0.02;       // width of each edge line in inches
-    let margin = 0.15;       // shortest distance between a stone's edge and the board's edge
-    let window = 0.0;       // shortest distance between the board's edge and the image's edge
+    let width = 0.03;       // width of each edge line in inches
+    let margin = 0.15;      // shortest distance between a stone's edge and the board's edge
+    let window = 0.1;       // shortest distance between the board's edge and the image's edge
 
     // Private computations.
 
@@ -38,6 +38,8 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     ret.push_str(&format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"));
     ret.push_str(&format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\">\n",
              left, top, right - left, bottom - top));
+    //ret.push_str("<rect width=\"5000\" height=\"5000\" x=\"-2000\" y=\"-2000\" fill=\"#DCB35C\"/>\n");
+
     ret.push_str(&format!("<path stroke=\"#DCB35C\" stroke-linecap=\"round\" stroke-width=\"{}\" fill=\"none\" d=\"", scale * (diam + margin * 2.0)));
     ret.push_str(&strokes);
     ret.push_str("\"/>\n");
@@ -64,14 +66,18 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
 //}
 
 fn main() {
-    //let lae = lae_from_spec("turtle:4:4").unwrap();
-    let lae = lae_from_spec("loop:12").unwrap();
+    //let lae = lae_from_spec("turtle:1:1").unwrap();
+    //let lae = lae_from_spec("trihex:5").unwrap();
+    let lae = lae_from_spec(&std::env::args().nth(1).unwrap()).unwrap();
     let board = Board::new(lae.1.clone());
     let mut position = board.empty_position();
 
-    board.play(&mut position, Black, 1);
-    board.play(&mut position, White, 5);
+    //for i in 0..49 {
+        //board.play(&mut position, Black, 2*i);
+        //board.play(&mut position, White, 2*i+1);
+    //}
 
     println!("{}", svg_from_lae(lae, position));
+    //println!("Point count: {}", board.point_count());
 }
 
