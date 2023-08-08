@@ -70,7 +70,7 @@ fn main() {
     //let lae = lae_from_spec("trihex:5").unwrap();
     let lae = lae_from_spec(&std::env::args().nth(1).unwrap()).unwrap();
     let board = Board::new(lae.1.clone());
-    let mut position = board.empty_position();
+    let position = board.empty_position();
 
     //for i in 0..49 {
         //board.play(&mut position, Black, 2*i);
