@@ -24,6 +24,7 @@ fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
         ("turtle:W:H",     |args| lae_turtle(args[0], args[1])),
         ("wheels:W:H",     |args| lae_wheels(args[0], args[1])),
         ("donut:W:H:X:Y",  |args| lae_donut(args[0], args[1], args[2], args[3])),
+        ("conga:N",        |args| lae_conga(args[0])),
     ]
 }
 
@@ -224,6 +225,21 @@ pub fn lae_wheels(width: usize, height: usize) -> Lae {
         .dedup(0.1)
         .standard_lae()
 }
+
+// CONGA BOARD
+
+pub fn lae_conga(points: usize) -> Lae {
+    let mut layout = Layout::new();
+    let mut point = (0.0, 0.0);
+
+    for i in 0..points {
+        layout.push(point);
+        point = step(point, 0.08 * (if i % 2 == 0 {-1.0} else {1.0}));
+    }
+
+    return layout.standard_lae()
+}
+
 
 // HELPER FUNCTIONS
 
