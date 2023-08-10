@@ -5,9 +5,49 @@ use stones::boards::lae_from_spec;
 use stones::engine::{Board, Position, Color::*};
 use indoc::*;
 
+// Linear transform stuff.
+
+fn shift(layout: &Layout, dx: f32, dy: f32) -> Layout {
+    layout.iter()
+          .map(|&p| (p.0 + dx, p.1 + dy))
+          .collect()
+}
+
+fn scale(layout: &Layout, scale: f32) -> Layout {
+    layout.iter()
+          .map(|&p| (p.0 * scale, p.1 * scale))
+          .collect()
+}
+
+// "Normalize" a layout by enforcing:
+//     1. The shortest distance between two points is 1.
+//     2. The center is at (0, 0).
+
+fn normalize(layout: &Layout) -> Layout {
+    let left   = layout.iter().map(|&n| n.0).reduce(f32::min).unwrap();
+    let right  = layout.iter().map(|&n| n.0).reduce(f32::max).unwrap();
+    let top    = layout.iter().map(|&n| n.1).reduce(f32::min).unwrap();
+    let bottom = layout.iter().map(|&n| n.1).reduce(f32::max).unwrap();
+
+    let mut min_dist: f32 = f32::INFINITY;
+
+    for a in layout {
+        for b in layout {
+            let dist = f32::hypot(a.0 - b.0, a.1 - b.1);
+
+            if dist > 0.0 && dist < min_dist {
+                min_dist = dist;
+            }
+        }
+    }
+
+    scale(&shift(layout, -(left + right) / 2.0, -(top + bottom)/2.0), 1.0 / min_dist)
+}
+
+// Produce the SVG text representation of a given board.
 
 fn svg_from_lae(lae: Lae, position: Position) -> String {
-    let dpi = 300.0;            // pixels per inch
+    let dpi = 100.0;            // pixels per inch
     let stone_diam_in  = 0.875; // stone diameter in inches
     let line_width_in  = 0.03;  // width of each edge line in inches
     let wood_margin_in = 0.15;  // shortest distance between a stone's edge and the board's edge
@@ -15,8 +55,9 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
 
     // Private computations.
 
-    let (layout_stone, edges) = lae;
-    let layout: Layout = layout_stone.into_iter().map(|p| (p.0 * stone_diam_in, p.1 * stone_diam_in)).collect();
+    let (mut layout, edges) = lae;
+    layout = normalize(&layout);
+    layout = scale(&layout, stone_diam_in);
     let distance = stone_diam_in / 2.0 + wood_margin_in + img_border_in;
 
     let left   = dpi * (layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - distance);
@@ -40,8 +81,6 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     }
 
     // SVG data.
-
-    let mut ret = "".to_string();
 
     return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
@@ -86,6 +125,6 @@ fn main() {
     //}
 
     println!("{}", svg_from_lae(lae, position));
-    println!("Point count: {}", board.point_count());
+    eprintln!("Point count: {}", board.point_count());
 }
 
