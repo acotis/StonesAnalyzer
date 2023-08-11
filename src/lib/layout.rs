@@ -9,6 +9,8 @@ pub trait LayoutTrait {
     fn shift(self, dx: f32, dy: f32) -> Layout;
     fn rotate(self, fraction: f32) -> Layout;
     fn mirror(self) -> Layout;
+    fn bounds(&self) -> (f32, f32, f32, f32);
+    fn min_point_separation(&self) -> f32;
 }
 
 impl LayoutTrait for Layout {
@@ -37,6 +39,29 @@ impl LayoutTrait for Layout {
     fn rotate(self, fraction: f32) -> Layout {
         let angle = fraction * TAU;
         self.transform(angle.cos(), -angle.sin(), angle.sin(), angle.cos(), 0.0, 0.0)
+    }
+
+    fn bounds(&self) -> (f32, f32, f32, f32) {
+        let left   = self.iter().map(|&n| n.0).reduce(f32::min).unwrap();
+        let right  = self.iter().map(|&n| n.0).reduce(f32::max).unwrap();
+        let top    = self.iter().map(|&n| n.1).reduce(f32::min).unwrap();
+        let bottom = self.iter().map(|&n| n.1).reduce(f32::max).unwrap();
+        (left, right, top, bottom)
+    }
+
+    fn min_point_separation(&self) -> f32 {
+        let mut min_dist: f32 = f32::INFINITY;
+
+        for a in self {
+            for b in self {
+                let dist = f32::hypot(a.0 - b.0, a.1 - b.1);
+                if dist > 0.0 && dist < min_dist {
+                    min_dist = dist;
+                }
+            }
+        }
+
+        min_dist
     }
 }
 
