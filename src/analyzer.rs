@@ -9,6 +9,7 @@ use stones::engine::{Board, Color::*};
 use stones::gametree::{GameTree, Symbol, Symbol::*, Turn::*};
 use stones::boards::*;
 use stones::san::*;
+use stones::layout::*;
 
 use std::time::{Instant, Duration};
 use sfml::window::*;
@@ -467,25 +468,16 @@ fn sizing_in_px(au_layout: &Layout, win: &RenderWindow) -> (Layout, f32) {
     // Compute the arbitrary-units stone size as half the minimum distance
     // between any two points in the arbitrary-units layout.
 
-    let mut au_stone_size: f32 = f32::INFINITY;
-
-    for a in au_layout {
-        for b in au_layout {
-            let half_dist = f32::hypot(a.0 - b.0, a.1 - b.1) / 2.0;
-
-            if half_dist > 0.0 && half_dist < au_stone_size {
-                au_stone_size = half_dist;
-            }
-        }
-    }
+    let au_stone_size = au_layout.min_point_separation() / 2.0;
 
     // Compute the arbitrary-units bounding box of the board's layout,
     // accounting for how far out the stones may go.
 
-    let au_left   = au_layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - au_stone_size;
-    let au_right  = au_layout.iter().map(|&n| n.0).reduce(f32::max).unwrap() + au_stone_size;
-    let au_top    = au_layout.iter().map(|&n| n.1).reduce(f32::min).unwrap() - au_stone_size;
-    let au_bottom = au_layout.iter().map(|&n| n.1).reduce(f32::max).unwrap() + au_stone_size;
+    let (mut au_left, mut au_right, mut au_top, mut au_bottom) = au_layout.bounds();
+    au_left   -= au_stone_size;
+    au_right  += au_stone_size;
+    au_top    -= au_stone_size;
+    au_bottom += au_stone_size;
 
     let au_width  = au_right  - au_left;
     let au_height = au_bottom - au_top;
