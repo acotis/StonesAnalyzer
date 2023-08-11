@@ -3,27 +3,14 @@ use stones::boards::Lae;
 use stones::boards::Layout;
 use stones::boards::lae_from_spec;
 use stones::engine::{Board, Position, Color::*};
+use stones::boards::Transformable;
 use indoc::*;
-
-// Linear transform stuff.
-
-fn shift(layout: &Layout, dx: f32, dy: f32) -> Layout {
-    layout.iter()
-          .map(|&p| (p.0 + dx, p.1 + dy))
-          .collect()
-}
-
-fn scale(layout: &Layout, scale: f32) -> Layout {
-    layout.iter()
-          .map(|&p| (p.0 * scale, p.1 * scale))
-          .collect()
-}
 
 // "Normalize" a layout by enforcing:
 //     1. The shortest distance between two points is 1.
 //     2. The center is at (0, 0).
 
-fn normalize(layout: &Layout) -> Layout {
+fn normalize(layout: Layout) -> Layout {
     let left   = layout.iter().map(|&n| n.0).reduce(f32::min).unwrap();
     let right  = layout.iter().map(|&n| n.0).reduce(f32::max).unwrap();
     let top    = layout.iter().map(|&n| n.1).reduce(f32::min).unwrap();
@@ -31,8 +18,8 @@ fn normalize(layout: &Layout) -> Layout {
 
     let mut min_dist: f32 = f32::INFINITY;
 
-    for a in layout {
-        for b in layout {
+    for a in &layout {
+        for b in &layout {
             let dist = f32::hypot(a.0 - b.0, a.1 - b.1);
 
             if dist > 0.0 && dist < min_dist {
@@ -41,7 +28,8 @@ fn normalize(layout: &Layout) -> Layout {
         }
     }
 
-    scale(&shift(layout, -(left + right) / 2.0, -(top + bottom)/2.0), 1.0 / min_dist)
+    layout.shift(-(left + right) / 2.0, -(top + bottom)/2.0)
+          .scale(1.0 / min_dist)
 }
 
 // Produce the SVG text representation of a given board.
@@ -51,13 +39,15 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     let stone_diam_in  = 0.875; // stone diameter in inches
     let line_width_in  = 0.03;  // width of each edge line in inches
     let wood_margin_in = 0.15;  // shortest distance between a stone's edge and the board's edge
-    let img_border_in  = 0.1;   // shortest distance between the board's edge and the image's edge
+    let img_border_in  = 0.0;   // shortest distance between the board's edge and the image's edge
 
     // Private computations.
 
     let (mut layout, edges) = lae;
-    layout = normalize(&layout);
-    layout = scale(&layout, stone_diam_in);
+    layout = normalize(layout);
+    layout = layout.scale(stone_diam_in);
+    //layout = layout.rotate(0.25);
+    layout = layout.mirror();
     let distance = stone_diam_in / 2.0 + wood_margin_in + img_border_in;
 
     let left   = dpi * (layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - distance);

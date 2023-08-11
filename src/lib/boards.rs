@@ -237,9 +237,8 @@ pub fn lae_conga(points: usize) -> Lae {
         point = step(point, 0.08 * (if i % 2 == 0 {-1.0} else {1.0}));
     }
 
-    return layout.standard_lae()
+    layout.standard_lae()
 }
-
 
 // HELPER FUNCTIONS
 
@@ -247,8 +246,15 @@ trait LayoutStuff {
     fn induced_edges(&self, edge_len: f32, tolerance: f32) -> Edges;
     fn standard_lae(self) -> Lae;
     fn dedup(self, tolerance: f32) -> Layout;
-    fn scale(self, factor: f32) -> Layout;
     fn stamp_with(self, stamp: Layout) -> Layout;
+}
+
+pub trait Transformable {
+    fn transform(self, x0: f32, x1: f32, y0: f32, y1: f32, s0: f32, s1: f32) -> Layout;
+    fn scale(self, factor: f32) -> Layout;
+    fn shift(self, dx: f32, dy: f32) -> Layout;
+    fn rotate(self, fraction: f32) -> Layout;
+    fn mirror(self) -> Layout;
 }
 
 impl LayoutStuff for Layout {
@@ -301,12 +307,6 @@ impl LayoutStuff for Layout {
         ret
     }
 
-    // Scale a layout by a given multiplicative factor.
-
-    fn scale(self, factor: f32) -> Layout {
-        self.into_iter().map(|point| (point.0 * factor, point.1 * factor)).collect()
-    }
-
     // Cross two layouts by using one as a rubber stamp and stamping it onto each
     // point of the other.
 
@@ -322,6 +322,36 @@ impl LayoutStuff for Layout {
         layout
     }
 }
+
+impl Transformable for Layout {
+    // Transform a layout by the augmented matrix:
+    //     [x0 y0 | s0]
+    //     [x1 y1 | s1]
+
+    fn transform(self, x0: f32, x1: f32, y0: f32, y1: f32, s0: f32, s1: f32) -> Layout {
+        self.into_iter()
+            .map(|p| (p.0 * x0 + p.1 * y0 + s0, p.0 * x1 + p.1 * y1 + s1))
+            .collect()
+    }
+
+    fn scale(self, factor: f32) -> Layout {
+        self.transform(factor, 0.0, 0.0, factor, 0.0, 0.0)
+    }
+
+    fn shift(self, dx: f32, dy: f32) -> Layout {
+        self.transform(1.0, 0.0, 0.0, 1.0, dx, dy)
+    }
+
+    fn mirror(self) -> Layout {
+        self.transform(-1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+    }
+
+    fn rotate(self, fraction: f32) -> Layout {
+        let angle = fraction * std::f32::consts::TAU;
+        self.transform(angle.cos(), -angle.sin(), angle.sin(), angle.cos(), 0.0, 0.0)
+    }
+}
+
 
 // Helper functions.
 
