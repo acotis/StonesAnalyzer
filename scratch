@@ -1,0 +1,1 @@
+rm -f analyses/scratch.san; cargo run analyses/scratch.san --create $1
