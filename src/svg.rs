@@ -1,9 +1,9 @@
 
 use stones::boards::Lae;
-use stones::boards::Layout;
 use stones::boards::lae_from_spec;
 use stones::engine::{Board, Position, Color::*};
-use stones::boards::Transformable;
+use stones::layout::Layout;
+use stones::layout::LayoutTrait;
 use indoc::*;
 
 // "Normalize" a layout by enforcing:

@@ -37,6 +37,8 @@ use crate::engine::Color::*;
 
 // Structs.
 
+pub type Edges = Vec::<(usize, usize)>;
+
 #[derive(Clone, PartialEq, Copy, Debug, Serialize, Deserialize)]
 pub enum Color {
     Empty = 0,

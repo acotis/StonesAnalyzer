@@ -3,7 +3,7 @@ use std::io;
 use std::io::prelude::*;
 use crate::engine::Board;
 use crate::gametree::GameTree;
-use crate::boards::Layout;
+use crate::layout::Layout;
 use std::fs::File;
 
 pub fn read_san_file(filename: &str) -> io::Result<(GameTree, Layout)> {
