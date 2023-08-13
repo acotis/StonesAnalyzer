@@ -20,14 +20,12 @@ fn normalize(layout: Layout) -> Layout {
 
 // Produce the SVG text representation of a given board.
 
-fn svg_from_lae(lae: Lae, position: Position) -> String {
+fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
     let dpi = 100.0;           // pixels per inch
     let stone_diam_in = 0.875; // stone diameter in inches
     let line_width_in = 0.03;  // width of each edge line in inches
     let wood_extra_in = 0.15;  // shortest distance between a stone's edge and the board's edge
     let img_margin_in = 0.0;   // shortest distance between the board's edge and the image's edge
-
-    let front = false;
 
     // Private computations.
 
@@ -36,7 +34,8 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     layout = layout.scale(stone_diam_in);
     layout = layout.scale(dpi);
     layout = layout.rotate(-2.0/16.0);
-    //layout = layout.mirror();
+    if text.is_some() {layout = layout.mirror();}
+
     let distance = dpi * (stone_diam_in / 2.0 + wood_extra_in + img_margin_in);
 
     let left   = layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - distance;
@@ -50,8 +49,8 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     let line_width    = dpi * line_width_in;
     let bg_line_width = dpi * (stone_diam_in + wood_extra_in * 2.0);
 
-    let lopen  = if front {""} else {"!--"};
-    let lclose = if front {""} else {"--"};
+    let lopen  = if text.is_none() {""} else {"!--"};
+    let lclose = if text.is_none() {""} else {"--"};
 
     // Stroke pattern.
     
@@ -64,7 +63,7 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
 
     // SVG data.
 
-    return formatdoc!(r##"
+    let mut svg = formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
             <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
             <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
@@ -81,6 +80,12 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
             <text dy="50" class="text">in every board shape</text>
         </svg>
     "##);
+
+    if let Some(text) = text {
+        eprintln!("there was text");
+    }
+
+    svg
 
     //for i in 0..layout.len() {
         //if position[i] != Empty {
@@ -106,7 +111,7 @@ fn main() {
         //board.play(&mut position, White, 2*i+1);
     //}
 
-    println!("{}", svg_from_lae(lae, position));
+    println!("{}", svg_from_lae(lae, position, std::env::args().nth(2)));
     eprintln!("Point count: {}", board.point_count());
 }
 
