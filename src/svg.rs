@@ -5,6 +5,7 @@ use stones::engine::{Board, Position, Color::*};
 use stones::layout::Layout;
 use stones::layout::LayoutTrait;
 use indoc::*;
+use std::env::args;
 
 // "Normalize" a layout by enforcing:
 //     1. The shortest distance between two points is 1.
@@ -20,7 +21,7 @@ fn normalize(layout: Layout) -> Layout {
 
 // Produce the SVG text representation of a given board.
 
-fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
+fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
     let dpi = 100.0;           // pixels per inch
     let stone_diam_in = 0.875; // stone diameter in inches
     let line_width_in = 0.03;  // width of each edge line in inches
@@ -33,8 +34,8 @@ fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
     layout = normalize(layout);
     layout = layout.scale(stone_diam_in);
     layout = layout.scale(dpi);
-    layout = layout.rotate(-2.0/16.0);
     if text.is_some() {layout = layout.mirror();}
+    layout = layout.rotate(rotation);
 
     let distance = dpi * (stone_diam_in / 2.0 + wood_extra_in + img_margin_in);
 
@@ -63,7 +64,19 @@ fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
 
     // SVG data.
 
-    let mut svg = formatdoc!(r##"
+    let svg_text_lines = if let Some(text) = text {
+        let dy_start = 10 - 20 * text.matches("|").count() as isize;
+        text.split("|")
+            .enumerate()
+            .map(|(id, line)| format!(r#"<text dy="{}" class="text">{}</text>"#,
+                                      dy_start + (40 * id) as isize, line))
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        "".to_string()
+    };
+
+    return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
             <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
             <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
@@ -75,17 +88,9 @@ fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
                     font-family: lora;
                 }}
             </style>
-            <text dy="-30" class="text">The essence of Go</text>
-            <text dy="10" class="text">reflected like a moonbeam</text>
-            <text dy="50" class="text">in every board shape</text>
+            {svg_text_lines}
         </svg>
     "##);
-
-    if let Some(text) = text {
-        eprintln!("there was text");
-    }
-
-    svg
 
     //for i in 0..layout.len() {
         //if position[i] != Empty {
@@ -102,16 +107,14 @@ fn svg_from_lae(lae: Lae, position: Position, text: Option<String>) -> String {
 //}
 
 fn main() {
-    let lae = lae_from_spec(&std::env::args().nth(1).unwrap()).unwrap();
-    let board = Board::new(lae.1.clone());
-    let position = board.empty_position();
+    let mut args = args(); args.next();
+    let spec = args.next().unwrap();
+    let text = args.next();
+    let angle: f32 = args.next().unwrap_or("0".to_string()).parse().unwrap();
 
-    //for i in 0..49 {
-        //board.play(&mut position, Black, 2*i);
-        //board.play(&mut position, White, 2*i+1);
-    //}
+    let lae = lae_from_spec(&spec).unwrap();
 
-    println!("{}", svg_from_lae(lae, position, std::env::args().nth(2)));
-    eprintln!("Point count: {}", board.point_count());
+    eprintln!("Point count: {}", lae.0.len());
+    println!("{}", svg_from_lae(lae, text, angle));
 }
 

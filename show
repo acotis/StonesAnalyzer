@@ -3,7 +3,7 @@
 set -e
 
 clear
-cargo run --bin stones_svg -- $1 > board.svg
+cargo run --bin stones_svg -- "$@" > board.svg
 convert board.svg board.png
 ristretto board.png
 
