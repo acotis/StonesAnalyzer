@@ -27,14 +27,16 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     let wood_extra_in = 0.15;  // shortest distance between a stone's edge and the board's edge
     let img_margin_in = 0.0;   // shortest distance between the board's edge and the image's edge
 
+    let front = false;
+
     // Private computations.
 
     let (mut layout, edges) = lae;
     layout = normalize(layout);
     layout = layout.scale(stone_diam_in);
     layout = layout.scale(dpi);
-    //layout = layout.rotate(-3.0/16.0);
-    layout = layout.mirror();
+    layout = layout.rotate(-2.0/16.0);
+    //layout = layout.mirror();
     let distance = dpi * (stone_diam_in / 2.0 + wood_extra_in + img_margin_in);
 
     let left   = layout.iter().map(|&n| n.0).reduce(f32::min).unwrap() - distance;
@@ -47,6 +49,9 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
 
     let line_width    = dpi * line_width_in;
     let bg_line_width = dpi * (stone_diam_in + wood_extra_in * 2.0);
+
+    let lopen  = if front {""} else {"!--"};
+    let lclose = if front {""} else {"--"};
 
     // Stroke pattern.
     
@@ -62,7 +67,7 @@ fn svg_from_lae(lae: Lae, position: Position) -> String {
     return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
             <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
-            <path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" />
+            <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
 
             <style>
                 .text {{
