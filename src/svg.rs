@@ -18,7 +18,8 @@ use clap::Parser;
 struct CLI {
     #[arg()]                                     spec:   String,
     #[arg(short, long, default_value_t = 0.0)]   rotate: f32,
-    #[arg(short, long)]                          face:   String,
+    #[arg(       long, default_value_t = false)] blank:  bool,
+    #[arg(short, long)]                          back:   Option<String>,
 }
 
 // Face enum.
@@ -73,8 +74,8 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
     let line_width    = dpi * line_width_in;
     let bg_line_width = dpi * (stone_diam_in + wood_extra_in * 2.0);
 
-    let lopen  = if matches!(face, Back(_)) {"!--"} else {""};
-    let lclose = if matches!(face, Back(_)) {"--"}  else {""};
+    let lopen  = if face == Front {""} else {"!--"};
+    let lclose = if face == Front {""} else {"--"};
 
     // Stroke pattern.
     
@@ -118,30 +119,19 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
 fn main() {
     let args = CLI::parse();
-    let lae = lae_from_spec(&args.spec).unwrap();
 
-    let face = match args.face {
-        None => Front,
-        Some(face_spec) {
-            if      face_spec == "front".to_string() {Front}
-            else if face_spec == "blank".to_string() {Blank}
-            else if face_spec.starts_with("back:".to_string()) {face_spec[5:].to_string()}
-            else {panic!();}
-        }
-    }
-
-
-    if args.face == "face"
-        eprintln!("Error: cannot use --blank and --text together.");
+    if args.blank && args.back.is_some() {
+        eprintln!("Error: cannot use --blank and --back together.");
         std::process::exit(-1);
     }
 
+    let lae = lae_from_spec(&args.spec).unwrap();
     let face = if args.blank {
         Blank
-    } else if args.text.is_none() {
+    } else if args.back.is_none() {
         Front
     } else {
-        Back(args.text.unwrap())
+        Back(args.back.unwrap())
     };
 
     eprintln!("Point count: {}", lae.0.len());
