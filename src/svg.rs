@@ -3,8 +3,32 @@ use stones::boards::Lae;
 use stones::boards::lae_from_spec;
 use stones::layout::Layout;
 use stones::layout::LayoutTrait;
+use crate::Face::*;
 use indoc::*;
-use std::env::args;
+use clap::Parser;
+
+// Command-line arguments.
+
+//                      blank   text
+// normal blank         true    None
+// normal with lines    false   None
+// reverse with text    false   "..."   [text can be empty for blank back]
+
+#[derive(Parser)]
+struct CLI {
+    #[arg()]                                     spec:   String,
+    #[arg(short, long, default_value_t = 0.0)]   rotate: f32,
+    #[arg(short, long)]                          face:   String,
+}
+
+// Face enum.
+
+#[derive(PartialEq)]
+enum Face {
+    Front,
+    Blank,
+    Back(String),
+}
 
 // "Normalize" a layout by enforcing:
 //     1. The shortest distance between two points is 1.
@@ -20,7 +44,7 @@ fn normalize(layout: Layout) -> Layout {
 
 // Produce the SVG text representation of a given board.
 
-fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
+fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
     let dpi = 100.0;           // pixels per inch
     let stone_diam_in = 0.875; // stone diameter in inches
     let line_width_in = 0.03;  // width of each edge line in inches
@@ -33,8 +57,8 @@ fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
     layout = normalize(layout);
     layout = layout.scale(stone_diam_in);
     layout = layout.scale(dpi);
-    if text.is_some() {layout = layout.mirror();}
     layout = layout.rotate(rotation);
+    if matches!(face, Back(_)) {layout = layout.mirror();}
 
     let distance = dpi * (stone_diam_in / 2.0 + wood_extra_in + img_margin_in);
 
@@ -49,8 +73,8 @@ fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
     let line_width    = dpi * line_width_in;
     let bg_line_width = dpi * (stone_diam_in + wood_extra_in * 2.0);
 
-    let lopen  = if text.is_none() {""} else {"!--"};
-    let lclose = if text.is_none() {""} else {"--"};
+    let lopen  = if matches!(face, Back(_)) {"!--"} else {""};
+    let lclose = if matches!(face, Back(_)) {"--"}  else {""};
 
     // Stroke pattern.
     
@@ -63,7 +87,7 @@ fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
 
     // SVG data.
 
-    let svg_text_lines = if let Some(text) = text {
+    let svg_text_lines = if let Back(text) = face {
         let dy_start = 10 - 20 * text.matches("|").count() as isize;
         text.split("|")
             .enumerate()
@@ -90,30 +114,37 @@ fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
             {svg_text_lines}
         </svg>
     "##);
-
-    //for i in 0..layout.len() {
-        //if position[i] != Empty {
-            //ret.push_str(&format!("<circle fill=\"{}\" cx=\"{}\" cy=\"{}\" r=\"{}\"/>\n",
-                                  //if position[i] == Black {"#000"} else {"#FFF"},
-                                  //layout[i].0 * dpi, layout[i].1 * dpi, dpi * stone_diam_in / 2.0));
-        //}
-    //}
 }
 
-//fn svg_from_lae_blank(lae: Lae) -> String {
-    //let board = Board::new(lae.1.clone());
-    //svg_from_lae(lae, board.empty_position())
-//}
-
 fn main() {
-    let mut args = args(); args.next();
-    let spec = args.next().unwrap();
-    let angle: f32 = args.next().unwrap_or("0".to_string()).parse().unwrap();
-    let text = args.next();
+    let args = CLI::parse();
+    let lae = lae_from_spec(&args.spec).unwrap();
 
-    let lae = lae_from_spec(&spec).unwrap();
+    let face = match args.face {
+        None => Front,
+        Some(face_spec) {
+            if      face_spec == "front".to_string() {Front}
+            else if face_spec == "blank".to_string() {Blank}
+            else if face_spec.starts_with("back:".to_string()) {face_spec[5:].to_string()}
+            else {panic!();}
+        }
+    }
+
+
+    if args.face == "face"
+        eprintln!("Error: cannot use --blank and --text together.");
+        std::process::exit(-1);
+    }
+
+    let face = if args.blank {
+        Blank
+    } else if args.text.is_none() {
+        Front
+    } else {
+        Back(args.text.unwrap())
+    };
 
     eprintln!("Point count: {}", lae.0.len());
-    println!("{}", svg_from_lae(lae, text, angle));
+    println!("{}", svg_from_lae(lae, args.rotate, face))
 }
 
