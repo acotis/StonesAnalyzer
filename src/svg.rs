@@ -9,11 +9,6 @@ use clap::Parser;
 
 // Command-line arguments.
 
-//                      blank   text
-// normal blank         true    None
-// normal with lines    false   None
-// reverse with text    false   "..."   [text can be empty for blank back]
-
 #[derive(Parser)]
 struct CLI {
     #[arg()]                                     spec:   String,
