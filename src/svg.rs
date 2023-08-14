@@ -1,7 +1,6 @@
 
 use stones::boards::Lae;
 use stones::boards::lae_from_spec;
-use stones::engine::{Board, Position, Color::*};
 use stones::layout::Layout;
 use stones::layout::LayoutTrait;
 use indoc::*;
@@ -109,8 +108,8 @@ fn svg_from_lae(lae: Lae, text: Option<String>, rotation: f32) -> String {
 fn main() {
     let mut args = args(); args.next();
     let spec = args.next().unwrap();
-    let text = args.next();
     let angle: f32 = args.next().unwrap_or("0".to_string()).parse().unwrap();
+    let text = args.next();
 
     let lae = lae_from_spec(&spec).unwrap();
 

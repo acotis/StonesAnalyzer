@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+clear
+rm -f image/*
+cargo run --bin stones_svg -- "$1" $(python3 -c "print(0 - $2)") > image/board_front.svg
+cargo run --bin stones_svg -- "$@"                               > image/board_back.svg
+convert image/board_front.svg image/board_front.png
+convert image/board_back.svg  image/board_back.png
+ristretto image/board_front.png
+
