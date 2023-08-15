@@ -83,12 +83,16 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
     // SVG data.
 
+    let font_size = 36;
+    let line_sep = 47;
+    let mid_line = 22;
+
     let svg_text_lines = if let Back(text) = face {
-        let dy_start = 10 - 20 * text.matches("|").count() as isize;
+        let dy_start = mid_line - (line_sep/2) * text.matches("|").count() as isize;
         text.split("|")
             .enumerate()
             .map(|(id, line)| format!(r#"<text dy="{}" class="text">{}</text>"#,
-                                      dy_start + (40 * id) as isize, line))
+                                      dy_start + (line_sep as isize * id as isize), line))
             .collect::<Vec<_>>()
             .join("\n")
     } else {
@@ -97,12 +101,13 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
     return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
-            <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
+            <polygon fill="#DCB35C" points="500,0 249.99998,433.01273 -250.00003,433.0127 -500,-0.00004371139 -249.99995,-433.01273 250.00018,-433.0126 "/>
+            <!--path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" /-->
             <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
 
             <style>
                 .text {{
-                    font-size: 30;
+                    font-size: {font_size};
                     text-anchor: middle;
                     font-family: lora;
                 }}
