@@ -45,7 +45,7 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
     let stone_diam_in = 0.875; // stone diameter in inches
     let line_width_in = 0.03;  // width of each edge line in inches
     let wood_extra_in = 0.15;  // shortest distance between a stone's edge and the board's edge
-    let img_margin_in = 0.0;   // shortest distance between the board's edge and the image's edge
+    let img_margin_in = 0.1;   // shortest distance between the board's edge and the image's edge
 
     // Private computations.
 
@@ -85,7 +85,7 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
     let font_size = 36;
     let line_sep = 47;
-    let mid_line = 22;
+    let mid_line = 12;
 
     let svg_text_lines = if let Back(text) = face {
         let dy_start = mid_line - (line_sep/2) * text.matches("|").count() as isize;
