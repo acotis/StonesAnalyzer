@@ -3,6 +3,6 @@
 set -e
 
 clear
-cargo run --bin stones_svg -- trihex:5 --back "The essence of Go|reflected like a moonbeam|in every board shape" > Order/new_blueprint.svg
+cargo run --bin stones_svg -- trihex:5 --back "The essence of Go|--------------reflected like a moonbeam------------------|in every board shape" > Order/new_blueprint.svg
 ristretto Order/new_blueprint.svg
 
