@@ -101,8 +101,8 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
     return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
-            <polygon fill="#DCB35C" points="500,0 249.99998,433.01273 -250.00003,433.0127 -500,-0.00004371139 -249.99995,-433.01273 250.00018,-433.0126 "/>
-            <!--path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" /-->
+            <!--polygon fill="#DCB35C" points="500,0 249.99998,433.01273 -250.00003,433.0127 -500,-0.00004371139 -249.99995,-433.01273 250.00018,-433.0126 "/-->
+            <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
             <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
 
             <style>
