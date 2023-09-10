@@ -41,11 +41,13 @@ fn normalize(layout: Layout) -> Layout {
 // Produce the SVG text representation of a given board.
 
 fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
-    let dpi = 100.0;           // pixels per inch
+    let dpi = 100.0; // 300.0; // pixels per inch
     let stone_diam_in = 0.875; // stone diameter in inches
     let line_width_in = 0.03;  // width of each edge line in inches
-    let wood_extra_in = 0.15;  // shortest distance between a stone's edge and the board's edge
-    let img_margin_in = 0.5;   // shortest distance between the board's edge and the image's edge
+    let wood_extra_in = 0.15;  // 0.00;  // shortest distance between a stone's edge and the board's edge
+    let img_margin_in = 0.5;   // 0.0;   // shortest distance between the board's edge and the image's edge
+    let board_color = "#DCB35C"; //"#FFFFFF";
+    let line_color  = "#000"; // "#DDD";
 
     // Private computations.
 
@@ -101,9 +103,9 @@ fn svg_from_lae(lae: Lae, rotation: f32, face: Face) -> String {
 
     return formatdoc!(r##"
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}">
-            <!--polygon fill="#DCB35C" points="500,0 249.99998,433.01273 -250.00003,433.0127 -500,-0.00004371139 -249.99995,-433.01273 250.00018,-433.0126 "/-->
-            <path stroke="#DCB35C" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
-            <{lopen}path stroke="#000" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
+            <!--polygon fill="{board_color}" points="500,0 249.99998,433.01273 -250.00003,433.0127 -500,-0.00004371139 -249.99995,-433.01273 250.00018,-433.0126 "/-->
+            <path stroke="{board_color}" stroke-linecap="round" stroke-width="{bg_line_width}" fill="none" d="{strokes}" />
+            <{lopen}path stroke="{line_color}" stroke-linecap="round" stroke-width="{line_width}" fill="none" d="{strokes}" /{lclose}>
 
             <style>
                 .text {{
