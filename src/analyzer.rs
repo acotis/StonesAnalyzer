@@ -503,8 +503,8 @@ fn sizing_in_px(au_layout: &Layout, win: &RenderWindow) -> (Layout, f32) {
     let win_w = win.size().x as f32;
     let win_h = win.size().y as f32;
 
-    let squish_factor_w = (win_w) / au_width;
-    let squish_factor_h = (win_h) / au_height;
+    let squish_factor_w = win_w / au_width;
+    let squish_factor_h = win_h / au_height;
     let squish_factor = f32::min(squish_factor_w, squish_factor_h);
 
     let offset_w = (win_w - au_width  * squish_factor) / 2.0;
