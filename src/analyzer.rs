@@ -19,7 +19,6 @@ use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use crate::Mode::*;
 
-const BORDER: f32 = 20.0;
 const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
