@@ -20,6 +20,7 @@ use sfml::window::Event::*;
 use crate::Mode::*;
 
 const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
+const EDGE_WIDTH_RATIO: f32 = 20.0;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
 const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
@@ -112,11 +113,15 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
     // Create the RenderWindow.
 
+    let mut context_settings: ContextSettings = Default::default();
+    context_settings.antialiasing_level = 16;
+    println!("antialiasing level: {}", context_settings.antialiasing_level);
+
     let mut window = RenderWindow::new(
         (800, 600),
         "Stones analyzer",
         Style::DEFAULT,
-        &Default::default()
+        &context_settings
     );
     window.set_framerate_limit(60);
 
@@ -232,7 +237,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
         }
 
         draw_bg              (&mut window, set_root);
-        draw_board           (&mut window, &gametree, &layout);
+        draw_board           (&mut window, &gametree, &layout, stone_size);
         draw_stones          (&mut window, &gametree, &layout, stone_size);
         draw_move_marker     (&mut window, &gametree, &layout, stone_size);
         draw_immortal_markers(&mut window, &gametree, &layout, stone_size);
@@ -260,10 +265,10 @@ fn draw_bg(win: &mut RenderWindow, set_root: bool) {
 
 // Draw the edges of the board.
 
-fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout) {
+fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
     for i in 0..gametree.board.point_count() {
         for j in gametree.board.get_neighbors(i) {
-            draw_line(win, layout[i], layout[j], EDGE_COLOR);
+            draw_line(win, layout[i], layout[j], EDGE_COLOR, stone_size / EDGE_WIDTH_RATIO);
         }
     }
 }
@@ -419,18 +424,26 @@ fn draw_polygon(win: &mut RenderWindow, side_count: u32, rotation: f32,
 
 // Draw a line from one point to another.
 
-fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color) {
-    let mut vertex_buffer = VertexBuffer::new(
-        PrimitiveType::LINE_STRIP, 2, VertexBufferUsage::STATIC);
+fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color, width: f32) {
+    let dist  = f32::hypot(b.1 - a.1, b.0 - a.0);
+    let angle = f32::atan2(b.1 - a.1, b.0 - a.0);
+    let mut rs = RectangleShape::new();
+    rs.set_size(Vector2f::new(dist, width));
+    rs.set_origin(Vector2f::new(0.0, width/2.0));
+    rs.set_position(Vector2f::new(a.0, a.1));
+    rs.rotate(angle * 180.0/std::f32::consts::PI);
+    rs.set_fill_color(color);
+    win.draw(&rs);
 
-    let vertices = 
-        &[Vertex::with_pos_color(Vector2::new(a.0, a.1), color),
-          Vertex::with_pos_color(Vector2::new(b.0, b.1), color)];
+    let mut cs = CircleShape::new(width/2.0, 50);
+    cs.set_origin(Vector2::new(width/2.0, width/2.0));
+    cs.set_position(Vector2::new(a.0, a.1));
+    cs.set_fill_color(color);
+    win.draw(&cs);
 
-    vertex_buffer.update(vertices, 0);
-    win.draw(&vertex_buffer);
+    cs.set_position(Vector2::new(b.0, b.1));
+    win.draw(&cs);
 }
-
 
 // Update the "view" of the window (call this after a resize event to stop it from
 // getting all stretched out).
