@@ -20,6 +20,7 @@ use sfml::window::Event::*;
 use crate::Mode::*;
 
 const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
+const STONE_MARGIN: f32 = 1.5;
 const EDGE_WIDTH_RATIO: f32 = 20.0;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
@@ -186,18 +187,38 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
                 }
 
                 (Normal(_), _, KeyPressed {code: Key::S, ..}) => {
-                    let w = window.size().x;
-                    let h = window.size().y;
+                    println!("S key pressed!");
+
                     let mut texture = Texture::new().expect("constructing texture");
-                    if !texture.create(w, h) {
+                    if !texture.create(window.size().x, window.size().y) {
                         eprintln!("Failed to create texture.");
                         break;
                     }
-                    unsafe {texture.update_from_render_window(&window, 0, 0);}
-                    if texture.copy_to_image().expect("copying to image").save_to_file("hi.png") {
+
+                    unsafe {
+                        texture.update_from_render_window(&window, 0, 0);
+                    }
+
+                    let (mut left, mut right, mut top, mut bottom) = layout.bounds();
+                    left   -= stone_size * STONE_MARGIN;
+                    right  += stone_size * STONE_MARGIN;
+                    top    -= stone_size * STONE_MARGIN;
+                    bottom += stone_size * STONE_MARGIN;
+
+                    let w = right - left;
+                    let h = bottom - top;
+
+                    let uncropped = texture.copy_to_image().expect("copying to image");
+                    let mut cropped = Image::new(w as u32, h as u32);
+                    cropped.copy_image(
+                        &uncropped, 0, 0,
+                        &IntRect::new(left as i32, top as i32, w as i32, h as i32),
+                        false
+                    );
+
+                    if cropped.save_to_file("screenshot.png") {
                         println!("screenshot saved");
                     }
-                    println!("S key pressed!");
                 }
 
                 // SymbolSelect-mode event handling.
@@ -501,10 +522,10 @@ fn sizing_in_px(au_layout: &Layout, win: &RenderWindow) -> (Layout, f32) {
     // accounting for how far out the stones may go.
 
     let (mut au_left, mut au_right, mut au_top, mut au_bottom) = au_layout.bounds();
-    au_left   -= au_stone_size * 1.5;
-    au_right  += au_stone_size * 1.5;
-    au_top    -= au_stone_size * 1.5;
-    au_bottom += au_stone_size * 1.5;
+    au_left   -= au_stone_size * STONE_MARGIN;
+    au_right  += au_stone_size * STONE_MARGIN;
+    au_top    -= au_stone_size * STONE_MARGIN;
+    au_bottom += au_stone_size * STONE_MARGIN;
 
     let au_width  = au_right  - au_left;
     let au_height = au_bottom - au_top;
