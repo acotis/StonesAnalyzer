@@ -3,20 +3,10 @@
  * 
  * This module provides the GameTree struct. It is used to represent a game
  * of Go, possibly with branching paths. You construct a GameTree from a Board
- * struct (which it can't outlive). Initially, the tree has only one node, at
- * the empty position for that board. You can perform operations such as playing
- * a move, undoing the current move without deleting the branch it's on, and
- * resetting the tree to just the initial position. Here is the current set
- * of methods:
- *
- *     pub fun play(&mut self, Color, Option<usize>) -> PlayResult;
- *     pub fun undo(&mut self);
- *     pub fun reset(&mut self);
- *     pub fun game_over(&self) -> bool;
- *     pub fun get_last_move(&self) -> Option<Option<usize>>;
- *     pub fun color_at(usize) -> Color;
- *     pub fun is_immortal(usize) -> bool
- *     pub fun whose_turn() -> Color;
+ * struct, which it takes ownership of. Initially, the tree has only one node,
+ * at the empty position for that board. You can perform operations such as
+ * playing a move, undoing the current move without deleting the branch it's
+ * on, and resetting the tree to the initial position.
  */
 
 use serde::{Serialize, Deserialize};
