@@ -21,6 +21,7 @@ use crate::Mode::*;
 
 const SYMBOL_BUTTON_INNER_MARGIN: f32 = 0.1;
 const STONE_MARGIN: f32 = 1.5;
+const STONE_MARGIN_SCREENSHOT: f32 = 1.4;
 const EDGE_WIDTH_RATIO: f32 = 20.0;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
@@ -200,10 +201,10 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
                     }
 
                     let (mut left, mut right, mut top, mut bottom) = layout.bounds();
-                    left   -= stone_size * STONE_MARGIN;
-                    right  += stone_size * STONE_MARGIN;
-                    top    -= stone_size * STONE_MARGIN;
-                    bottom += stone_size * STONE_MARGIN;
+                    left   -= stone_size * STONE_MARGIN_SCREENSHOT;
+                    right  += stone_size * STONE_MARGIN_SCREENSHOT;
+                    top    -= stone_size * STONE_MARGIN_SCREENSHOT;
+                    bottom += stone_size * STONE_MARGIN_SCREENSHOT;
 
                     let w = right - left;
                     let h = bottom - top;
@@ -260,7 +261,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
         draw_bg              (&mut window, set_root);
         draw_board           (&mut window, &gametree, &layout, stone_size);
         draw_stones          (&mut window, &gametree, &layout, stone_size);
-        draw_move_marker     (&mut window, &gametree, &layout, stone_size);
+        //draw_move_marker     (&mut window, &gametree, &layout, stone_size);
         //draw_immortal_markers(&mut window, &gametree, &layout, stone_size);
         draw_symbols         (&mut window, &gametree, &layout, stone_size);
 

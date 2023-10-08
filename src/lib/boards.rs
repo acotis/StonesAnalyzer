@@ -16,7 +16,7 @@ pub type Lae = (Layout, Edges); // "Layout and Edges"
 fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
     vec![
         ("square:N",       |args| lae_square(args[0])),
-        ("rect:W:H",       |args| lae_rect(args[0], args[1])),
+        ("grid:W:H",       |args| lae_grid(args[0], args[1])),
         ("loop:N",         |args| lae_loop(args[0])),
         ("trihex:L",       |args| lae_trihex(args[0])),
         ("honeycomb:L",    |args| lae_honeycomb(args[0])),
@@ -73,9 +73,9 @@ pub fn lae_from_spec(spec: &str) -> Result<Lae, String> {
     return Err(format!("Board type '{}' does not exist.\n{}", name, valid_board_err_message()));
 }
 
-// RECTANGULAR BOARDS
+// GRID BOARDS
 
-pub fn lae_rect(width: usize, height: usize) -> Lae {
+pub fn lae_grid(width: usize, height: usize) -> Lae {
     let mut layout = Layout::new();
 
     for y in 0..height {
@@ -90,7 +90,7 @@ pub fn lae_rect(width: usize, height: usize) -> Lae {
 // SQUARE BOARDS
 
 pub fn lae_square(side_len: usize) -> Lae {
-    lae_rect(side_len, side_len)
+    lae_grid(side_len, side_len)
 }
 
 // DONUT BOARDS
@@ -209,7 +209,7 @@ pub fn lae_turtle(width: usize, height: usize) -> Lae {
     tile.push(point); point = step(point, 19.0/24.0);
     tile.push(point);
 
-    lae_rect(width, height).0
+    lae_grid(width, height).0
         .scale(2.0 * (TAU / 24.0).cos())
         .stamp_with(tile)
         .dedup(0.1)
@@ -219,7 +219,7 @@ pub fn lae_turtle(width: usize, height: usize) -> Lae {
 // WHEELS BOARD
 
 pub fn lae_wheels(width: usize, height: usize) -> Lae {
-    lae_rect(width, height).0
+    lae_grid(width, height).0
         .scale((TAU / 12.0).cos() * 2.0 + 2.0)
         .stamp_with(hex_tile())
         .dedup(0.1)
