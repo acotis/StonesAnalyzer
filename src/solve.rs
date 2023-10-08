@@ -19,11 +19,12 @@ fn main() {
 
     let lae = lae_from_spec(&args.board_spec);
     
-    if let Err(err_string) = lae {
-        eprintln!("{}", err_string);
-        return;
-    }
-
-    let (_layout, _edges) = lae.unwrap();
+    let (_layout, _edges) = match lae {
+        Err(err_string) => {
+            eprintln!("{}", err_string);
+            return;
+        },
+        Ok(result) => result
+    };
 }
 
