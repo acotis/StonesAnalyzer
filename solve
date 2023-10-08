@@ -3,5 +3,5 @@
 set -e
 
 clear
-cargo run --bin stones_solver grid:3:2
+cargo run --bin stones_solver $1
 
