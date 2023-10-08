@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+clear
+cargo run --bin stones_solver grid:3:2
+
