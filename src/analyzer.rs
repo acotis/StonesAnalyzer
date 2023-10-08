@@ -4,6 +4,7 @@
 use std::env;
 use std::io;
 use clap::Parser;
+use std::process::Command;
 
 use stones::engine::{Board, Color::*};
 use stones::gametree::{GameTree, Symbol, Symbol::*, Turn::*};
@@ -219,6 +220,20 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
                     if cropped.save_to_file("screenshot.png") {
                         println!("screenshot saved");
+
+                        Command::new("xclip")
+                            .arg("-selection")
+                            .arg("clipboard")
+                            .arg("-t")
+                            .arg("image/png")
+                            .arg("-i")
+                            .arg("screenshot.png")
+                            .spawn()
+                            .expect("copying screenshot to clipboard");
+
+                        // The xclip process doesn't exit until something else
+                        // is copied to the clipboard, so we use spawn() instead
+                        // of output() here.
                     }
                 }
 
