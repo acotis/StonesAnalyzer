@@ -28,27 +28,21 @@ use std::ops::Index;
 use std::cmp::max;
 use crate::engine::Color::*;
 
-// Structs.
+//============================================================================
+// Edges type.
+//============================================================================
 
 pub type Edges = Vec::<(usize, usize)>;
+
+//============================================================================
+// Color enum.
+//============================================================================
 
 #[derive(Clone, PartialEq, Copy, Debug, Serialize, Deserialize)]
 pub enum Color {
     Empty = 0,
     Black,
     White,
-}
-
-pub struct Board {
-    point_count: usize,
-    neighbor_lists: Vec<Vec<usize>>,
-}
-
-#[derive(Clone)]
-pub struct Position {
-    board_state: Vec<Color>,
-    chains: Vec<Vec<usize>>,
-    chain_id_backref: Vec<usize>,
 }
 
 impl Color {
@@ -61,6 +55,17 @@ impl Color {
     }
 }
 
+//============================================================================
+// Position struct.
+//============================================================================
+
+#[derive(Clone)]
+pub struct Position {
+    board_state: Vec<Color>,
+    chains: Vec<Vec<usize>>,
+    chain_id_backref: Vec<usize>,
+}
+
 impl Index<usize> for Position {
     type Output = Color;
     fn index(&self, index: usize) -> &Color {&self.board_state[index]}
@@ -71,6 +76,15 @@ impl PartialEq for Position {
 }
 
 impl Eq for Position {}
+
+//============================================================================
+// Board struct.
+//============================================================================
+
+pub struct Board {
+    point_count: usize,
+    neighbor_lists: Vec<Vec<usize>>,
+}
 
 impl Board {
     pub fn new(connections: Vec<(usize, usize)>) -> Board {
@@ -117,6 +131,8 @@ impl Board {
         board
     }
 
+    // Utility functions.
+
     pub fn point_count(&self) -> usize {
         self.point_count
     }
@@ -124,6 +140,8 @@ impl Board {
     pub fn get_neighbors(&self, point_a: usize) -> Vec<usize> {
         self.neighbor_lists[point_a].clone()
     }
+
+    // Function to create an empty position.
 
     pub fn empty_position(&self) -> Position {
         // Note that we create one more chain ID than the number of points on the
@@ -186,6 +204,11 @@ impl Board {
             }
         }
     }
+}
+
+// Private methods.
+
+impl Board {
 
     // Use the bucketfill algorithm to create a chain from a given seed point.
     // Each time you add a point to the new chain, remove it from the chain it
