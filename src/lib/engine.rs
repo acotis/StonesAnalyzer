@@ -204,6 +204,20 @@ impl Board {
             }
         }
     }
+
+    // Score the game with stone-scoring.
+    
+    pub fn score_delta_stone(&self, pos: &Position) -> i32 {
+        let mut delta: i32 = 0;
+        for i in 0..self.point_count {
+            delta += match pos[i] {
+                Black => 1,
+                White => -1,
+                Empty => 0,
+            }
+        }
+        delta
+    }
 }
 
 // Private methods.

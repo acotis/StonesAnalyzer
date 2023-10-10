@@ -172,6 +172,10 @@ impl GameTree {
         &self.board
     }
 
+    pub fn score_delta_stone(&self) -> i32 {
+        self.board.score_delta_stone(&self.tree[self.cursor].position)
+    }
+
     // Private methods.
 
     fn add_child(&mut self, turn: Turn, position: Position) {
