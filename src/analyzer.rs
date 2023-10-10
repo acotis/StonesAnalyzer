@@ -109,9 +109,9 @@ enum Mode {
 
 pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root: bool) {
     assert!(
-        gametree.board.point_count() == au_layout.len(),
+        gametree.board().point_count() == au_layout.len(),
         "Interative app: board has {} points but layout has {} points.",
-        gametree.board.point_count(), au_layout.len()
+        gametree.board().point_count(), au_layout.len()
     );
 
     // Create the RenderWindow.
@@ -303,8 +303,8 @@ fn draw_bg(win: &mut RenderWindow, set_root: bool) {
 // Draw the edges of the board.
 
 fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
-    for i in 0..gametree.board.point_count() {
-        for j in gametree.board.get_neighbors(i) {
+    for i in 0..gametree.board().point_count() {
+        for j in gametree.board().get_neighbors(i) {
             draw_line(win, layout[i], layout[j], EDGE_COLOR, stone_size / EDGE_WIDTH_RATIO);
         }
     }
@@ -313,7 +313,7 @@ fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, ston
 // Draw the stones on the board.
 
 fn draw_stones(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
-    for i in 0..gametree.board.point_count() {
+    for i in 0..gametree.board().point_count() {
         if gametree.color_at(i) != Empty {
             let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
             draw_circle_plain(win, layout[i], stone_size, color);
@@ -332,7 +332,7 @@ fn draw_move_marker(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout
 // Draw the immortal-stone markers.
 
 fn draw_immortal_markers(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
-    for i in 0..gametree.board.point_count() {
+    for i in 0..gametree.board().point_count() {
         if gametree.is_immortal(i) {
             draw_circle_plain(
                 win,
@@ -374,7 +374,7 @@ fn draw_hover_stone(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout
 // Draw the symbols that have been dropped on the board.
 
 fn draw_symbols(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
-    for pt in 0..gametree.board.point_count() {
+    for pt in 0..gametree.board().point_count() {
         draw_symbol(win, layout[pt], stone_size, gametree.symbol_at(pt));
     }
 }

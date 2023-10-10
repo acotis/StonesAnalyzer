@@ -61,10 +61,10 @@ struct CompactGTN {
 }
 
 pub struct GameTree {
-    pub board:  Board,
-    tree:       Vec<GameTreeNode>,
-    cursor:     usize,
-    root:       usize,
+    board:  Board,
+    tree:   Vec<GameTreeNode>,
+    cursor: usize,
+    root:   usize,
 }
 
 impl GameTree {
@@ -166,6 +166,10 @@ impl GameTree {
 
     pub fn set_root_here(&mut self) {
         self.root = self.cursor;
+    }
+
+    pub fn board(&self) -> &Board {
+        &self.board
     }
 
     // Private methods.

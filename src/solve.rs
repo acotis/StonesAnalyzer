@@ -31,6 +31,9 @@ fn main() {
     };
 
     let _point_count = layout.len();
-    let _game_tree = GameTree::new(Board::new(edges));
+    let mut game_tree = GameTree::new(Board::new(edges));
+
+    let board2 = Board::new(vec![(1, 2),(1, 0)]);
+    game_tree.board = board2;
 }
 

@@ -22,7 +22,7 @@ pub fn read_san_file(filename: &str) -> io::Result<(GameTree, Layout)> {
 }
 
 pub fn write_san_file(filename: &str, gametree: GameTree, layout: Layout) -> io::Result<()> {
-    let board_string  = gametree.board.to_string();
+    let board_string  = gametree.board().to_string();
     let layout_string = serde_json::to_string(&layout).unwrap();
     let tree_string   = gametree.to_string();
     
