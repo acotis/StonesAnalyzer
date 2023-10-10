@@ -47,21 +47,24 @@ fn solve(tree: &mut GameTree) -> i32 {
     let color = tree.whose_turn();
 
     tree.turn(color, Pass);
-    let mut optimal = solve(tree);
+    let mut best = solve(tree);
     tree.undo();
 
     for play in 0..tree.board().point_count() {
+        if color == Black && best >= (tree.board().point_count() - 2) as i32 {break;}
+        if color == White && best <= 0                                       {break;}
+
         let result = tree.turn(color, Play(play));
         if result == Success || result == SuccessGameOver {
-            optimal = match color {
-                Black => max(optimal, solve(tree)),
-                White => min(optimal, solve(tree)),
+            best = match color {
+                Black => max(best, solve(tree)),
+                White => min(best, solve(tree)),
                 Empty => panic!(),
             };
             tree.undo();
         }
     }
 
-    optimal
+    best
 }
 
