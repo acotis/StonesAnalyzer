@@ -139,12 +139,6 @@ impl Board {
         }
     }
 
-
-
-
-    // Post-refactor material below.
-
-
     // Play a stone of a given color at a given point.
 
     pub fn play(&self, pos: &mut Position, color: Color, point: usize) {
@@ -179,9 +173,6 @@ impl Board {
         self.capture(pos, color);
     }
 
-
-
-
     // Keep only immortal stones.
 
     pub fn keep_only_immortal(&self, pos: &mut Position) {
@@ -202,11 +193,11 @@ impl Board {
     // to be unequal to that of any chain that existed when the method was called.
 
     fn seed_chain(&self, pos: &mut Position, point: usize) -> usize {
-        let id = pos.fresh_chain_id();
+        let id = self.fresh_chain_id(pos);
         let color = pos[point];
 
-        pos.remove_from_chain(pos.chain_id_backref[point], point);
-        pos.add_to_chain(id, point);
+        self.remove_from_chain(pos, pos.chain_id_backref[point], point);
+        self.add_to_chain(pos, id, point);
 
         let mut next = 0;
 
@@ -217,8 +208,8 @@ impl Board {
                 if pos[neighbor] == color {
                     let current_chain = pos.chain_id_backref[neighbor];
                     if current_chain != id {
-                        pos.remove_from_chain(current_chain, neighbor);
-                        pos.add_to_chain(id, neighbor);
+                        self.remove_from_chain(pos, current_chain, neighbor);
+                        self.add_to_chain(pos, id, neighbor);
                     }
                 }
             }
@@ -337,37 +328,36 @@ impl Board {
             }
         }
     }
-}
 
-impl Position {
 
     // Return the ID of a currently unused chain vector.
 
-    fn fresh_chain_id(&mut self) -> usize {
-        self.chains.iter()
-            .enumerate()
-            .filter(|&v| v.1.is_empty())
-            .next()
-            .unwrap().0
+    fn fresh_chain_id(&self, pos: &mut Position) -> usize {
+        pos.chains.iter()
+           .enumerate()
+           .filter(|&v| v.1.is_empty())
+           .next()
+           .unwrap().0
     }
 
     // Remove a given point from a given chain. Panics if the point is not
     // in that chain.
 
-    fn remove_from_chain(&mut self, id: usize, point: usize) {
+    fn remove_from_chain(&self, pos: &mut Position, id: usize, point: usize) {
         let index =
-            self.chains[id].iter()
-            .position(|x| *x == point)
-            .expect("Stone missing from chain");
+            pos.chains[id]
+               .iter()
+               .position(|x| *x == point)
+               .expect("Stone missing from chain");
 
-        self.chains[id].swap_remove(index);
+        pos.chains[id].swap_remove(index);
     }
 
     // Add a point to a given chain.
 
-    fn add_to_chain(&mut self, id: usize, point: usize) {
-        self.chains[id].push(point);
-        self.chain_id_backref[point] = id;
+    fn add_to_chain(&self, pos: &mut Position, id: usize, point: usize) {
+        pos.chains[id].push(point);
+        pos.chain_id_backref[point] = id;
     }
 }
 

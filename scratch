@@ -1,1 +1,3 @@
-rm -f analyses/scratch.san; cargo run analyses/scratch.san --create $1
+clear
+rm -f analyses/scratch.san
+cargo run analyses/scratch.san --create $1
