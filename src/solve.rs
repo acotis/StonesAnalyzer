@@ -26,7 +26,7 @@ fn main() {
     // Create the game tree from the board spec passed on the command line.
 
     let lae = lae_from_spec(&args.board_spec);
-    let (_layout, edges) = match lae {
+    let (layout, edges) = match lae {
         Err(err_string) => {
             eprintln!("{}", err_string);
             return;
@@ -34,12 +34,39 @@ fn main() {
         Ok(result) => result
     };
 
-    let mut game_tree = GameTree::new(Board::new(edges));
+    //println!("Edges: {:?}", edges);
+    let point_count = layout.len();
+    let mut tree = GameTree::new(Board::new(edges));
 
-    println!("Result: {}", solve(&mut game_tree));
+    //tree.turn(Black, Play(0));
+    //println!("Result after A1: {}", solve(&mut tree, 0, point_count as i32 - 2));
+    //tree.undo();
+    //tree.turn(Black, Play(1));
+    //println!("Result after B2: {}", solve(&mut tree, 0, point_count as i32 - 2));
+
+    println!("Result: {}", solve(&mut tree, 0, point_count as i32 - 2));
 }
 
-fn solve(tree: &mut GameTree) -> i32 {
+// Solve a board using alpha-beta pruning. The basic insight is that, when you are
+// examining one of a player's possible moves, if you find a refutation by the
+// opponent that makes the move worse than another one you've already examined, you
+// don't need to keep analyzing that move to compute exactly *how much* worse,
+// because you already know you aren't choosing this move.
+//
+// It also doesn't matter how far back the current player's alternative is. Black
+// is guaranteed a score of 0 or better by the No Disadvantage Theorem, and on some
+// boards, the only way for them to achieve it is to pass on move 1. However, no
+// matter how deep you are in the game tree, if you're analyzing White's moves and
+// have found that they can achieve -3 by some move, you don't need to keep
+// analyzing their options on this turn.
+// 
+// I think this is true: when a given analysis node of the maximizing player is
+// already known to have a value of at least alpha, values up to alpha are all
+// interchangeable with each other in all nodes below it in the game tree.
+//
+// No clue if this code is correct yet!
+
+fn solve(tree: &mut GameTree, alpha: i32, beta: i32) -> i32 {
     if tree.game_over() {
         return tree.score_delta_stone();
     }
@@ -47,18 +74,18 @@ fn solve(tree: &mut GameTree) -> i32 {
     let color = tree.whose_turn();
 
     tree.turn(color, Pass);
-    let mut best = solve(tree);
+    let mut best = solve(tree, alpha, beta);
     tree.undo();
 
     for play in 0..tree.board().point_count() {
-        if color == Black && best >= (tree.board().point_count() - 2) as i32 {break;}
-        if color == White && best <= 0                                       {break;}
+        if color == Black && best >= beta  {break;}
+        if color == White && best <= alpha {break;}
 
         let result = tree.turn(color, Play(play));
         if result == Success || result == SuccessGameOver {
             best = match color {
-                Black => max(best, solve(tree)),
-                White => min(best, solve(tree)),
+                Black => max(best, solve(tree, max(alpha, best), beta)),
+                White => min(best, solve(tree, alpha, min(beta, best))),
                 Empty => panic!(),
             };
             tree.undo();
