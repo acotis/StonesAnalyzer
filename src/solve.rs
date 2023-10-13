@@ -44,7 +44,7 @@ fn main() {
     //tree.turn(Black, Play(1));
     //println!("Result after B2: {}", solve(&mut tree, 0, point_count as i32 - 2));
 
-    println!("Result: {}", solve(&mut tree, 0, point_count as i32 - 2));
+    println!("\nResult: {}", solve(&mut tree, 0, point_count as i32 - 2));
 }
 
 // Solve a board using alpha-beta pruning. The basic insight is that, when you are
@@ -67,22 +67,40 @@ fn main() {
 // No clue if this code is correct yet!
 
 fn solve(tree: &mut GameTree, alpha: i32, beta: i32) -> i32 {
+    let color = tree.whose_turn();
+    let indent = "|   ".repeat(tree.turn_depth());
+    let color_str = match color {Black => "Black", White => "White", Empty => panic!()};
+
     if tree.game_over() {
-        return tree.score_delta_stone();
+        let score = tree.score_delta_stone();
+        println!("{indent}Score: {score}");
+        return score;
     }
 
-    let color = tree.whose_turn();
+    println!("{indent}{color_str} pass:");
 
     tree.turn(color, Pass);
     let mut best = solve(tree, alpha, beta);
     tree.undo();
 
+    let mut invoke_alpha_beta = false;
+
     for play in 0..tree.board().point_count() {
-        if color == Black && best >= beta  {break;}
-        if color == White && best <= alpha {break;}
+        if color == Black && best >= beta  {
+            println!("{indent}Best = {best}, beta = {beta}, breaking now");
+            invoke_alpha_beta = true;
+            break;
+        }
+
+        if color == White && best <= alpha {
+            println!("{indent}Best = {best}, alpha = {alpha}, breaking now");
+            invoke_alpha_beta = true;
+            break;
+        }
 
         let result = tree.turn(color, Play(play));
         if result == Success || result == SuccessGameOver {
+            println!("{indent}{color_str} {play}:");
             best = match color {
                 Black => max(best, solve(tree, max(alpha, best), beta)),
                 White => min(best, solve(tree, alpha, min(beta, best))),
@@ -92,6 +110,11 @@ fn solve(tree: &mut GameTree, alpha: i32, beta: i32) -> i32 {
         }
     }
 
+    if !invoke_alpha_beta {
+        println!("{indent}Checked all moves.");
+    }
+
+    println!("{indent}Return: {best}");
     best
 }
 

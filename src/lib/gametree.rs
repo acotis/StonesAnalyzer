@@ -48,6 +48,7 @@ struct GameTreeNode {
 
     parent:         Option<usize>,          // None for root node, Some for all others.
     last_turn:      Option<Turn>,           // None for root node, Some for all others.
+    turn_depth:     usize,
     to_play:        Color,
 
     position:       Position,
@@ -78,6 +79,7 @@ impl GameTree {
                     parent:         None,
                     last_turn:      None,
                     to_play:        Black,
+                    turn_depth:     0,
 
                     position:       board.empty_position(),
                     only_immortal:  board.empty_position(),
@@ -164,6 +166,10 @@ impl GameTree {
         self.tree[self.cursor].to_play
     }
 
+    pub fn turn_depth(&self) -> usize {
+        self.tree[self.cursor].turn_depth
+    }
+
     pub fn set_root_here(&mut self) {
         self.root = self.cursor;
     }
@@ -187,6 +193,7 @@ impl GameTree {
                 parent:         Some(self.cursor),
                 last_turn:      Some(turn),
                 to_play:        self.tree[self.cursor].to_play.reverse(),
+                turn_depth:     self.tree[self.cursor].turn_depth + 1,
 
                 position:       position.clone(),
                 only_immortal:  position,
@@ -256,6 +263,7 @@ impl GameTree {
                     parent:         None,
                     last_turn:      None,
                     to_play:        Black,
+                    turn_depth:     0,
 
                     position:       gametree.board.empty_position(),
                     only_immortal:  gametree.board.empty_position(),
@@ -279,6 +287,7 @@ impl GameTree {
             self.tree[child].last_turn = Some(turn);
             self.tree[child].to_play = self.tree[node].to_play.reverse();
             self.tree[child].position = self.tree[node].position.clone();
+            self.tree[child].turn_depth = self.tree[node].turn_depth + 1;
 
             if let Play(pt) = turn {
                 let color = self.tree[node].to_play;
