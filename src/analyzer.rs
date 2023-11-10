@@ -276,7 +276,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
         draw_bg              (&mut window, set_root);
         draw_board           (&mut window, &gametree, &layout, stone_size);
         draw_stones          (&mut window, &gametree, &layout, stone_size);
-        //draw_move_marker     (&mut window, &gametree, &layout, stone_size);
+        draw_move_marker     (&mut window, &gametree, &layout, stone_size);
         //draw_immortal_markers(&mut window, &gametree, &layout, stone_size);
         draw_symbols         (&mut window, &gametree, &layout, stone_size);
 
