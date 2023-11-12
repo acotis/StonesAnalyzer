@@ -25,7 +25,7 @@ fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
         ("wheels:W:H",     |args| lae_wheels(args[0], args[1])),
         ("donut:W:H:X:Y",  |args| lae_donut(args[0], args[1], args[2], args[3])),
         ("conga:N",        |args| lae_conga(args[0])),
-        ("pack",           |args| lae_pack()),
+        ("pack",           |_args| lae_pack()),
     ]
 }
 

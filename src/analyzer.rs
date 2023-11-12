@@ -35,8 +35,8 @@ const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
 const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
 const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
-const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
-const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
+//const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
+//const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
 const BUTTON_COLOR   : Color = Color {r: 200, g: 200, b: 200, a:  80};
 const BUTTON_HOVER   : Color = Color {r: 200, g: 200, b: 200, a: 160};
 
@@ -331,22 +331,22 @@ fn draw_move_marker(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout
 
 // Draw the immortal-stone markers.
 
-fn draw_immortal_markers(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
-    for i in 0..gametree.board().point_count() {
-        if gametree.is_immortal(i) {
-            draw_circle_plain(
-                win,
-                layout[i],
-                stone_size * 0.5,
-                match gametree.color_at(i) {
-                    Black => BLACK_IMMORTAL,
-                    White => WHITE_IMMORTAL,
-                    _ => {panic!();}
-                }
-            );
-        }
-    }
-}
+//fn draw_immortal_markers(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
+    //for i in 0..gametree.board().point_count() {
+        //if gametree.is_immortal(i) {
+            //draw_circle_plain(
+                //win,
+                //layout[i],
+                //stone_size * 0.5,
+                //match gametree.color_at(i) {
+                    //Black => BLACK_IMMORTAL,
+                    //White => WHITE_IMMORTAL,
+                    //_ => {panic!();}
+                //}
+            //);
+        //}
+    //}
+//}
 
 // Draw the hover stone.
 
