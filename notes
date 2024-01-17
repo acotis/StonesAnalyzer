@@ -1,4 +1,41 @@
 
+==================
+TODO
+==================
+
++ Refactor the core engine methods to be part of the Board struct instead of Position.
++ Add auto-scoring functionality
++ Make it auto-save every 10 seconds (or on every action or something).
+    - Currently it doesn't save if you exit with ctrl-C, which is obviously bad.
+
++ Make it mark illegal moves (i.e. ko violations) somehow.
++ Add "competitive mode" where it doesn't mark immortal stones
++ Make it be possible to see which moves have been made from a given position
+  (maybe by holding down ctrl)
++ Make it possible to play on a board without saving it
+
++ SVG application:
+    + Probably don't do any of this?
+    + Add last-move marker.
+    + Add immortal stones marker?
+    + Add illegal move marker?
+    + Add ability to read a .san file and generate images for all positions
+      with a given comment (such as "gen").
+    + Make the SVG application automatically scale the layout so that the closest pair of points are 7/8" apart.
+
+==================
+NOTES
+==================
+
+- Investigate what's making turn-taking on the 39x39 board so slow.
+    - It's the seed_chain() method, called when removing non-immortal chains.
+      It takes a noticeable amount of time to run once on this board and that
+      method calls it a lot.
+
+=========================
+THINKING ABOUT ALPHA-BETA
+=========================
+
 - Iterating through black's options.
 - Current best is +5.
 - Check out the next option.
@@ -14,8 +51,6 @@
         - Iterate through Black's options.
         - Nothing you return above +10 will be differentiated from +10.
         - Current best is +3.
-
-
 
 - Black's turn.
 - Inspect a move. Best: +1.
@@ -39,8 +74,6 @@
         - All return values up to +5 are equivalent (will cause parent to return early).
         - Inspect a move. Best: +3?
 
-
-
 solve 3x2 grid
 
 alphabeta(-, 0, G-2, true)
@@ -48,77 +81,49 @@ alphabeta(-, 0, G-2, true)
     alphabeta(A1, 0, G-2, false). value = -4.
     alphabeta(B1, 0, i
 
-
-
-
-Todo:
-    + SVG application:
-        + Add last-move marker.
-        + Add immortal stones marker?
-        + Add illegal move marker?
-        + Add ability to read a .san file and generate images for all positions
-          with a given comment (such as "gen").
-        + Probably don't do any of this?
-
-    + Make the SVG application automatically scale the layout so that the closest pair of points are 7/8" apart.
-
-    + Refactor the core engine methods to be part of the Board struct instead of Position.
-    + Add auto-scoring functionality
-    + Make it auto-save every 10 seconds (or on every action or something).
-        - Currently it doesn't save if you exit with ctrl-C, which is obviously bad.
-
-    + Make it mark illegal moves (i.e. ko violations) somehow.
-    + Add "competitive mode" where it doesn't mark immortal stones
-    + Make it be possible to see which moves have been made from a given position
-      (maybe by holding down ctrl)
-    + Make it possible to play on a board without saving it
-
-
-- Investigate what's making turn-taking on the 39x39 board so slow.
-    - It's the seed_chain() method, called when removing non-immortal chains.
-      It takes a noticeable amount of time to run once on this board and that
-      method calls it a lot.
-
+=====================
+OLD CAPTURE ALGORITHM
+=====================
 
 Old, maybe faster algorithm for updating the chains after adding a newly-placed stone to the board:
 
-        // Create a sorted, de-dupped list of all the ID's of the same-colored
-        // chains this move was adjacent to (there can be zero or more of these).
+    // Create a sorted, de-dupped list of all the ID's of the same-colored
+    // chains this move was adjacent to (there can be zero or more of these).
 
-        //let mut adjacent_chain_ids: Vec<usize> =
-            //self.board.neighbor_lists[point].iter()
-                //.filter(|&&n| self.board_state[n] == color)
-                //.map(|&n| self.chain_id_backref[n])
-                //.collect();
+    //let mut adjacent_chain_ids: Vec<usize> =
+        //self.board.neighbor_lists[point].iter()
+            //.filter(|&&n| self.board_state[n] == color)
+            //.map(|&n| self.chain_id_backref[n])
+            //.collect();
 
-        //adjacent_chain_ids.sort();
-        //adjacent_chain_ids.dedup();
+    //adjacent_chain_ids.sort();
+    //adjacent_chain_ids.dedup();
 
-        // If there were no chains adjacent to this move, get a fresh chain ID
-        // and consider the move "adjacent" to that chain.
+    // If there were no chains adjacent to this move, get a fresh chain ID
+    // and consider the move "adjacent" to that chain.
 
-        //let dest_chain = match adjacent_chain_ids.len() {
-            //0 => self.fresh_chain_id(color),
-            //_ => adjacent_chain_ids.swap_remove(0),
-        //};
+    //let dest_chain = match adjacent_chain_ids.len() {
+        //0 => self.fresh_chain_id(color),
+        //_ => adjacent_chain_ids.swap_remove(0),
+    //};
 
-        // Put this stone on the board; push it onto the destination chain.
+    // Put this stone on the board; push it onto the destination chain.
 
-        //self.board_state[point] = color;
-        //self.chains[color as usize][dest_chain].push(point);
+    //self.board_state[point] = color;
+    //self.chains[color as usize][dest_chain].push(point);
 
-        // Drain all the other chains in the list into the first one.
+    // Drain all the other chains in the list into the first one.
 
-        //let mut temp = Vec::<usize>::new();
+    //let mut temp = Vec::<usize>::new();
 
-        //for chain_id in adjacent_chain_ids {
-            //temp.append(&mut self.chains[color as usize][chain_id]);
-            //self.chains[color as usize][dest_chain].append(&mut temp);
-        //}
+    //for chain_id in adjacent_chain_ids {
+        //temp.append(&mut self.chains[color as usize][chain_id]);
+        //self.chains[color as usize][dest_chain].append(&mut temp);
+    //}
 
-        // ...and update the backref for all points in this chain.
+    // ...and update the backref for all points in this chain.
 
-        //for point in &self.chains[color as usize][dest_chain] { 
-            //self.chain_id_backref[*point] = dest_chain;
-        //}
+    //for point in &self.chains[color as usize][dest_chain] { 
+        //self.chain_id_backref[*point] = dest_chain;
+    //}
 
