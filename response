@@ -1,0 +1,35 @@
+
+Web request successful. Response:
+
+
+Response { 
+    url: Url { 
+        scheme: "http",
+        cannot_be_a_base: false,
+        username: "",
+        password: None,
+        host: Some(Domain("www.google.com")),
+        port: None,
+        path: "/",
+        query: None,
+        fragment: None
+    },
+    status: 200,
+    headers: {
+        "date": "Mon, 11 Mar 2024 01:14:59 GMT",
+        "expires": "-1",
+        "cache-control": "private, max-age=0",
+        "content-type": "text/html; charset=ISO-8859-1",
+        "content-security-policy-report-only": "object-src 'none';base-uri 'self';script-src 'nonce-79-PClnggtCyQpWsh7ZIfA' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp",
+        "p3p": "CP=\"This is not a P3P policy! See g.co/p3phelp for more info.\"",
+        "server": "gws",
+        "x-xss-protection": "0",
+        "x-frame-options": "SAMEORIGIN",
+        "set-cookie": "1P_JAR=2024-03-11-01; expires=Wed, 10-Apr-2024 01:14:59 GMT; path=/; domain=.google.com; Secure",
+        "set-cookie": "AEC=Ae3NU9MhJW8e979it7xgV5aTPN9TkV7vGul4uwrCeHMMs0oRETvTQe6Jcg; expires=Sat, 07-Sep-2024 01:14:59 GMT; path=/; domain=.google.com; Secure; HttpOnly; SameSite=lax",
+        "set-cookie": "NID=512=g03T_NybG-ThOH6MS8oNY9wkcODSIhlbCz-P24pi_G7Zl2G2hXKjFJmi5zpuzxvWz-1ezbKUDOW27Hd5tCKMN9gXb20IhctV1qKo61CfyrNciQNZMzpCFjMoa1HcqiyLC6HDr0t-BSy-Z03z-mNmgYenWVPhda27cdoG9j-ga1k; expires=Tue, 10-Sep-2024 01:14:59 GMT; path=/; domain=.google.com; HttpOnly",
+        "accept-ranges": "none",
+        "vary": "Accept-Encoding",
+        "transfer-encoding": "chunked"
+    }
+}
