@@ -4,3 +4,4 @@ target/
 *.jpg
 *.svg
 analyses/*
+image/
