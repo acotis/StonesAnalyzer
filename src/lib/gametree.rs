@@ -7,6 +7,11 @@
  * at the empty position for that board. You can perform operations such as
  * playing a move, undoing the current move without deleting the branch it's
  * on, and resetting the tree to the initial position.
+ *
+ * TODO: Move the Symbol enum into the analyzer app, and make it a type
+ * parameter of the GameTree class, i.e., make it so that the user of the
+ * class can choose what data type they want to associate with each node.
+ * This data type will have to implement Serialize and Deserialize, I guess.
  */
 
 use serde::{Serialize, Deserialize};
