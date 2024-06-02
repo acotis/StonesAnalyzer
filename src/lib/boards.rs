@@ -18,7 +18,7 @@ fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
         ("square:N",       |args| lae_square(args[0])),
         ("grid:W:H",       |args| lae_grid(args[0], args[1])),
         ("loop:N",         |args| lae_loop(args[0])),
-        ("trihex:L",       |args| lae_trihex(args[0])),
+        ("hex:L",          |args| lae_trihex(args[0])),
         ("honeycomb:L",    |args| lae_honeycomb(args[0])),
         ("sixfourthree:L", |args| lae_sixfourthree(args[0])),
         ("turtle:W:H",     |args| lae_turtle(args[0], args[1])),
