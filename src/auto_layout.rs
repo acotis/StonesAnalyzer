@@ -158,8 +158,8 @@ impl LayoutGel {
             point.x += point.dx * dt;
             point.y += point.dy * dt;
 
-            point.dx *= 0.90;
-            point.dy *= 0.90;
+            point.dx *= f32::powf(0.8, (dt * 100.0));
+            point.dy *= f32::powf(0.8, (dt * 100.0));
         }
 
         for s in &self.springs {
@@ -198,13 +198,17 @@ impl LayoutGel {
 }
 
 fn main() {
-    let board = Board::new(lae_grid(4, 2).1);
-    let mut gel = LayoutGel::from(board.clone());
+    //let edges = lae_trihex(2).1;
+    //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
+    //let edges = lae_wheels(1, 1).1;
+    //let edges = lae_honeycomb(1).1;
+    //let edges = lae_turtle(1, 1).1;
+    //let edges = lae_sixfourthree(0).1;
+    //let edges = lae_pack().1;
+    let edges = lae_grid(4, 2).1;
 
-    //let mut points = set_up(vec![(0, 1), (0, 2), (1, 3), (2, 3), (1, 2)]);
-    //let mut points = set_up(vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]);
-    //let mut points = set_up(vec![(0, 1), (1, 2), (2, 3), (4, 5), (5, 6), (6, 7), (0, 4), (1, 5), (2, 6), (3, 7)]);
-    //let mut points = set_up(vec![(0, 1), (1, 2), (2, 3), (4, 5), (5, 6), (6, 7), (8, 9), (9, 10), (10, 11), (0, 4), (1, 5), (2, 6), (3, 7), (4, 8), (5, 9), (6, 10), (7, 11)]);
+    let board = Board::new(edges);
+    let mut gel = LayoutGel::from(board.clone());
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
@@ -220,13 +224,14 @@ fn main() {
 
     // Event loop.
 
+    let mut time_moving = true;
+
     while window.is_open() {
         while let Some(event) = window.poll_event() {
             match event {
                 Closed => {window.close();}
-                (KeyPressed {code: Key::R, ..}) => {
-                    gel = LayoutGel::from(board.clone());
-                }
+                KeyPressed {code: Key::R, ..} => {gel = LayoutGel::from(board.clone());}
+                KeyPressed {code: Key::Space, ..} => {time_moving = !time_moving}
                 Resized {..} => {}
                 _ => {}
             }
@@ -247,7 +252,10 @@ fn main() {
         window.set_active(true);
         window.display();
 
-        gel.tick_time(0.01);
+        if time_moving {
+            gel.tick_time(0.01);
+        }
+
         std::thread::sleep(Duration::from_millis(10));
     }
 }
