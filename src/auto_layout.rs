@@ -14,6 +14,42 @@ const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
 const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
 
+fn color_from_force(mut force: f32, adj: bool) -> Color {
+    force = f32::clamp(force, -1.0, 1.0);
+
+    let mut r = 0.0;
+    let mut g = 0.0;
+    let mut b = 0.0;
+    let mut a = 1.0;
+
+    if adj {
+        if force > 0.0 {
+            r = 1.0;
+            g = 1.0 - force;
+            b = 1.0 - force;
+        } else {
+            r = 1.0 + force;
+            g = 1.0 + force;
+            b = 1.0;
+        }
+    } else {
+        if force > 0.0 {
+            r = 1.0;
+            a = force;
+        } else {
+            b = 1.0;
+            a = -force;
+        }
+    }
+
+    Color {
+        r: (r * 255.0) as u8,
+        g: (g * 255.0) as u8,
+        b: (b * 255.0) as u8,
+        a: (a * 255.0) as u8,
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Point {
     x: f32,
@@ -53,11 +89,13 @@ impl Spring {
             let displacement = distance - 1.0;
             self.force = -displacement;
         } else {
-            let displacement = distance - 1.2;
+            let displacement = distance - 1.41;
             if displacement < -0.1 {
                 self.force = -displacement;
-            } else {
+            } else if displacement < 0.0 {
                 self.force = 0.1;
+            } else {
+                self.force = 0.0;
             }
         }
     }
@@ -149,8 +187,8 @@ impl LayoutGel {
                     y1: self.points[spring.i].y,
                     x2: self.points[spring.j].x,
                     y2: self.points[spring.j].y,
-                    width: if spring.adj {10.0} else {1.0},
-                    color: WHITE_COLOR,
+                    width: if spring.adj {15.0} else {4.0},
+                    color: color_from_force(spring.force, spring.adj),
                 }
             );
         }
@@ -173,7 +211,7 @@ fn main() {
 
     let mut window = RenderWindow::new(
         (800, 600),
-        "Stones analyzer",
+        "Sproingy Doingy",
         Style::DEFAULT,
         &context_settings
     );
