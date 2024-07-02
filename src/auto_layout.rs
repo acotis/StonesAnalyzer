@@ -103,6 +103,8 @@ impl Spring {
                 self.force = 0.0;
             }
         }
+
+        self.force *= 2.0;
     }
 }
 
@@ -182,6 +184,31 @@ impl LayoutGel {
         }
     }
 
+    fn get_nearest(&self, x: f32, y: f32) -> Option<usize> {
+        let mut best: Option<usize> = None;
+        let mut dist: Option<f32> = None;
+
+        for (i, point) in self.points.iter().enumerate() {
+            let d = f32::hypot(x - point.x, y - point.y);
+
+            if d < 0.15 {
+                if dist == None || dist.unwrap() > d {
+                    best = Some(i);
+                    dist = Some(d);
+                }
+            }
+        }
+
+        best
+    }
+
+    fn snap(&mut self, point: Option<usize>, x: f32, y: f32) {
+        if let Some(p) = point {
+            self.points[p].x = x;
+            self.points[p].y = y;
+        }
+    }
+
     fn get_lines(&self) -> Vec<Line> {
         let mut ret = vec![];
 
@@ -205,12 +232,13 @@ impl LayoutGel {
 fn main() {
     //let edges = lae_trihex(3).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
-    //let edges = lae_wheels(1, 1).1;
-    let edges = lae_honeycomb(1).1;
-    //let edges = lae_turtle(1, 1).1;
-    //let edges = lae_sixfourthree(0).1;
+    let edges = lae_wheels(2, 2).1;
+    //let edges = lae_honeycomb(2).1;
+    //let edges = lae_turtle(2, 2).1;
+    //let edges = lae_sixfourthree(1).1;
     //let edges = lae_pack().1;
-    //let edges = lae_grid(5, 5).1;
+    //let edges = lae_grid(4, 2).1;
+    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
 
     let board = Board::new(edges);
     let mut gel = LayoutGel::from(board.clone());
@@ -230,13 +258,32 @@ fn main() {
     // Event loop.
 
     let mut time_moving = true;
+    let mut click_and_drag: Option<usize> = None;
 
     while window.is_open() {
+        //println!("{:?}", click_and_drag);
+
+        let mouse_pos = window.mouse_position();
+        let mouse_x = mouse_pos.x as f32 / 100.0;
+        let mouse_y = mouse_pos.y as f32 / 100.0;
+
         while let Some(event) = window.poll_event() {
             match event {
-                Closed => {window.close();}
-                KeyPressed {code: Key::R, ..} => {gel = LayoutGel::from(board.clone());}
-                KeyPressed {code: Key::Space, ..} => {time_moving = !time_moving}
+                Closed => {
+                    window.close();
+                }
+                KeyPressed {code: Key::R, ..} => {
+                    gel = LayoutGel::from(board.clone());
+                }
+                KeyPressed {code: Key::Space, ..} => {
+                    time_moving = !time_moving
+                }
+                MouseButtonPressed {button: Left, ..} => {
+                    click_and_drag = gel.get_nearest(mouse_x, mouse_y);
+                }
+                MouseButtonReleased {button: Left, ..} => {
+                    click_and_drag = None;
+                }
                 Resized {..} => {}
                 _ => {}
             }
@@ -257,6 +304,7 @@ fn main() {
         window.set_active(true);
         window.display();
 
+        gel.snap(click_and_drag, mouse_x, mouse_y);
         if time_moving {
             gel.tick_time(0.01);
         }
