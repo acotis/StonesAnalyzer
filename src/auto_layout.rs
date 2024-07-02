@@ -87,7 +87,12 @@ impl Spring {
 
         if self.adj {
             let displacement = distance - 1.0;
-            self.force = -displacement;
+
+            if displacement < 0.0 {
+                self.force = -displacement;
+            } else {
+                self.force = -displacement;
+            }
         } else {
             let displacement = distance - 1.41;
             if displacement < -0.1 {
@@ -121,11 +126,11 @@ impl From<Board> for LayoutGel {
         let point_count = board.point_count();
 
         for i in 0..point_count {
-            let angle = (i as f32) / (point_count as f32) * 6.283185;
+            //let angle = (i as f32) / (point_count as f32) * 6.283185;
             let angle_rand = rng.gen_range(0.0f32..6.283185);
 
-            ret.points[i].x = 5.0 + 1.0 * angle.cos() + 0.5 * angle_rand.cos();
-            ret.points[i].y = 5.0 + 1.0 * angle.sin() + 0.5 * angle_rand.sin();
+            ret.points[i].x = 5.0 + 1.0 * angle_rand.cos();// + 0.5 * angle_rand.cos();
+            ret.points[i].y = 5.0 + 1.0 * angle_rand.sin();// + 0.5 * angle_rand.sin();
 
             let neighbors = board.get_neighbors(i);
 
@@ -198,14 +203,14 @@ impl LayoutGel {
 }
 
 fn main() {
-    //let edges = lae_trihex(2).1;
+    //let edges = lae_trihex(3).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
     //let edges = lae_wheels(1, 1).1;
-    //let edges = lae_honeycomb(1).1;
+    let edges = lae_honeycomb(1).1;
     //let edges = lae_turtle(1, 1).1;
     //let edges = lae_sixfourthree(0).1;
     //let edges = lae_pack().1;
-    let edges = lae_grid(4, 2).1;
+    //let edges = lae_grid(5, 5).1;
 
     let board = Board::new(edges);
     let mut gel = LayoutGel::from(board.clone());
