@@ -1420,6 +1420,7 @@ dependencies = [
  "actix-web",
  "clap",
  "indoc",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",
