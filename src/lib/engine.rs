@@ -81,6 +81,7 @@ impl Eq for Position {}
 // Board struct.
 //============================================================================
 
+#[derive(Clone)]
 pub struct Board {
     point_count: usize,
     neighbor_lists: Vec<Vec<usize>>,

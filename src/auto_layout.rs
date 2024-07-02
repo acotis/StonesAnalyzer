@@ -198,7 +198,8 @@ impl LayoutGel {
 }
 
 fn main() {
-    let mut gel = LayoutGel::from(Board::new(lae_grid(4, 2).1));
+    let board = Board::new(lae_grid(4, 2).1);
+    let mut gel = LayoutGel::from(board.clone());
 
     //let mut points = set_up(vec![(0, 1), (0, 2), (1, 3), (2, 3), (1, 2)]);
     //let mut points = set_up(vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]);
@@ -223,6 +224,9 @@ fn main() {
         while let Some(event) = window.poll_event() {
             match event {
                 Closed => {window.close();}
+                (KeyPressed {code: Key::R, ..}) => {
+                    gel = LayoutGel::from(board.clone());
+                }
                 Resized {..} => {}
                 _ => {}
             }
