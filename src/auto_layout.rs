@@ -228,15 +228,16 @@ impl LayoutGel {
 }
 
 fn main() {
-    //let edges = lae_trihex(2).1;
+    //let edges = lae_trihex(3).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
     //let edges = lae_wheels(2, 2).1;
-    //let edges = lae_honeycomb(2).1;
-    //let edges = lae_turtle(2, 2).1;
+    //let edges = lae_honeycomb(3).1;
+    let edges = lae_turtle(1, 1).1;
     //let edges = lae_sixfourthree(1).1;
     //let edges = lae_pack().1;
-    //let edges = lae_grid(4, 3).1;
-    let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
+    //let edges = lae_loop(6).1;
+    //let edges = lae_grid(4, 2).1;
+    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
 
     let board = Board::new(edges);
     let mut gel = LayoutGel::from(board.clone());
