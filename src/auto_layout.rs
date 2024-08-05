@@ -11,8 +11,6 @@ use stones::engine::Board;
 use stones::boards::*;
 
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
-const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
-const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
 
 fn color_from_force(mut force: f32, adj: bool) -> Color {
     force = f32::clamp(force, -1.0, 1.0);
@@ -131,8 +129,8 @@ impl From<Board> for LayoutGel {
             //let angle = (i as f32) / (point_count as f32) * 6.283185;
             let angle_rand = rng.gen_range(0.0f32..6.283185);
 
-            ret.points[i].x = 5.0 + 1.0 * angle_rand.cos();// + 0.5 * angle_rand.cos();
-            ret.points[i].y = 5.0 + 1.0 * angle_rand.sin();// + 0.5 * angle_rand.sin();
+            ret.points[i].x = angle_rand.cos();// + 0.5 * angle_rand.cos();
+            ret.points[i].y = angle_rand.sin();// + 0.5 * angle_rand.sin();
 
             let neighbors = board.get_neighbors(i);
 
@@ -165,8 +163,8 @@ impl LayoutGel {
             point.x += point.dx * dt;
             point.y += point.dy * dt;
 
-            point.dx *= f32::powf(0.8, (dt * 100.0));
-            point.dy *= f32::powf(0.8, (dt * 100.0));
+            point.dx *= f32::powf(0.8, dt * 100.0);
+            point.dy *= f32::powf(0.8, dt * 100.0);
         }
 
         for s in &self.springs {
@@ -230,15 +228,15 @@ impl LayoutGel {
 }
 
 fn main() {
-    //let edges = lae_trihex(3).1;
+    //let edges = lae_trihex(2).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
-    let edges = lae_wheels(2, 2).1;
+    //let edges = lae_wheels(2, 2).1;
     //let edges = lae_honeycomb(2).1;
     //let edges = lae_turtle(2, 2).1;
     //let edges = lae_sixfourthree(1).1;
     //let edges = lae_pack().1;
-    //let edges = lae_grid(4, 2).1;
-    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
+    //let edges = lae_grid(4, 3).1;
+    let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
 
     let board = Board::new(edges);
     let mut gel = LayoutGel::from(board.clone());
@@ -263,14 +261,21 @@ fn main() {
     while window.is_open() {
         //println!("{:?}", click_and_drag);
 
+        let win_size = window.size();
+        let offset_x = win_size.x as f32 / 2.0;
+        let offset_y = win_size.y as f32 / 2.0;
+
         let mouse_pos = window.mouse_position();
-        let mouse_x = mouse_pos.x as f32 / 100.0;
-        let mouse_y = mouse_pos.y as f32 / 100.0;
+        let mouse_x = (mouse_pos.x as f32 - offset_x) / 100.0;
+        let mouse_y = (mouse_pos.y as f32 - offset_y) / 100.0;
 
         while let Some(event) = window.poll_event() {
             match event {
                 Closed => {
                     window.close();
+                }
+                Resized {..} => {
+                    update_view(&mut window);
                 }
                 KeyPressed {code: Key::R, ..} => {
                     gel = LayoutGel::from(board.clone());
@@ -284,7 +289,6 @@ fn main() {
                 MouseButtonReleased {button: Left, ..} => {
                     click_and_drag = None;
                 }
-                Resized {..} => {}
                 _ => {}
             }
         }
@@ -294,8 +298,8 @@ fn main() {
         for line in gel.get_lines() {
             draw_line(
                 &mut window,
-                (line.x1 * 100.0, line.y1 * 100.0),
-                (line.x2 * 100.0, line.y2 * 100.0),
+                (offset_x + line.x1 * 100.0, offset_y + line.y1 * 100.0),
+                (offset_x + line.x2 * 100.0, offset_y + line.y2 * 100.0),
                 line.color,
                 line.width,
             );
@@ -334,3 +338,9 @@ fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color,
     win.draw(&cs);
 }
 
+fn update_view(win: &mut RenderWindow) {
+    let size = win.size();
+    win.set_view(
+        &View::from_rect(
+            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
+}
