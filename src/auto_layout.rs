@@ -124,11 +124,11 @@ impl LayoutGel {
 
                 let force = &self.springs[i][j].force;
 
-                self.points[i].dx += force * x_unit;
-                self.points[i].dy += force * y_unit;
+                self.points[i].dx += force * x_unit * dt;
+                self.points[i].dy += force * y_unit * dt;
 
-                self.points[j].dx += force * -x_unit;
-                self.points[j].dy += force * -y_unit;
+                self.points[j].dx += force * -x_unit * dt;
+                self.points[j].dy += force * -y_unit * dt;
             }
         }
     }
@@ -159,7 +159,7 @@ impl LayoutGel {
                     }
                 };
 
-                self.springs[i][j].force = 2.0 * force;
+                self.springs[i][j].force = 200.0 * force;
             }
         }
     }
@@ -197,7 +197,7 @@ impl LayoutGel {
         best
     }
 
-    fn get_nearest_edge(&self, x: f32, y: f32) -> Option<usize> {
+    fn get_nearest_edge(&self, _x: f32, _y: f32) -> Option<usize> {
         // todo (to be used for deleting edges with the mouse)
         None
     }
@@ -209,21 +209,26 @@ impl LayoutGel {
         }
     }
 
-    fn add_point(&mut self) -> usize {
-        // todo
-        0
+    fn add_point(&mut self, x: f32, y: f32) -> usize {
+        self.points.push(Point {x, y, dx: 0.0, dy: 0.0});
+        self.springs.push(vec![Spring {adj: false, force: 0.0}; self.count()]);
+        self.update_springs();
+        self.count() - 1
     }
 
     fn add_edge(&mut self, i: usize, j: usize) {
-        // todo
+        if i < j {self.add_edge(j, i);}
+        else {self.springs[i][j].adj = true;}
     }
 
     fn remove_edge(&mut self, i: usize, j: usize) {
-        // todo
+        if i < j {self.remove_edge(j, i);}
+        else {self.springs[i][j].adj = false;}
     }
 }
 
 fn color_from_force(mut force: f32, adj: bool) -> Color {
+    force /= 100.0;
     force = f32::clamp(force, -1.0, 1.0);
 
     let mut r = 0.0;
@@ -328,7 +333,27 @@ fn main() {
             }
         }
 
+        // Clear the window with black.
+
         window.clear(Color {r: 0, g: 0, b: 0, a: 255});
+
+        // Draw the bare points (so a point with no spring is visible).
+
+        for i in 0..gel.count() {
+            let point = &gel[i];
+            let x = point.x;
+            let y = point.y;
+
+            draw_line(
+                &mut window,
+                (offset_x + x * 100.0, offset_y + y * 100.0),
+                (offset_x + x * 100.0, offset_y + y * 100.0),
+                Color {r: 255, g: 255, b: 255, a: 255},
+                10.0
+            );
+        }
+
+        // Draw the springs.
 
         for i in 0..gel.count() {
             for j in 0..i {
@@ -355,9 +380,7 @@ fn main() {
         window.display();
 
         gel.snap(click_and_drag, mouse_x, mouse_y);
-        if time_moving {
-            gel.tick_time(0.01);
-        }
+        gel.tick_time(if time_moving {0.01} else {0.00});
 
         std::thread::sleep(Duration::from_millis(10));
     }
