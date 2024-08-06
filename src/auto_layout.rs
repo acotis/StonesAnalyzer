@@ -11,7 +11,7 @@ use rand::Rng;
 use stones::engine::Board;
 use stones::boards::*;
 
-const BLACK_COLOR: Color = Color {r: 0, g: 0, b: 0, a: 255};
+// Basic structs.
 
 struct LayoutGel {
     points: Vec<Point>,
@@ -179,7 +179,7 @@ impl LayoutGel {
         self.points.len()
     }
 
-    fn get_nearest(&self, x: f32, y: f32) -> Option<usize> {
+    fn get_nearest_point(&self, x: f32, y: f32) -> Option<usize> {
         let mut best: Option<usize> = None;
         let mut dist: Option<f32> = None;
 
@@ -197,11 +197,29 @@ impl LayoutGel {
         best
     }
 
+    fn get_nearest_edge(&self, x: f32, y: f32) -> Option<usize> {
+        // todo (to be used for deleting edges with the mouse)
+        None
+    }
+
     fn snap(&mut self, point: Option<usize>, x: f32, y: f32) {
         if let Some(p) = point {
             self.points[p].x = x;
             self.points[p].y = y;
         }
+    }
+
+    fn add_point(&mut self) -> usize {
+        // todo
+        0
+    }
+
+    fn add_edge(&mut self, i: usize, j: usize) {
+        // todo
+    }
+
+    fn remove_edge(&mut self, i: usize, j: usize) {
+        // todo
     }
 }
 
@@ -301,7 +319,7 @@ fn main() {
                     time_moving = !time_moving
                 }
                 MouseButtonPressed {button: Left, ..} => {
-                    click_and_drag = gel.get_nearest(mouse_x, mouse_y);
+                    click_and_drag = gel.get_nearest_point(mouse_x, mouse_y);
                 }
                 MouseButtonReleased {button: Left, ..} => {
                     click_and_drag = None;
@@ -310,7 +328,7 @@ fn main() {
             }
         }
 
-        window.clear(BLACK_COLOR);
+        window.clear(Color {r: 0, g: 0, b: 0, a: 255});
 
         for i in 0..gel.count() {
             for j in 0..i {
