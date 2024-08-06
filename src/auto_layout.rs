@@ -10,6 +10,7 @@ use rand::Rng;
 
 use stones::engine::Board;
 use stones::boards::*;
+use crate::MouseState::*;
 
 // Basic structs.
 
@@ -202,11 +203,9 @@ impl LayoutGel {
         None
     }
 
-    fn snap(&mut self, point: Option<usize>, x: f32, y: f32) {
-        if let Some(p) = point {
-            self.points[p].x = x;
-            self.points[p].y = y;
-        }
+    fn snap(&mut self, point: usize, x: f32, y: f32) {
+        self.points[point].x = x;
+        self.points[point].y = y;
     }
 
     fn add_point(&mut self, x: f32, y: f32) -> usize {
@@ -264,6 +263,14 @@ fn color_from_force(mut force: f32, adj: bool) -> Color {
     }
 }
 
+// Main application.
+
+enum MouseState {
+    Null,
+    DragPoint(usize),
+    AddEdge(usize),
+}
+
 fn main() {
     //let edges = lae_trihex(3).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
@@ -296,11 +303,9 @@ fn main() {
     // Event loop.
 
     let mut time_moving = true;
-    let mut click_and_drag: Option<usize> = None;
+    let mut mouse_state = Null;
 
     while window.is_open() {
-        //println!("{:?}", click_and_drag);
-
         let win_size = window.size();
         let offset_x = win_size.x as f32 / 2.0;
         let offset_y = win_size.y as f32 / 2.0;
@@ -311,24 +316,54 @@ fn main() {
 
         while let Some(event) = window.poll_event() {
             match event {
-                Closed => {
-                    window.close();
-                }
-                Resized {..} => {
-                    update_view(&mut window);
-                }
+                Closed => {window.close();}
+                Resized {..} => {update_view(&mut window);}
+
+                // Restart.
+
                 KeyPressed {code: Key::R, ..} => {
                     gel = LayoutGel::from(board.clone());
                 }
+                
+                // Pause and unpause.
+
                 KeyPressed {code: Key::Space, ..} => {
                     time_moving = !time_moving
                 }
+
+                // Dragging points around.
+
                 MouseButtonPressed {button: Left, ..} => {
-                    click_and_drag = gel.get_nearest_point(mouse_x, mouse_y);
+                    if let Some(grabbed) = gel.get_nearest_point(mouse_x, mouse_y) {
+                        mouse_state = DragPoint(grabbed);
+                    }
                 }
+
                 MouseButtonReleased {button: Left, ..} => {
-                    click_and_drag = None;
+                    mouse_state = Null;
                 }
+
+                // Adding points and edges.
+
+                MouseButtonPressed {button: Right, ..} => {
+                    if let Some(grabbed) = gel.get_nearest_point(mouse_x, mouse_y) {
+                        mouse_state = AddEdge(grabbed);
+                    } else {
+                        gel.add_point(mouse_x, mouse_y);
+                    }
+                }
+
+                MouseButtonReleased {button: Right, ..} => {
+                    if let AddEdge(base) = mouse_state {
+                        if let Some(now_at) = gel.get_nearest_point(mouse_x, mouse_y) {
+                            gel.add_edge(base, now_at);
+                        }
+                    }
+                    mouse_state = Null;
+                }
+
+                // Default.
+
                 _ => {}
             }
         }
@@ -376,15 +411,34 @@ fn main() {
             }
         }
 
+        // If there is one, draw the edge currently being added.
+
+        if let AddEdge(base) = mouse_state {
+            let point = &gel[base];
+
+            draw_line(
+                &mut window,
+                (offset_x + point.x * 100.0, offset_y + point.y * 100.0),
+                (offset_x + mouse_x * 100.0, offset_y + mouse_y * 100.0),
+                Color {r: 255, g: 255, b: 255, a: 128},
+                15.0
+            );
+        }
+
         window.set_active(true);
         window.display();
 
-        gel.snap(click_and_drag, mouse_x, mouse_y);
+        if let DragPoint(dragging) = mouse_state {
+            gel.snap(dragging, mouse_x, mouse_y);
+        }
+
         gel.tick_time(if time_moving {0.01} else {0.00});
 
         std::thread::sleep(Duration::from_millis(10));
     }
 }
+
+// Drawing methods.
 
 fn draw_line(win: &mut RenderWindow, a: (f32, f32), b: (f32, f32), color: Color, width: f32) {
     let dist  = f32::hypot(b.1 - a.1, b.0 - a.0);
