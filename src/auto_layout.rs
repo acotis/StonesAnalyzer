@@ -1,4 +1,5 @@
 
+use std::ops::Index;
 use sfml::window::*;
 use sfml::graphics::*;
 use sfml::system::*;
@@ -10,7 +11,199 @@ use rand::Rng;
 use stones::engine::Board;
 use stones::boards::*;
 
-const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
+const BLACK_COLOR: Color = Color {r: 0, g: 0, b: 0, a: 255};
+
+struct LayoutGel {
+    points: Vec<Point>,
+    springs: Vec<Vec<Spring>>,
+}
+
+#[derive(Debug, Clone)]
+struct Point {
+    x: f32,
+    y: f32,
+    dx: f32,
+    dy: f32,
+}
+
+#[derive(Debug, Clone)]
+struct Spring {
+    adj: bool,
+    force: f32,
+}
+
+// Trait implementation for getting Points from a Gel.
+
+impl Index<usize> for LayoutGel {
+    type Output = Point;
+
+    fn index(&self, index: usize) -> &Point {
+        &self.points[index]
+    }
+}
+
+// Trait implementation for getting Springs from a Gel.
+
+impl Index<(usize, usize)> for LayoutGel {
+    type Output = Spring;
+
+    fn index(&self, (i, j): (usize, usize)) -> &Spring {
+        if i < j {self.index((j, i))} else {&self.springs[i][j]}
+    }
+}
+
+// Trait implementation for making a Gel from a Board structure.
+
+impl From<Board> for LayoutGel {
+    fn from(board: Board) -> Self {
+        let mut rng = rand::thread_rng();
+
+        let mut ret = LayoutGel {
+            points: vec![
+                Point {
+                    x: 0.0,
+                    y: 0.0,
+                    dx: 0.0,
+                    dy: 0.0,
+                };
+                board.point_count()
+            ],
+            springs: vec![
+                vec![];
+                board.point_count()
+            ],
+        };
+
+        let point_count = board.point_count();
+
+        for i in 0..point_count {
+            //let angle = (i as f32) / (point_count as f32) * 6.283185;
+            let angle_rand = rng.gen_range(0.0f32..6.283185);
+
+            ret.points[i].x = angle_rand.cos();// + 0.5 * angle_rand.cos();
+            ret.points[i].y = angle_rand.sin();// + 0.5 * angle_rand.sin();
+
+            let neighbors = board.get_neighbors(i);
+
+            for j in 0..i {
+                ret.springs[i].push(
+                    Spring {adj: neighbors.contains(&j), force: 0.0}
+                );
+            }
+        }
+
+        ret.update_springs();
+        ret
+    }
+}
+
+// Physics stuff for Gel.
+
+impl LayoutGel {
+    fn tick_time(&mut self, dt: f32) {
+        self.update_nodes(dt);
+        self.update_springs();
+    }
+
+    fn update_nodes(&mut self, dt: f32) {
+        for point in &mut self.points {
+            point.x += point.dx * dt;
+            point.y += point.dy * dt;
+
+            point.dx *= f32::powf(0.8, dt * 100.0);
+            point.dy *= f32::powf(0.8, dt * 100.0);
+        }
+
+        for i in 0..self.count() {
+            for j in 0..i {
+                let x_diff = self[i].x - self[j].x;
+                let y_diff = self[i].y - self[j].y;
+                let len = f32::hypot(x_diff, y_diff);
+                let x_unit = x_diff / len;
+                let y_unit = y_diff / len;
+
+                let force = &self.springs[i][j].force;
+
+                self.points[i].dx += force * x_unit;
+                self.points[i].dy += force * y_unit;
+
+                self.points[j].dx += force * -x_unit;
+                self.points[j].dy += force * -y_unit;
+            }
+        }
+    }
+
+    fn update_springs(&mut self) {
+        for i in 0..self.count() {
+            for j in 0..i {
+                let distance = f32::hypot(
+                    self.points[i].x - self.points[j].x,
+                    self.points[i].y - self.points[j].y
+                );
+
+                let force = if self.springs[i][j].adj {
+                    let displacement = distance - 1.0;
+                    if displacement < 0.0 {
+                        -displacement
+                    } else {
+                        -displacement
+                    }
+                } else {
+                    let displacement = distance - 1.41;
+                    if displacement < -0.1 {
+                        -displacement
+                    } else if displacement < 0.0 {
+                        0.1
+                    } else {
+                        0.0
+                    }
+                };
+
+                self.springs[i][j].force = 2.0 * force;
+            }
+        }
+    }
+}
+
+// Structural stuff for Gel.
+
+impl LayoutGel {
+    fn empty() -> Self {
+        LayoutGel {
+            points: vec![],
+            springs: vec![],
+        }
+    }
+
+    fn count(&self) -> usize {
+        self.points.len()
+    }
+
+    fn get_nearest(&self, x: f32, y: f32) -> Option<usize> {
+        let mut best: Option<usize> = None;
+        let mut dist: Option<f32> = None;
+
+        for (i, point) in self.points.iter().enumerate() {
+            let d = f32::hypot(x - point.x, y - point.y);
+
+            if d < 0.15 {
+                if dist == None || dist.unwrap() > d {
+                    best = Some(i);
+                    dist = Some(d);
+                }
+            }
+        }
+
+        best
+    }
+
+    fn snap(&mut self, point: Option<usize>, x: f32, y: f32) {
+        if let Some(p) = point {
+            self.points[p].x = x;
+            self.points[p].y = y;
+        }
+    }
+}
 
 fn color_from_force(mut force: f32, adj: bool) -> Color {
     force = f32::clamp(force, -1.0, 1.0);
@@ -48,185 +241,6 @@ fn color_from_force(mut force: f32, adj: bool) -> Color {
     }
 }
 
-#[derive(Debug, Clone)]
-struct Point {
-    x: f32,
-    y: f32,
-    dx: f32,
-    dy: f32,
-}
-
-#[derive(Debug, Clone)]
-struct Spring {
-    i: usize,
-    j: usize,
-    adj: bool,
-    force: f32,
-}
-
-#[derive(Debug, Clone)]
-struct Line {
-    x1: f32,
-    y1: f32,
-    x2: f32,
-    y2: f32,
-    width: f32,
-    color: Color,
-}
-
-struct LayoutGel {
-    points: Vec<Point>,
-    springs: Vec<Spring>,
-}
-
-impl Spring {
-    fn update_force(&mut self, a: &Point, b: &Point) {
-        let distance = f32::hypot(a.x - b.x, a.y - b.y);
-
-        if self.adj {
-            let displacement = distance - 1.0;
-
-            if displacement < 0.0 {
-                self.force = -displacement;
-            } else {
-                self.force = -displacement;
-            }
-        } else {
-            let displacement = distance - 1.41;
-            if displacement < -0.1 {
-                self.force = -displacement;
-            } else if displacement < 0.0 {
-                self.force = 0.1;
-            } else {
-                self.force = 0.0;
-            }
-        }
-
-        self.force *= 2.0;
-    }
-}
-
-impl From<Board> for LayoutGel {
-    fn from(board: Board) -> Self {
-        let mut rng = rand::thread_rng();
-
-        let mut ret = LayoutGel {
-            points: vec![
-                Point {
-                    x: 0.0,
-                    y: 0.0,
-                    dx: 0.0,
-                    dy: 0.0,
-                };
-                board.point_count()
-            ],
-            springs: vec![],
-        };
-
-        let point_count = board.point_count();
-
-        for i in 0..point_count {
-            //let angle = (i as f32) / (point_count as f32) * 6.283185;
-            let angle_rand = rng.gen_range(0.0f32..6.283185);
-
-            ret.points[i].x = angle_rand.cos();// + 0.5 * angle_rand.cos();
-            ret.points[i].y = angle_rand.sin();// + 0.5 * angle_rand.sin();
-
-            let neighbors = board.get_neighbors(i);
-
-            for j in i+1..point_count {
-                ret.springs.push(
-                    Spring {i, j, adj: neighbors.contains(&j), force: 0.0}
-                );
-            }
-        }
-
-        ret.update_springs();
-        ret
-    }
-}
-
-impl LayoutGel {
-    fn tick_time(&mut self, dt: f32) {
-        self.update_nodes(dt);
-        self.update_springs();
-    }
-
-    fn update_springs(&mut self) {
-        for s in &mut self.springs {
-            s.update_force(&self.points[s.i], &self.points[s.j]);
-        }
-    }
-
-    fn update_nodes(&mut self, dt: f32) {
-        for point in &mut self.points {
-            point.x += point.dx * dt;
-            point.y += point.dy * dt;
-
-            point.dx *= f32::powf(0.8, dt * 100.0);
-            point.dy *= f32::powf(0.8, dt * 100.0);
-        }
-
-        for s in &self.springs {
-            let x_diff = self.points[s.i].x - self.points[s.j].x;
-            let y_diff = self.points[s.i].y - self.points[s.j].y;
-            let len = f32::hypot(x_diff, y_diff);
-            let x_unit = x_diff / len;
-            let y_unit = y_diff / len;
-
-            self.points[s.i].dx += s.force * x_unit;
-            self.points[s.i].dy += s.force * y_unit;
-
-            self.points[s.j].dx += s.force * -x_unit;
-            self.points[s.j].dy += s.force * -y_unit;
-        }
-    }
-
-    fn get_nearest(&self, x: f32, y: f32) -> Option<usize> {
-        let mut best: Option<usize> = None;
-        let mut dist: Option<f32> = None;
-
-        for (i, point) in self.points.iter().enumerate() {
-            let d = f32::hypot(x - point.x, y - point.y);
-
-            if d < 0.15 {
-                if dist == None || dist.unwrap() > d {
-                    best = Some(i);
-                    dist = Some(d);
-                }
-            }
-        }
-
-        best
-    }
-
-    fn snap(&mut self, point: Option<usize>, x: f32, y: f32) {
-        if let Some(p) = point {
-            self.points[p].x = x;
-            self.points[p].y = y;
-        }
-    }
-
-    fn get_lines(&self) -> Vec<Line> {
-        let mut ret = vec![];
-
-        for spring in &self.springs {
-            ret.push(
-                Line {
-                    x1: self.points[spring.i].x,
-                    y1: self.points[spring.i].y,
-                    x2: self.points[spring.j].x,
-                    y2: self.points[spring.j].y,
-                    width: if spring.adj {15.0} else {4.0},
-                    color: color_from_force(spring.force, spring.adj),
-                }
-            );
-        }
-
-        ret
-    }
-}
-
 fn main() {
     //let edges = lae_trihex(3).1;
     //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
@@ -241,6 +255,8 @@ fn main() {
 
     let board = Board::new(edges);
     let mut gel = LayoutGel::from(board.clone());
+
+    //let mut gel = LayoutGel::empty();
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
@@ -296,14 +312,25 @@ fn main() {
 
         window.clear(BLACK_COLOR);
 
-        for line in gel.get_lines() {
-            draw_line(
-                &mut window,
-                (offset_x + line.x1 * 100.0, offset_y + line.y1 * 100.0),
-                (offset_x + line.x2 * 100.0, offset_y + line.y2 * 100.0),
-                line.color,
-                line.width,
-            );
+        for i in 0..gel.count() {
+            for j in 0..i {
+                let x1 = gel[i].x;
+                let y1 = gel[i].y;
+                let x2 = gel[j].x;
+                let y2 = gel[j].y;
+
+                let spring = &gel[(i,j)];
+                let width = if spring.adj {15.0} else {4.0};
+                let color = color_from_force(spring.force, spring.adj);
+
+                draw_line(
+                    &mut window,
+                    (offset_x + x1 * 100.0, offset_y + y1 * 100.0),
+                    (offset_x + x2 * 100.0, offset_y + y2 * 100.0),
+                    color,
+                    width,
+                );
+            }
         }
 
         window.set_active(true);
