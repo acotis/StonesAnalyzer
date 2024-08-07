@@ -2,7 +2,7 @@
 name = "stones"
 version = "0.1.0"
 edition = "2021"
-default-run = "stones_analyzer"
+default-run = "auto_layout"
 
 [lib]
 name = "stones"

@@ -13,7 +13,6 @@ use stones::boards::*;
 use crate::MouseState::*;
 
 // Todo
-//      - Non-adjacent spring lines always appear below adjacent ones.
 //      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Add an edge to a base without an existing target point.
@@ -392,24 +391,28 @@ fn main() {
 
         // Draw the springs.
 
-        for i in 0..gel.count() {
-            for j in 0..i {
-                let x1 = gel[i].x;
-                let y1 = gel[i].y;
-                let x2 = gel[j].x;
-                let y2 = gel[j].y;
+        for kind in [false, true] {
+            for i in 0..gel.count() {
+                for j in 0..i {
+                    let x1 = gel[i].x;
+                    let y1 = gel[i].y;
+                    let x2 = gel[j].x;
+                    let y2 = gel[j].y;
 
-                let spring = &gel[(i,j)];
-                let width = if spring.adj {15.0} else {4.0};
-                let color = color_from_force(spring.force, spring.adj);
+                    let spring = &gel[(i,j)];
+                    let width = if spring.adj {15.0} else {4.0};
+                    let color = color_from_force(spring.force, spring.adj);
 
-                draw_line(
-                    &mut window,
-                    (offset_x + x1 * 100.0, offset_y + y1 * 100.0),
-                    (offset_x + x2 * 100.0, offset_y + y2 * 100.0),
-                    color,
-                    width,
-                );
+                    if spring.adj == kind {
+                        draw_line(
+                            &mut window,
+                            (offset_x + x1 * 100.0, offset_y + y1 * 100.0),
+                            (offset_x + x2 * 100.0, offset_y + y2 * 100.0),
+                            color,
+                            width,
+                        );
+                    }
+                }
             }
         }
 
