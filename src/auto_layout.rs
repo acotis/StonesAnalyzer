@@ -9,12 +9,11 @@ use std::time::Duration;
 use rand::Rng;
 
 use stones::engine::Board;
-use stones::boards::*;
 use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Highlight which graph object is closest to the mouse?
+//      - Can't initiate an edge when edge is selected.
 //      - Drag graph by an edge.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
