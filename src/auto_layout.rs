@@ -15,12 +15,15 @@ use crate::GraphElement::*;
 
 // Todo
 //      - Highlight which graph object is closest to the mouse?
+//      - Drag graph by an edge.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
 
 // Configurable stuff.
+
+const GRAB_RADIUS: f32 = 0.25;
 
 fn force_from_distance(adjacent: bool, distance: f32) -> f32 {
     200.0 * if adjacent {
@@ -97,7 +100,9 @@ struct Point {
 #[derive(Debug, Clone)]
 struct Spring {
     adj: bool,
-    force: f32,
+    force: f32, // cache
+    x: f32,     // cache
+    y: f32,     // cache
 }
 
 #[derive(Debug, Clone)] // Return value of get_nearest_element()
@@ -190,16 +195,18 @@ impl LayoutGel {
     fn update_springs(&mut self) {
         for i in 0..self.count() {
             for j in 0..i {
-                let distance = f32::hypot(
-                    self.points[i].x - self.points[j].x,
-                    self.points[i].y - self.points[j].y
-                );
+                let x1 = self[i].x;
+                let y1 = self[i].y;
+                let x2 = self[j].x;
+                let y2 = self[j].y;
 
+                let distance = f32::hypot(x1 - x2, y1 - y2);
                 self.springs[i][j].force = force_from_distance(
                     self.springs[i][j].adj,
                     distance
                 );
-
+                self.springs[i][j].x = (x1 + x2) / 2.0;
+                self.springs[i][j].y = (y1 + y2) / 2.0;
             }
         }
     }
@@ -227,7 +234,7 @@ impl LayoutGel {
             let point = &self.points[i];
             let d = f32::hypot(x - point.x, y - point.y);
 
-            if d < 0.25 {
+            if d < GRAB_RADIUS {
                 if dist == None || dist.unwrap() > d {
                     best = Some(Vertex(i));
                     dist = Some(d);
@@ -239,13 +246,11 @@ impl LayoutGel {
             for j in 0..i {
                 if !self[(i,j)].adj {continue;}
 
-                let point_i = &self.points[i];
-                let point_j = &self.points[j];
-                let edge_x = (point_i.x + point_j.x) / 2.0;
-                let edge_y = (point_i.y + point_j.y) / 2.0;
+                let edge_x = self[(i,j)].x;
+                let edge_y = self[(i,j)].y;
                 let d = f32::hypot(x - edge_x, y - edge_y);
 
-                if d < 0.25 {
+                if d < GRAB_RADIUS {
                     if dist == None || dist.unwrap() > d {
                         best = Some(Edge(i, j));
                         dist = Some(d);
@@ -268,7 +273,7 @@ impl LayoutGel {
         }
 
         self.points.push(Point {x, y, dx: 0.0, dy: 0.0});
-        self.springs.push(vec![Spring {adj: false, force: 0.0}; self.count()]);
+        self.springs.push(vec![Spring {adj: false, force: 0.0, x: 0.0, y: 0.0}; self.count()]);
         self.update_springs();
         self.count() - 1
     }
@@ -493,6 +498,14 @@ fn main() {
             );
         }
 
+        // If any graph element is selected, highlight it.
+
+        match gel.get_nearest_element(mouse_x, mouse_y) {
+            Some(Vertex(v)) => {draw_circle(&mut window, (offset_x + 100.0 * gel[v].x,     offset_y + 100.0 * gel[v].y),     25.0, Color {r: 255, g: 255, b: 0, a: 128}, 0.0, Color {r: 0, g: 0, b: 0, a: 0});}
+            Some(Edge(i,j)) => {draw_circle(&mut window, (offset_x + 100.0 * gel[(i,j)].x, offset_y + 100.0 * gel[(i,j)].y), 25.0, Color {r:   0, g: 255, b: 0, a: 128}, 0.0, Color {r: 0, g: 0, b: 0, a: 0});}
+            None => {}
+        }
+
         window.set_active(true);
         window.display();
 
@@ -535,3 +548,25 @@ fn update_view(win: &mut RenderWindow) {
         &View::from_rect(
             &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
 }
+
+fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
+               outline_thickness: f32, outline_color: Color) {
+    draw_polygon(win, 50, 0.0, center, radius, color, outline_thickness, outline_color);
+}
+
+// Draw a regular polygon with a given number of sides, rotation from its default
+// orientation, center, radius, color, outline thickness, and outline color.
+
+fn draw_polygon(win: &mut RenderWindow, side_count: u32, rotation: f32,
+                center: (f32, f32), radius: f32, color: Color,
+                outline_thickness: f32, outline_color: Color) {
+    let mut cs = CircleShape::new(radius, side_count);
+    cs.set_origin(Vector2::new(radius, radius));
+    cs.set_position(Vector2::new(center.0, center.1));
+    cs.rotate(rotation * 360.0);
+    cs.set_fill_color(color);
+    cs.set_outline_thickness(outline_thickness);
+    cs.set_outline_color(outline_color);
+    win.draw(&cs);
+}
+
