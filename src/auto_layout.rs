@@ -13,7 +13,6 @@ use stones::boards::*;
 use crate::MouseState::*;
 
 // Todo
-//      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Delete an edge?
 //      - Highlight which graph object is closest to the mouse?
