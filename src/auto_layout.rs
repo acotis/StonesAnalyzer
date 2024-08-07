@@ -13,9 +13,9 @@ use stones::boards::*;
 use crate::MouseState::*;
 
 // Todo
+//      - Delete a point when it has no neighbors.
 //      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
-//      - Delete a point.
 //      - Delete an edge?
 //      - Highlight which graph object is closest to the mouse?
 //      - Export to .san file.
