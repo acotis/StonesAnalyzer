@@ -12,6 +12,19 @@ use stones::engine::Board;
 use stones::boards::*;
 use crate::MouseState::*;
 
+// Todo
+//      - Non-adjacent spring lines always appear below adjacent ones.
+//      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
+//      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
+//      - Add an edge to a base without an existing target point.
+//      - Add an edge without an existing base?
+//      - Delete a point.
+//      - Delete an edge?
+//      - Highlight which graph object is closest to the mouse?
+//      - Export to .san file.
+//      - Refactor code to always use the Index traits.
+//          - Use IndexMut?
+
 // Configurable stuff.
 
 fn force_from_distance(adjacent: bool, distance: f32) -> f32 {
@@ -70,9 +83,6 @@ fn color_from_force(mut force: f32, adj: bool) -> Color {
         a: (a * 255.0) as u8,
     }
 }
-
-
-
 
 // Basic structs.
 
