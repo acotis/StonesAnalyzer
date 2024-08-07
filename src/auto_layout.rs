@@ -11,11 +11,12 @@ use rand::Rng;
 use stones::engine::Board;
 use stones::boards::*;
 use crate::MouseState::*;
+use crate::GraphElement::*;
 
 // Todo
-//      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Delete an edge?
 //      - Highlight which graph object is closest to the mouse?
+//      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
@@ -98,6 +99,12 @@ struct Point {
 struct Spring {
     adj: bool,
     force: f32,
+}
+
+#[derive(Debug, Clone)] // Return value of get_nearest_element()
+enum GraphElement {
+    Vertex(usize),
+    Edge(usize, usize),
 }
 
 // Trait implementation for getting Points from a Gel.
@@ -213,27 +220,42 @@ impl LayoutGel {
         self.points.len()
     }
 
-    fn get_nearest_point(&self, x: f32, y: f32) -> Option<usize> {
-        let mut best: Option<usize> = None;
+    fn get_nearest_element(&self, x: f32, y: f32) -> Option<GraphElement> {
+        let mut best: Option<GraphElement> = None;
         let mut dist: Option<f32> = None;
 
-        for (i, point) in self.points.iter().enumerate() {
+        for i in 0..self.count() {
+            let point = &self.points[i];
             let d = f32::hypot(x - point.x, y - point.y);
 
             if d < 0.25 {
                 if dist == None || dist.unwrap() > d {
-                    best = Some(i);
+                    best = Some(Vertex(i));
                     dist = Some(d);
                 }
             }
         }
 
-        best
-    }
+        for i in 0..self.count() {
+            for j in 0..i {
+                if !self[(i,j)].adj {continue;}
 
-    fn get_nearest_edge(&self, _x: f32, _y: f32) -> Option<usize> {
-        // todo (to be used for deleting edges with the mouse)
-        None
+                let point_i = &self.points[i];
+                let point_j = &self.points[j];
+                let edge_x = (point_i.x + point_j.x) / 2.0;
+                let edge_y = (point_i.y + point_j.y) / 2.0;
+                let d = f32::hypot(x - edge_x, y - edge_y);
+
+                if d < 0.25 {
+                    if dist == None || dist.unwrap() > d {
+                        best = Some(Edge(i, j));
+                        dist = Some(d);
+                    }
+                }
+            }
+        }
+
+        best
     }
 
     fn snap(&mut self, point: usize, x: f32, y: f32) {
@@ -266,8 +288,11 @@ impl LayoutGel {
         self.points.remove(i);
     }
 
-    fn remove_point(&mut self, i: usize) {
-        self.remove_point_simple(i);
+    fn remove_element(&mut self, e: GraphElement) {
+        match e {
+            Vertex(i) => {self.remove_point_simple(i);}
+            Edge(i,j) => {self.remove_edge(i, j);}
+        }
 
         // Auto-delete any points with no edges.
 
@@ -360,7 +385,7 @@ fn main() {
                 // Dragging points around.
 
                 MouseButtonPressed {button: Left, ..} => {
-                    if let Some(grabbed) = gel.get_nearest_point(mouse_x, mouse_y) {
+                    if let Some(Vertex(grabbed)) = gel.get_nearest_element(mouse_x, mouse_y) {
                         mouse_state = DragPoint(grabbed);
                     }
                 }
@@ -372,22 +397,22 @@ fn main() {
                 // Adding points and edges.
 
                 MouseButtonPressed {button: Right, ..} => {
-                    let grabbed = match gel.get_nearest_point(mouse_x, mouse_y) {
-                        Some(point) => point,
-                        None => gel.add_point(mouse_x, mouse_y),
+                    let grabbed = match gel.get_nearest_element(mouse_x, mouse_y) {
+                        Some(Vertex(point)) => point,
+                        None | Some(Edge(_,_)) => gel.add_point(mouse_x, mouse_y),
                     };
                     mouse_state = AddEdge(grabbed);
                 }
 
                 MouseButtonReleased {button: Right, ..} => {
                     if let AddEdge(base) = mouse_state {
-                        let now_at = match gel.get_nearest_point(mouse_x, mouse_y) {
-                            Some(point) => if point == base {
+                        let now_at = match gel.get_nearest_element(mouse_x, mouse_y) {
+                            Some(Vertex(point)) => if point == base {
                                 gel.add_point(mouse_x, mouse_y)
                             } else {
                                 point
                             },
-                            None => gel.add_point(mouse_x, mouse_y),
+                            None | Some(Edge(_,_)) => gel.add_point(mouse_x, mouse_y),
                         };
                         gel.add_edge(base, now_at);
                     }
@@ -397,8 +422,8 @@ fn main() {
                 // Removing points.
                 
                 MouseButtonPressed {button: Middle, ..} => {
-                    if let Some(point) = gel.get_nearest_point(mouse_x, mouse_y) {
-                        gel.remove_point(point);
+                    if let Some(element) = gel.get_nearest_element(mouse_x, mouse_y) {
+                        gel.remove_element(element);
                     }
                 }
 
