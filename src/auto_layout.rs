@@ -13,7 +13,6 @@ use stones::boards::*;
 use crate::MouseState::*;
 
 // Todo
-//      - Automatically delete a point when it has no neighbors.
 //      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Delete an edge?
@@ -239,12 +238,15 @@ impl LayoutGel {
     }
 
     fn snap(&mut self, point: usize, x: f32, y: f32) {
-        println!("snapping");
         self.points[point].x = x;
         self.points[point].y = y;
     }
 
     fn add_point(&mut self, x: f32, y: f32) -> usize {
+        if self.points.iter().any(|p| f32::hypot(p.x - x, p.y - y) < 0.01) {
+            return self.add_point(x + 0.01, y + 0.01);
+        }
+
         self.points.push(Point {x, y, dx: 0.0, dy: 0.0});
         self.springs.push(vec![Spring {adj: false, force: 0.0}; self.count()]);
         self.update_springs();
@@ -256,13 +258,17 @@ impl LayoutGel {
         else {self.springs[i][j].adj = true;}
     }
 
-    fn remove_point(&mut self, i: usize) {
+    fn remove_point_simple(&mut self, i: usize) {
         for j in i+1..self.count() {
             self.springs[j].remove(i);
         }
 
         self.springs.remove(i);
         self.points.remove(i);
+    }
+
+    fn remove_point(&mut self, i: usize) {
+        self.remove_point_simple(i);
 
         // Auto-delete any points with no edges.
 
@@ -272,7 +278,7 @@ impl LayoutGel {
                 .collect::<Vec<_>>();
 
         while let Some(point) = dust.pop() {
-            self.remove_point(point);
+            self.remove_point_simple(point);
         }
     }
 
@@ -326,8 +332,6 @@ fn main() {
     let mut mouse_state = Null;
 
     while window.is_open() {
-        println!("{mouse_state:?}");
-
         let win_size = window.size();
         let offset_x = win_size.x as f32 / 2.0;
         let offset_y = win_size.y as f32 / 2.0;
