@@ -13,7 +13,7 @@ use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Can't initiate an edge when edge is selected.
+//      - Base end of in-progress edge is clamped still.
 //      - Drag graph by an edge.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
@@ -88,7 +88,7 @@ struct LayoutGel {
     springs: Vec<Vec<Spring>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 struct Point {
     x: f32,
     y: f32,
@@ -96,7 +96,7 @@ struct Point {
     dy: f32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 struct Spring {
     adj: bool,
     force: f32, // cache
@@ -104,7 +104,7 @@ struct Spring {
     y: f32,     // cache
 }
 
-#[derive(Debug, Clone)] // Return value of get_nearest_element()
+#[derive(Debug, Clone, Copy)] // Return value of get_nearest_element()
 enum GraphElement {
     Vertex(usize),
     Edge(usize, usize),
@@ -325,25 +325,10 @@ enum MouseState {
 }
 
 fn main() {
-    //let edges = lae_trihex(3).1;
-    //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
-    //let edges = lae_wheels(2, 2).1;
-    //let edges = lae_honeycomb(3).1;
-    //let edges = lae_turtle(1, 1).1;
-    //let edges = lae_sixfourthree(1).1;
-    //let edges = lae_pack().1;
-    //let edges = lae_loop(6).1;
-    //let edges = lae_grid(4, 2).1;
-    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
-
-    //let board = Board::new(edges);
-    //let mut gel = LayoutGel::from(board.clone());
-
     let mut gel = LayoutGel::empty();
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
-    println!("antialiasing level: {}", context_settings.antialiasing_level);
 
     let mut window = RenderWindow::new(
         (800, 600),
@@ -366,6 +351,7 @@ fn main() {
         let mouse_pos = window.mouse_position();
         let mouse_x = (mouse_pos.x as f32 - offset_x) / 100.0;
         let mouse_y = (mouse_pos.y as f32 - offset_y) / 100.0;
+        let selected = gel.get_nearest_element(mouse_x, mouse_y);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -375,7 +361,6 @@ fn main() {
                 // Restart.
 
                 KeyPressed {code: Key::R, ..} => {
-                    //gel = LayoutGel::from(board.clone());
                     gel = LayoutGel::empty();
                 }
                 
@@ -388,7 +373,7 @@ fn main() {
                 // Dragging points around.
 
                 MouseButtonPressed {button: Left, ..} => {
-                    if let Some(Vertex(grabbed)) = gel.get_nearest_element(mouse_x, mouse_y) {
+                    if let Some(Vertex(grabbed)) = selected {
                         mouse_state = DragPoint(grabbed);
                     }
                 }
@@ -397,19 +382,19 @@ fn main() {
                     mouse_state = Null;
                 }
 
-                // Adding points and edges.
+                // Adding edges.
 
                 MouseButtonPressed {button: Right, ..} => {
-                    let grabbed = match gel.get_nearest_element(mouse_x, mouse_y) {
-                        Some(Vertex(point)) => point,
-                        None | Some(Edge(_,_)) => gel.add_point(mouse_x, mouse_y),
-                    };
-                    mouse_state = AddEdge(grabbed);
+                    match selected {
+                        Some(Vertex(v)) => {mouse_state = AddEdge(v);},
+                        Some(Edge(_,_)) => {}, // do nothing
+                        None => {mouse_state = AddEdge(gel.add_point(mouse_x, mouse_y));}
+                    }
                 }
 
                 MouseButtonReleased {button: Right, ..} => {
                     if let AddEdge(base) = mouse_state {
-                        let now_at = match gel.get_nearest_element(mouse_x, mouse_y) {
+                        let now_at = match selected {
                             Some(Vertex(point)) => if point == base {
                                 gel.add_point(mouse_x, mouse_y)
                             } else {
@@ -425,7 +410,7 @@ fn main() {
                 // Removing points.
                 
                 MouseButtonPressed {button: Middle, ..} => {
-                    if let Some(element) = gel.get_nearest_element(mouse_x, mouse_y) {
+                    if let Some(element) = selected {
                         gel.remove_element(element);
                     }
                 }
@@ -499,7 +484,7 @@ fn main() {
 
         // If any graph element is selected, highlight it.
 
-        match gel.get_nearest_element(mouse_x, mouse_y) {
+        match selected {
             Some(Vertex(v)) => {draw_circle(&mut window, (offset_x + 100.0 * gel[v].x,     offset_y + 100.0 * gel[v].y),     25.0, Color {r: 255, g: 255, b: 0, a: 128}, 0.0, Color {r: 0, g: 0, b: 0, a: 0});}
             Some(Edge(i,j)) => {draw_circle(&mut window, (offset_x + 100.0 * gel[(i,j)].x, offset_y + 100.0 * gel[(i,j)].y), 25.0, Color {r:   0, g: 255, b: 0, a: 128}, 0.0, Color {r: 0, g: 0, b: 0, a: 0});}
             None => {}
