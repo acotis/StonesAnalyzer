@@ -260,13 +260,13 @@ fn main() {
     //let edges = lae_sixfourthree(1).1;
     //let edges = lae_pack().1;
     //let edges = lae_loop(6).1;
-    let edges = lae_grid(4, 2).1;
+    //let edges = lae_grid(4, 2).1;
     //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
 
-    let board = Board::new(edges);
-    let mut gel = LayoutGel::from(board.clone());
+    //let board = Board::new(edges);
+    //let mut gel = LayoutGel::from(board.clone());
 
-    //let mut gel = LayoutGel::empty();
+    let mut gel = LayoutGel::empty();
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
