@@ -14,7 +14,6 @@ use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Delete an edge?
 //      - Highlight which graph object is closest to the mouse?
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
