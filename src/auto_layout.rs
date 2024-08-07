@@ -13,7 +13,6 @@ use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Base end of in-progress edge is clamped still.
 //      - Drag graph by an edge.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
@@ -321,7 +320,7 @@ impl LayoutGel {
 enum MouseState {
     Null,
     DragPoint(usize),
-    AddEdge(usize),
+    AddEdge(usize, f32, f32),
 }
 
 fn main() {
@@ -351,7 +350,7 @@ fn main() {
         let mouse_pos = window.mouse_position();
         let mouse_x = (mouse_pos.x as f32 - offset_x) / 100.0;
         let mouse_y = (mouse_pos.y as f32 - offset_y) / 100.0;
-        let selected = gel.get_nearest_element(mouse_x, mouse_y);
+        let mut selected = gel.get_nearest_element(mouse_x, mouse_y);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -386,14 +385,14 @@ fn main() {
 
                 MouseButtonPressed {button: Right, ..} => {
                     match selected {
-                        Some(Vertex(v)) => {mouse_state = AddEdge(v);},
+                        Some(Vertex(v)) => {mouse_state = AddEdge(v, gel[v].x, gel[v].y);}
                         Some(Edge(_,_)) => {}, // do nothing
-                        None => {mouse_state = AddEdge(gel.add_point(mouse_x, mouse_y));}
+                        None => {mouse_state = AddEdge(gel.add_point(mouse_x, mouse_y), mouse_x, mouse_y);}
                     }
                 }
 
                 MouseButtonReleased {button: Right, ..} => {
-                    if let AddEdge(base) = mouse_state {
+                    if let AddEdge(base, _, _) = mouse_state {
                         let now_at = match selected {
                             Some(Vertex(point)) => if point == base {
                                 gel.add_point(mouse_x, mouse_y)
@@ -413,12 +412,21 @@ fn main() {
                     if let Some(element) = selected {
                         gel.remove_element(element);
                     }
+                    selected = None;
                 }
 
                 // Default.
 
                 _ => {}
             }
+        }
+
+        // Update continuously held states.
+
+        match mouse_state {
+            AddEdge(base, base_x, base_y) => {gel.snap(base, base_x, base_y);},
+            DragPoint(dragging) => {gel.snap(dragging, mouse_x, mouse_y);},
+            Null => {}, // do nothing
         }
 
         // Clear the window with black.
@@ -470,7 +478,7 @@ fn main() {
 
         // If there is one, draw the edge currently being added.
 
-        if let AddEdge(base) = mouse_state {
+        if let AddEdge(base, _, _) = mouse_state {
             let point = &gel[base];
 
             draw_line(
@@ -490,15 +498,14 @@ fn main() {
             None => {}
         }
 
+        // Draw the window.
+
         window.set_active(true);
         window.display();
 
-        if let DragPoint(dragging) = mouse_state {
-            gel.snap(dragging, mouse_x, mouse_y);
-        }
+        // Tick time forward.
 
         gel.tick_time(if time_moving {0.01} else {0.00});
-
         std::thread::sleep(Duration::from_millis(10));
     }
 }
