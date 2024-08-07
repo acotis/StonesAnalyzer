@@ -272,21 +272,7 @@ enum MouseState {
 }
 
 fn main() {
-    //let edges = lae_trihex(3).1;
-    //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
-    //let edges = lae_wheels(2, 2).1;
-    //let edges = lae_honeycomb(3).1;
-    let edges = lae_turtle(1, 1).1;
-    //let edges = lae_sixfourthree(1).1;
-    //let edges = lae_pack().1;
-    //let edges = lae_loop(6).1;
-    //let edges = lae_grid(4, 2).1;
-    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
-
-    let board = Board::new(edges);
-    let mut gel = LayoutGel::from(board.clone());
-
-    //let mut gel = LayoutGel::empty();
+    let mut gel = LayoutGel::empty();
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
@@ -322,7 +308,8 @@ fn main() {
                 // Restart.
 
                 KeyPressed {code: Key::R, ..} => {
-                    gel = LayoutGel::from(board.clone());
+                    //gel = LayoutGel::from(board.clone());
+                    gel = LayoutGel::empty();
                 }
                 
                 // Pause and unpause.
