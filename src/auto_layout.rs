@@ -255,6 +255,15 @@ impl LayoutGel {
         else {self.springs[i][j].adj = true;}
     }
 
+    fn remove_point(&mut self, i: usize) {
+        for j in i+1..self.count() {
+            self.springs[j].remove(i);
+        }
+
+        self.springs.remove(i);
+        self.points.remove(i);
+    }
+
     fn remove_edge(&mut self, i: usize, j: usize) {
         if i < j {self.remove_edge(j, i);}
         else {self.springs[i][j].adj = false;}
@@ -365,6 +374,14 @@ fn main() {
                         gel.add_edge(base, now_at);
                     }
                     mouse_state = Null;
+                }
+
+                // Removing points.
+                
+                MouseButtonPressed {button: Middle, ..} => {
+                    if let Some(point) = gel.get_nearest_point(mouse_x, mouse_y) {
+                        gel.remove_point(point);
+                    }
                 }
 
                 // Default.
