@@ -15,8 +15,6 @@ use crate::MouseState::*;
 // Todo
 //      - Empty points always appear between adjacent and non-adjacent springs in Z layer.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
-//      - Add an edge to a base without an existing target point.
-//      - Add an edge without an existing base?
 //      - Delete a point.
 //      - Delete an edge?
 //      - Highlight which graph object is closest to the mouse?
@@ -347,18 +345,24 @@ fn main() {
                 // Adding points and edges.
 
                 MouseButtonPressed {button: Right, ..} => {
-                    if let Some(grabbed) = gel.get_nearest_point(mouse_x, mouse_y) {
-                        mouse_state = AddEdge(grabbed);
-                    } else {
-                        gel.add_point(mouse_x, mouse_y);
-                    }
+                    let grabbed = match gel.get_nearest_point(mouse_x, mouse_y) {
+                        Some(point) => point,
+                        None => gel.add_point(mouse_x, mouse_y),
+                    };
+                    mouse_state = AddEdge(grabbed);
                 }
 
                 MouseButtonReleased {button: Right, ..} => {
                     if let AddEdge(base) = mouse_state {
-                        if let Some(now_at) = gel.get_nearest_point(mouse_x, mouse_y) {
-                            gel.add_edge(base, now_at);
-                        }
+                        let now_at = match gel.get_nearest_point(mouse_x, mouse_y) {
+                            Some(point) => if point == base {
+                                gel.add_point(mouse_x, mouse_y)
+                            } else {
+                                point
+                            },
+                            None => gel.add_point(mouse_x, mouse_y),
+                        };
+                        gel.add_edge(base, now_at);
                     }
                     mouse_state = Null;
                 }
