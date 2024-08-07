@@ -13,9 +13,8 @@ use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Drag graph by an edge.
-//      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Export to .san file.
+//      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
 
