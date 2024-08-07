@@ -57,44 +57,24 @@ impl Index<(usize, usize)> for LayoutGel {
 
 impl From<Board> for LayoutGel {
     fn from(board: Board) -> Self {
+        let mut gel = LayoutGel::empty();
         let mut rng = rand::thread_rng();
 
-        let mut ret = LayoutGel {
-            points: vec![
-                Point {
-                    x: 0.0,
-                    y: 0.0,
-                    dx: 0.0,
-                    dy: 0.0,
-                };
-                board.point_count()
-            ],
-            springs: vec![
-                vec![];
-                board.point_count()
-            ],
-        };
-
-        let point_count = board.point_count();
-
-        for i in 0..point_count {
-            //let angle = (i as f32) / (point_count as f32) * 6.283185;
+        for _ in 0..board.point_count() {
             let angle_rand = rng.gen_range(0.0f32..6.283185);
+            let x = angle_rand.cos();
+            let y = angle_rand.sin();
 
-            ret.points[i].x = angle_rand.cos();// + 0.5 * angle_rand.cos();
-            ret.points[i].y = angle_rand.sin();// + 0.5 * angle_rand.sin();
+            gel.add_point(x, y);
+        }
 
-            let neighbors = board.get_neighbors(i);
-
-            for j in 0..i {
-                ret.springs[i].push(
-                    Spring {adj: neighbors.contains(&j), force: 0.0}
-                );
+        for i in 0..gel.count()  {
+            for j in board.get_neighbors(i) {
+                gel.add_edge(i, j);
             }
         }
 
-        ret.update_springs();
-        ret
+        gel
     }
 }
 
@@ -187,7 +167,7 @@ impl LayoutGel {
         for (i, point) in self.points.iter().enumerate() {
             let d = f32::hypot(x - point.x, y - point.y);
 
-            if d < 0.15 {
+            if d < 0.25 {
                 if dist == None || dist.unwrap() > d {
                     best = Some(i);
                     dist = Some(d);
@@ -272,7 +252,21 @@ enum MouseState {
 }
 
 fn main() {
-    let mut gel = LayoutGel::empty();
+    //let edges = lae_trihex(3).1;
+    //let edges = vec![(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)];
+    //let edges = lae_wheels(2, 2).1;
+    //let edges = lae_honeycomb(3).1;
+    //let edges = lae_turtle(1, 1).1;
+    //let edges = lae_sixfourthree(1).1;
+    //let edges = lae_pack().1;
+    //let edges = lae_loop(6).1;
+    let edges = lae_grid(4, 2).1;
+    //let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3), (3, 0), (3, 4)];
+
+    let board = Board::new(edges);
+    let mut gel = LayoutGel::from(board.clone());
+
+    //let mut gel = LayoutGel::empty();
 
     let mut context_settings: ContextSettings = Default::default();
     context_settings.antialiasing_level = 16;
