@@ -260,9 +260,24 @@ impl LayoutGel {
         best
     }
 
-    fn snap(&mut self, point: usize, x: f32, y: f32) {
-        self.points[point].x = x;
-        self.points[point].y = y;
+    fn snap(&mut self, elem: GraphElement, x: f32, y: f32) {
+        match elem {
+            Vertex(v) => {
+                self.points[v].x = x;
+                self.points[v].y = y;
+            },
+            Edge(i,j) => {
+                let dx = x - self[(i,j)].x;
+                let dy = y - self[(i,j)].y;
+
+                self.points[i].x += dx;
+                self.points[i].y += dy;
+                self.points[j].x += dx;
+                self.points[j].y += dy;
+
+                self.update_springs();
+            },
+        }
     }
 
     fn add_point(&mut self, x: f32, y: f32) -> usize {
@@ -319,7 +334,7 @@ impl LayoutGel {
 #[derive(Debug)]
 enum MouseState {
     Null,
-    DragPoint(usize),
+    Drag(GraphElement),
     AddEdge(usize, f32, f32),
 }
 
@@ -372,8 +387,8 @@ fn main() {
                 // Dragging points around.
 
                 MouseButtonPressed {button: Left, ..} => {
-                    if let Some(Vertex(grabbed)) = selected {
-                        mouse_state = DragPoint(grabbed);
+                    if let Some(element) = selected {
+                        mouse_state = Drag(element);
                     }
                 }
 
@@ -424,8 +439,8 @@ fn main() {
         // Update continuously held states.
 
         match mouse_state {
-            AddEdge(base, base_x, base_y) => {gel.snap(base, base_x, base_y);},
-            DragPoint(dragging) => {gel.snap(dragging, mouse_x, mouse_y);},
+            AddEdge(base, base_x, base_y) => {gel.snap(Vertex(base), base_x, base_y);},
+            Drag(element) => {gel.snap(element, mouse_x, mouse_y);},
             Null => {}, // do nothing
         }
 
