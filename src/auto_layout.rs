@@ -12,6 +12,68 @@ use stones::engine::Board;
 use stones::boards::*;
 use crate::MouseState::*;
 
+// Configurable stuff.
+
+fn force_from_distance(adjacent: bool, distance: f32) -> f32 {
+    200.0 * if adjacent {
+        let displacement = distance - 1.0;
+        if displacement < 0.0 {
+            -displacement
+        } else {
+            -displacement
+        }
+    } else {
+        let displacement = distance - 1.41;
+        if displacement < -0.1 {
+            -displacement
+        } else if displacement < 0.0 {
+            0.1
+        } else {
+            0.0
+        }
+    }
+}
+
+fn color_from_force(mut force: f32, adj: bool) -> Color {
+    force /= 100.0;
+    force = f32::clamp(force, -1.0, 1.0);
+
+    let mut r = 0.0;
+    let mut g = 0.0;
+    let mut b = 0.0;
+    let mut a = 1.0;
+
+    if adj {
+        if force > 0.0 {
+            r = 1.0;
+            g = 1.0 - force;
+            b = 1.0 - force;
+        } else {
+            r = 1.0 + force;
+            g = 1.0 + force;
+            b = 1.0;
+        }
+    } else {
+        if force > 0.0 {
+            r = 1.0;
+            a = force;
+        } else {
+            b = 1.0;
+            a = -force;
+        }
+    }
+
+    Color {
+        r: (r * 255.0) as u8,
+        g: (g * 255.0) as u8,
+        b: (b * 255.0) as u8,
+        a: (a * 255.0) as u8,
+    }
+}
+
+
+
+
 // Basic structs.
 
 struct LayoutGel {
@@ -122,25 +184,11 @@ impl LayoutGel {
                     self.points[i].y - self.points[j].y
                 );
 
-                let force = if self.springs[i][j].adj {
-                    let displacement = distance - 1.0;
-                    if displacement < 0.0 {
-                        -displacement
-                    } else {
-                        -displacement
-                    }
-                } else {
-                    let displacement = distance - 1.41;
-                    if displacement < -0.1 {
-                        -displacement
-                    } else if displacement < 0.0 {
-                        0.1
-                    } else {
-                        0.0
-                    }
-                };
+                self.springs[i][j].force = force_from_distance(
+                    self.springs[i][j].adj,
+                    distance
+                );
 
-                self.springs[i][j].force = 200.0 * force;
             }
         }
     }
@@ -203,43 +251,6 @@ impl LayoutGel {
     fn remove_edge(&mut self, i: usize, j: usize) {
         if i < j {self.remove_edge(j, i);}
         else {self.springs[i][j].adj = false;}
-    }
-}
-
-fn color_from_force(mut force: f32, adj: bool) -> Color {
-    force /= 100.0;
-    force = f32::clamp(force, -1.0, 1.0);
-
-    let mut r = 0.0;
-    let mut g = 0.0;
-    let mut b = 0.0;
-    let mut a = 1.0;
-
-    if adj {
-        if force > 0.0 {
-            r = 1.0;
-            g = 1.0 - force;
-            b = 1.0 - force;
-        } else {
-            r = 1.0 + force;
-            g = 1.0 + force;
-            b = 1.0;
-        }
-    } else {
-        if force > 0.0 {
-            r = 1.0;
-            a = force;
-        } else {
-            b = 1.0;
-            a = -force;
-        }
-    }
-
-    Color {
-        r: (r * 255.0) as u8,
-        g: (g * 255.0) as u8,
-        b: (b * 255.0) as u8,
-        a: (a * 255.0) as u8,
     }
 }
 
