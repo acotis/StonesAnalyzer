@@ -6,14 +6,17 @@ use sfml::system::*;
 use sfml::window::mouse::Button::*;
 use sfml::window::Event::*;
 use std::time::Duration;
+use std::process::Command;
 use rand::Rng;
 
-use stones::engine::Board;
+use stones::engine::{Edges, Board};
+use stones::layout::Layout;
+use stones::san::write_san_file;
+use stones::gametree::GameTree;
 use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
-//      - Export to .san file.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
@@ -326,6 +329,21 @@ impl LayoutGel {
         if i < j {self.remove_edge(j, i);}
         else {self.springs[i][j].adj = false;}
     }
+
+    fn get_lae(&self) -> (Layout, Edges) {
+        let layout = self.points.iter().map(|point| (point.x, point.y)).collect::<Vec<_>>();
+        let mut edges = vec![];
+
+        for i in 0..self.count() {
+            for j in 0..i {
+                if self[(i,j)].adj {
+                    edges.push((i, j));
+                }
+            }
+        }
+
+        (layout, edges)
+    }
 }
 
 // Main application.
@@ -383,7 +401,34 @@ fn main() {
                     time_moving = !time_moving
                 }
 
-                // Dragging points around.
+                // Save to .san file and open in analyzer.
+
+                KeyPressed {code: Key::Enter, ..} => {
+                    window.close();
+
+                    let filename = format!("{}", chrono::Local::now().format("analyses/%Y-%m-%d_%H-%M-%S_sproingy.san"));
+                    let (layout, edges) = gel.get_lae();
+
+                    write_san_file(
+                        &filename,
+                        GameTree::new(Board::new(edges)),
+                        layout
+                    ).unwrap();
+
+                    Command::new("cargo")
+                        .arg("run")
+                        .arg("--bin")
+                        .arg("stones_analyzer")
+                        .arg(filename)
+                        .spawn()
+                        .unwrap()
+                        .wait()
+                        .unwrap();
+
+                    return;
+                }
+
+                // Drag the graph around.
 
                 MouseButtonPressed {button: Left, ..} => {
                     if let Some(element) = selected {
@@ -395,7 +440,7 @@ fn main() {
                     mouse_state = Null;
                 }
 
-                // Adding edges.
+                // Add edges.
 
                 MouseButtonPressed {button: Right, ..} => {
                     match selected {
@@ -420,7 +465,7 @@ fn main() {
                     mouse_state = Null;
                 }
 
-                // Removing points.
+                // Removing points and edges.
                 
                 MouseButtonPressed {button: Middle, ..} => {
                     if let Some(element) = selected {
