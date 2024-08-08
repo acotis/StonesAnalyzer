@@ -17,9 +17,11 @@ use crate::MouseState::*;
 use crate::GraphElement::*;
 
 // Todo
+//      - Time is initially stopped.
 //      - Proposed-edge looks perfect even at the endcaps (no weird alpha thing).
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
+//      - Refactor code so that graphics stuff is not just copied from the analyzer app.
 
 // Configurable stuff.
 
@@ -371,7 +373,7 @@ fn main() {
 
     // Event loop.
 
-    let mut time_moving = true;
+    let mut time_moving = false;
     let mut mouse_state = Null;
 
     while window.is_open() {
