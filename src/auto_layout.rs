@@ -408,7 +408,7 @@ fn main() {
                 KeyPressed {code: Key::Enter, ..} => {
                     window.close();
 
-                    let filename = format!("{}", chrono::Local::now().format("analyses/%Y-%m-%d_%H-%M-%S_sproingy.san"));
+                    let filename = format!("{}", chrono::Local::now().format("analyses/sproingy_%Y-%m-%d_%H-%M-%S.san"));
                     let (layout, edges) = gel.get_lae();
 
                     write_san_file(
