@@ -395,6 +395,7 @@ fn main() {
 
                 KeyPressed {code: Key::R, ..} => {
                     gel = LayoutGel::empty();
+                    selected = None;
                 }
                 
                 // Pause and unpause.
