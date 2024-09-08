@@ -22,6 +22,7 @@ use crate::GraphElement::*;
 //      - Refactor code to always use the Index traits.
 //          - Use IndexMut?
 //      - Refactor code so that graphics stuff is not just copied from the analyzer app.
+//      - Restart by hitting esc.
 
 // Configurable stuff.
 
