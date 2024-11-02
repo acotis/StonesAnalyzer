@@ -16,6 +16,7 @@ pub type Lae = (Layout, Edges); // "Layout and Edges"
 fn board_specs() -> Vec<(&'static str, fn(Vec<usize>) -> Lae)> {
     vec![
         ("square:N",       |args| lae_square(args[0])),
+        ("diamond:N",      |args| lae_diamond(args[0])),
         ("grid:W:H",       |args| lae_grid(args[0], args[1])),
         ("loop:N",         |args| lae_loop(args[0])),
         ("hex:L",          |args| lae_trihex(args[0])),
@@ -93,6 +94,13 @@ pub fn lae_grid(width: usize, height: usize) -> Lae {
 
 pub fn lae_square(side_len: usize) -> Lae {
     lae_grid(side_len, side_len)
+}
+
+// DIAMOND BOARDS
+
+pub fn lae_diamond(side_len: usize) -> Lae {
+    let square = lae_square(side_len);
+    (square.0.rotate(1.0/8.0), square.1)
 }
 
 // DONUT BOARDS
