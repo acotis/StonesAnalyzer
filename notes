@@ -3,6 +3,8 @@
 TODO
 ==================
 
++ Roll all my scripts into the main binary as subcommands.
+
 + Add auto-scoring functionality
 + Make it auto-save every 10 seconds (or on every action or something).
     - Currently it doesn't save if you exit with ctrl-C, which is obviously bad.

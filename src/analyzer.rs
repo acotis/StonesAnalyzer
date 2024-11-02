@@ -26,15 +26,18 @@ const STONE_MARGIN_SCREENSHOT: f32 = 1.4;
 const EDGE_WIDTH_RATIO: f32 = 20.0;
 const SYMBOL_HOLD_DURATION: Duration = Duration::from_millis(750);
 
-const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};
-//const BOARD_COLOR    : Color = Color {r: 128, g: 128, b:  128, a: 255};
-const BOARD_COLOR_SR : Color = Color {r: 106, g:  70, b:  15, a: 255};
+const BOARD_COLOR    : Color = Color {r: 212, g: 140, b:  30, a: 255};  // wood
+//const BOARD_COLOR    : Color = Color {r: 255, g: 244, b:  204, a: 255}; // cream
+//const BOARD_COLOR    : Color = Color {r: 255, g: 255, b:  255, a: 0};   // white
+//const BOARD_COLOR    : Color = Color {r: 128, g: 128, b:  128, a: 255}; // grey
+const BOARD_COLOR_SR : Color = Color {r: 106, g:  70, b:  15, a: 0};
 const EDGE_COLOR     : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const MARKER_COLOR   : Color = Color {r:   0, g: 150, b: 255, a: 255};
 const SYMBOL_COLOR   : Color = Color {r:   0, g: 130, b:   0, a: 255};
 const BLACK_COLOR    : Color = Color {r:   0, g:   0, b:   0, a: 255};
 const BLACK_HOVER    : Color = Color {r:   0, g:   0, b:   0, a:  80};
-const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255};
+const WHITE_COLOR    : Color = Color {r: 255, g: 255, b: 255, a: 255}; // white
+//const WHITE_COLOR    : Color = Color {r: 255, g: 244, b:  204, a: 255}; // cream
 const WHITE_HOVER    : Color = Color {r: 255, g: 255, b: 255, a:  80};
 //const BLACK_IMMORTAL : Color = Color {r: 255, g: 255, b: 255, a:  40};
 //const WHITE_IMMORTAL : Color = Color {r:   0, g:   0, b:   0, a:  40};
@@ -276,7 +279,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
         draw_bg              (&mut window, set_root);
         draw_board           (&mut window, &gametree, &layout, stone_size);
-        draw_stones          (&mut window, &gametree, &layout, stone_size);
+        draw_stones          (&mut window, &gametree, &layout, stone_size * 0.95);
         draw_move_marker     (&mut window, &gametree, &layout, stone_size);
         //draw_immortal_markers(&mut window, &gametree, &layout, stone_size);
         draw_symbols         (&mut window, &gametree, &layout, stone_size);
@@ -316,8 +319,14 @@ fn draw_board(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, ston
 fn draw_stones(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, stone_size: f32) {
     for i in 0..gametree.board().point_count() {
         if gametree.color_at(i) != Empty {
-            let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
-            draw_circle_plain(win, layout[i], stone_size, color);
+            if gametree.color_at(i) == Black {
+                draw_circle_plain(win, layout[i], stone_size, BLACK_COLOR);
+            } else {
+                draw_circle_plain(win, layout[i], stone_size, BLACK_COLOR);
+                draw_circle_plain(win, layout[i], stone_size * 0.90, WHITE_COLOR);
+            }
+
+            //let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
         }
     }
 }
