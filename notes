@@ -3,26 +3,40 @@
 How to make a physical board
 ==================
 
+[NOTE: Adam Zalaznik seems to have fallen off. The last time I got boards made from him, he totally screwed up the order, and even when he re-did it for free, one of the boards was still quite noticeably wrong. Next time you want to make boards, you should shop around for another laser engraver.]
+
 1. Contact Adam Zalaznik to ask if he's up for the job.
     - Reference previous orders from him.
     - Describe the boards I'm ordering this time.
     - Attach PNG images of front and back.
         - Maybe SVG is better since that's what he ultimately needs, but SVGs have fucky text?
+        - Include readable graphic of text dimensions where the measured lines go all the way to the edge of the text.
     - Propose a price of $35/board + shipping, which is what we've been doing each time.
+    - Tell him what my address is, if it's changed since last time.
     - Wait for him to confirm he's in before proceeding.
 2. Order the wood from CraftCuts.
     - "Custom craft shape" product: https://www.craftcuts.com/custom-craft-shape.html
     - Material: Baltic Birch Plywood.
     - Longest dimension: (compute actual longest diameter of board in any direction and round up).
     - Shape thickness: 1/2 inch.
-    - Art upload: use PNG format with 1/2" inch image margin on all sides of board (this makes some of the math in the next part easier).
-    - Comment format:
-        - NOTE: they found this really confusing in my third order on 2024 Nov 8. Maybe try re-wording it. They didn't understand why I was talking about rectangles. Maybe just send them an image that looks like the proofs they send back to me.
-        - The attached image is a rectangle measuring [...] pixels wide by [...] pixels tall. The brown part is bare wood and the white part is empty air. The resolution is 300dpi, so the blueprint itself measures [...]" by [...]". The board fits snugly into a [...]"x[...]" rectangle ([...logic and geometry...], so the longest dimension of the board is [...]").
+    - Art upload: use PNG format, and upload a schematic with labeled dimensions.
+        - Consider digging out old proofs they've previously sent me, if they're for the exact same board design.
+    - No comment.
     - Have it shipped to Adam's work address.
         - Remember he's changed addresses at least once, so use the most recent one he's given.
-    
-
+3. Submit final designs to Adam Zalaznik.
+    - For each board design, run the `./generate` script to generate SVG and PNG images of the front/back/blank versions of it.
+    - Open the back (text side) PNG in Krita and add a rectangle around the text.
+        - Center the rectangle at the center of the design.
+            - This should result in the text being centered in the rectangle. If that's not what you want, figure something out.
+        - Label the width and height of the rectangle.
+        - Save this image as a seventh image in the folder.
+    - Zip all seven images into a zip file.
+    - Repeat for each board design.
+    - Email these to Adam Zalaznik.
+        - Explain about the rectangles being centered on the board and the text being centered in the rectangles.
+        - Mention that the text should be sized proportionally according to the rectangle.
+        - Mention that the rectangles are not part of the design.
 
 ==================
 Brainstorm: things that look like hexagons or triangles

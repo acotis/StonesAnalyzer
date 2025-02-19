@@ -322,8 +322,9 @@ fn draw_stones(win: &mut RenderWindow, gametree: &GameTree, layout: &Layout, sto
             if gametree.color_at(i) == Black {
                 draw_circle_plain(win, layout[i], stone_size, BLACK_COLOR);
             } else {
-                draw_circle_plain(win, layout[i], stone_size, BLACK_COLOR);
-                draw_circle_plain(win, layout[i], stone_size * 0.90, WHITE_COLOR);
+                //draw_circle_plain(win, layout[i], stone_size, BLACK_COLOR);
+                //draw_circle_plain(win, layout[i], stone_size * 0.90, WHITE_COLOR);
+                draw_circle_plain(win, layout[i], stone_size, WHITE_COLOR);
             }
 
             //let color = if gametree.color_at(i) == Black {BLACK_COLOR} else {WHITE_COLOR};
