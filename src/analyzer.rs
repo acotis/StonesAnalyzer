@@ -129,7 +129,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
         "Stones analyzer",
         Style::DEFAULT,
         &context_settings
-    );
+    ).expect("could not create window");
     window.set_framerate_limit(60);
 
     // Stuff we track.
@@ -196,10 +196,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
                     println!("S key pressed!");
 
                     let mut texture = Texture::new().expect("constructing texture");
-                    if !texture.create(window.size().x, window.size().y) {
-                        eprintln!("Failed to create texture.");
-                        break;
-                    }
+                    texture.create(window.size().x, window.size().y).expect("could not create texture");
 
                     unsafe {
                         texture.update_from_render_window(&window, 0, 0);
@@ -215,14 +212,15 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
                     let h = bottom - top;
 
                     let uncropped = texture.copy_to_image().expect("copying to image");
-                    let mut cropped = Image::new(w as u32, h as u32);
+                    //let mut cropped = Image::new(w as u32, h as u32);
+                    let mut cropped = Image::new().expect("could not create image");
                     cropped.copy_image(
                         &uncropped, 0, 0,
-                        &IntRect::new(left as i32, top as i32, w as i32, h as i32),
+                        IntRect::new(left as i32, top as i32, w as i32, h as i32),
                         false
                     );
 
-                    if cropped.save_to_file("screenshot.png") {
+                    if let Ok(_) = cropped.save_to_file("screenshot.png") {
                         println!("screenshot saved");
 
                         Command::new("xclip")
@@ -290,7 +288,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
             _ => {}
         }
 
-        window.set_active(true);
+        window.set_active(true).expect("could not set window to be active");
         window.display();
 
         std::thread::sleep(Duration::from_millis(10));
@@ -460,7 +458,7 @@ fn draw_circle_plain(win: &mut RenderWindow, center: (f32, f32), radius: f32, co
 fn draw_polygon(win: &mut RenderWindow, side_count: u32, rotation: f32,
                 center: (f32, f32), radius: f32, color: Color,
                 outline_thickness: f32, outline_color: Color) {
-    let mut cs = CircleShape::new(radius, side_count);
+    let mut cs = CircleShape::new(radius, side_count as usize);
     cs.set_origin(Vector2::new(radius, radius));
     cs.set_position(Vector2::new(center.0, center.1));
     cs.rotate(rotation * 360.0);
@@ -500,7 +498,8 @@ fn update_view(win: &mut RenderWindow) {
     let size = win.size();
     win.set_view(
         &View::from_rect(
-            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
+            FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)
+        ).expect("couldn't create view"));
 }
 
 
