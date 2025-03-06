@@ -121,8 +121,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
     // Create the RenderWindow.
 
     let mut context_settings: ContextSettings = Default::default();
-    context_settings.antialiasing_level = 16;
-    println!("antialiasing level: {}", context_settings.antialiasing_level);
+    context_settings.antialiasing_level = 8;
 
     let mut window = RenderWindow::new(
         (800, 600),
@@ -139,7 +138,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
     // Event loop.
 
-    while window.is_open() {
+    'outer: while window.is_open() {
         let mouse_pos = window.mouse_position();
         let hover_point = match mode {
             Normal(_)       => get_hover_point(&layout, stone_size, mouse_pos.x, mouse_pos.y),
@@ -155,7 +154,7 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
                 // Universal event handling.
 
-                (_, _, Closed) => {window.close();}
+                (_, _, Closed) => {window.close(); break 'outer;}
 
                 (_, _, Resized {..}) => {
                     update_view(&mut window);
@@ -213,30 +212,35 @@ pub fn interactive_app(gametree: &mut GameTree, au_layout: &Layout, mut set_root
 
                     let uncropped = texture.copy_to_image().expect("copying to image");
                     //let mut cropped = Image::new(w as u32, h as u32);
-                    let mut cropped = Image::new().expect("could not create image");
+                    let mut cropped = Image::new_solid(w as u32, h as u32, Color::WHITE).expect("could not create image");
                     cropped.copy_image(
                         &uncropped, 0, 0,
                         IntRect::new(left as i32, top as i32, w as i32, h as i32),
                         false
                     );
 
-                    if let Ok(_) = cropped.save_to_file("screenshot.png") {
-                        println!("screenshot saved");
+                    match cropped.save_to_file("screenshot.png") {
+                        Ok(_) => {
+                            println!("screenshot saved");
 
-                        Command::new("xclip")
-                            .arg("-selection")
-                            .arg("clipboard")
-                            .arg("-t")
-                            .arg("image/png")
-                            .arg("-i")
-                            .arg("screenshot.png")
-                            .spawn()
-                            .expect("copying screenshot to clipboard");
+                            Command::new("xclip")
+                                .arg("-selection")
+                                .arg("clipboard")
+                                .arg("-t")
+                                .arg("image/png")
+                                .arg("-i")
+                                .arg("screenshot.png")
+                                .spawn()
+                                .expect("copying screenshot to clipboard");
 
-                        // The xclip process doesn't exit until something else
-                        // is copied to the clipboard, so we use spawn() instead
-                        // of output() here.
-                    }
+                            // The xclip process doesn't exit until something else
+                            // is copied to the clipboard, so we use spawn() instead
+                            // of output() here.
+                        },
+                        Err(e) => {
+                            println!("error condition triggered: {e}");
+                        }
+                    };
                 }
 
                 // SymbolSelect-mode event handling.
