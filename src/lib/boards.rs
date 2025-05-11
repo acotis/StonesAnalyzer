@@ -1,7 +1,7 @@
 
 /* boards.rs
  *
- * This method provides some convenience methods for generating common board
+ * This file provides some convenience methods for generating common board
  * structures and layouts.
  */
 
