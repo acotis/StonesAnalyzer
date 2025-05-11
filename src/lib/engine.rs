@@ -12,7 +12,7 @@
  * Board is a struct representing a board structure (i.e. an undirected
  * graph). On a board with N points, the vertices are numbered 0 to N-1,
  * and a Board is constructed from a vector of pairs of usizes which are
- * the edges of the graph. The pint count is inferred to be one more
+ * the edges of the graph. The point count is inferred to be one more
  * than the identity of the largest vertex, and every point must have at
  * least one edge connected to it or the constructor will panic.
  *
