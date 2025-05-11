@@ -361,15 +361,13 @@ enum MouseState {
 fn main() {
     let mut gel = LayoutGel::empty();
 
-    let mut context_settings: ContextSettings = Default::default();
-    context_settings.antialiasing_level = 16;
-
     let mut window = RenderWindow::new(
         (800, 600),
         "Sproingy Doingy",
         Style::DEFAULT,
-        &context_settings
-    );
+        &ContextSettings::default(),
+    ).unwrap();
+
     window.set_framerate_limit(60);
 
     // Event loop.
@@ -389,7 +387,7 @@ fn main() {
 
         while let Some(event) = window.poll_event() {
             match event {
-                Closed => {window.close();}
+                Closed => {window.close(); return;}
                 Resized {..} => {update_view(&mut window);}
 
                 // Restart.
@@ -563,7 +561,7 @@ fn main() {
 
         // Draw the window.
 
-        window.set_active(true);
+        window.set_active(true).unwrap();
         window.display();
 
         // Tick time forward.
@@ -600,7 +598,9 @@ fn update_view(win: &mut RenderWindow) {
     let size = win.size();
     win.set_view(
         &View::from_rect(
-            &FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)));
+            FloatRect::new(0.0, 0.0, size.x as f32, size.y as f32)
+        ).unwrap()
+    );
 }
 
 fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: Color,
@@ -611,7 +611,7 @@ fn draw_circle(win: &mut RenderWindow, center: (f32, f32), radius: f32, color: C
 // Draw a regular polygon with a given number of sides, rotation from its default
 // orientation, center, radius, color, outline thickness, and outline color.
 
-fn draw_polygon(win: &mut RenderWindow, side_count: u32, rotation: f32,
+fn draw_polygon(win: &mut RenderWindow, side_count: usize, rotation: f32,
                 center: (f32, f32), radius: f32, color: Color,
                 outline_thickness: f32, outline_color: Color) {
     let mut cs = CircleShape::new(radius, side_count);
