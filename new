@@ -1,4 +1,0 @@
-clear
-name=$(date +"%Y-%m-%d_%H%M%S")
-cargo run --bin stones_analyzer analyses/$name.san --create $1
-

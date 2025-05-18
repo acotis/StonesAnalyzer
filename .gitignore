@@ -5,3 +5,4 @@ target/
 *.svg
 analyses/*
 image/
+trash_local/*
