@@ -1,8 +1,3 @@
-target/
 .*.swp
-*.png
-*.jpg
-*.svg
-analyses/*
-image/
-trash_local/*
+target/
+screenshot.png
