@@ -172,8 +172,8 @@ impl LayoutGel {
             point.x += point.dx * dt;
             point.y += point.dy * dt;
 
-            point.dx *= f32::powf(0.8, dt * 100.0);
-            point.dy *= f32::powf(0.8, dt * 100.0);
+            point.dx *= f32::powf(0.5, dt * 100.0);
+            point.dy *= f32::powf(0.5, dt * 100.0);
         }
 
         for i in 0..self.count() {
@@ -408,7 +408,7 @@ fn main() {
                 KeyPressed {code: Key::Enter, ..} => {
                     window.close();
 
-                    let filename = format!("{}", chrono::Local::now().format("analyses/sproingy_%Y-%m-%d_%H-%M-%S.san"));
+                    let filename = format!("{}", chrono::Local::now().format("sproingy_%Y-%m-%d_%H-%M-%S.san"));
                     let (layout, edges) = gel.get_lae();
 
                     write_san_file(
