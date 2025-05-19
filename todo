@@ -4,6 +4,7 @@ TODO
 ==================
 
 + Roll all my scripts into the main binary as subcommands.
+    — Not doing this anymore; should follow Unix philosophy "do one thing and do it well".
 
 + Add auto-scoring functionality
 + Make it auto-save every 10 seconds (or on every action or something).

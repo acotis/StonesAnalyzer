@@ -4,7 +4,7 @@ use reqwest::blocking::Client;
 fn main() {
     println!("Hello world");
 
-    let mut client = Client::default();
+    let client = Client::default();
 
     let response = 
         client.get("http://google.com")
